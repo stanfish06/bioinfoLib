@@ -37,3 +37,7 @@ explicit = true
 name = "pytorch-cu124"
 url = "https://download.pytorch.org/whl/cu124"
 explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
