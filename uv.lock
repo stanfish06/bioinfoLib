@@ -244,7 +244,6 @@ dependencies = [
     { name = "magic-impute" },
     { name = "palantir" },
     { name = "pandas" },
-    { name = "rapids-singlecell" },
     { name = "scanpy", extra = ["leiden"] },
     { name = "scvelo" },
     { name = "scvi-tools" },
@@ -261,7 +260,6 @@ requires-dist = [
     { name = "magic-impute", specifier = ">=3.0.0" },
     { name = "palantir", specifier = ">=1.3.6" },
     { name = "pandas", specifier = ">=2.2.3" },
-    { name = "rapids-singlecell", specifier = ">=0.11.1" },
     { name = "scanpy", extras = ["leiden"], specifier = ">=1.10.4" },
     { name = "scvelo", specifier = ">=0.3.3" },
     { name = "scvi-tools", specifier = ">=1.2.2.post2" },
@@ -844,19 +842,6 @@ wheels = [
 ]
 
 [[package]]
-name = "imageio"
-version = "2.37.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "pillow" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/47/57e897fb7094afb2d26e8b2e4af9a45c7cf1a405acdeeca001fdf2c98501/imageio-2.37.0.tar.gz", hash = "sha256:71b57b3669666272c818497aebba2b4c5f20d5b37c81720e5e1a56d59c492996", size = 389963 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cb/bd/b394387b598ed84d8d0fa90611a90bee0adc2021820ad5729f7ced74a8e2/imageio-2.37.0-py3-none-any.whl", hash = "sha256:11efa15b87bc7871b61590326b2d635439acc321cf7f8ce996f812543ce10eed", size = 315796 },
-]
-
-[[package]]
 name = "importlib-resources"
 version = "6.5.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1266,18 +1251,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/05/f9/27e94c1b3eb29e6933b6986ffc5fa1177d2cd1f0c8efc5f02c91c9ac61de/kiwisolver-1.4.8-cp313-cp313t-musllinux_1_2_ppc64le.whl", hash = "sha256:151dffc4865e5fe6dafce5480fab84f950d14566c480c08a53c663a0020504b6", size = 2390661 },
     { url = "https://files.pythonhosted.org/packages/d9/d4/3c9735faa36ac591a4afcc2980d2691000506050b7a7e80bcfe44048daa7/kiwisolver-1.4.8-cp313-cp313t-musllinux_1_2_s390x.whl", hash = "sha256:577facaa411c10421314598b50413aa1ebcf5126f704f1e5d72d7e4e9f020d90", size = 2546710 },
     { url = "https://files.pythonhosted.org/packages/4c/fa/be89a49c640930180657482a74970cdcf6f7072c8d2471e1babe17a222dc/kiwisolver-1.4.8-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:be4816dc51c8a471749d664161b434912eee82f2ea66bd7628bd14583a833e85", size = 2349213 },
-]
-
-[[package]]
-name = "lazy-loader"
-version = "0.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/6b/c875b30a1ba490860c93da4cabf479e03f584eba06fe5963f6f6644653d8/lazy_loader-0.4.tar.gz", hash = "sha256:47c75182589b91a4e1a85a136c074285a5ad4d9f39c63e0d7fb76391c4574cd1", size = 15431 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/60/d497a310bde3f01cb805196ac61b7ad6dc5dcf8dce66634dc34364b20b4f/lazy_loader-0.4-py3-none-any.whl", hash = "sha256:342aa8e14d543a154047afb4ba8ef17f5563baad3fc610d7b15b213b0f119efc", size = 12097 },
 ]
 
 [[package]]
@@ -2468,28 +2441,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rapids-singlecell"
-version = "0.11.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anndata" },
-    { name = "matplotlib" },
-    { name = "natsort" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scanpy" },
-    { name = "scikit-image" },
-    { name = "scikit-misc" },
-    { name = "scipy" },
-    { name = "statsmodels" },
-    { name = "tqdm" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/23/22/278fe1bbad33575a32386098e23e3d50572fe5c4143e4d03f91970d143b2/rapids_singlecell-0.11.1.tar.gz", hash = "sha256:ad53c02156bcbc9f079fb78d2bbe6821da633c41e016d941220e0f0b43ca8c13", size = 99708 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/fe/70c8dbbdae16af4e5e4050194dc18218a15ce699333a90a058ce8582f02e/rapids_singlecell-0.11.1-py3-none-any.whl", hash = "sha256:db5713c2b08c801d3410a6443baf3d4f2f5bcdfa01edc7df52f4a598bb1abb0f", size = 129921 },
-]
-
-[[package]]
 name = "referencing"
 version = "0.36.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2637,34 +2588,6 @@ leiden = [
 ]
 
 [[package]]
-name = "scikit-image"
-version = "0.25.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "imageio" },
-    { name = "lazy-loader" },
-    { name = "networkx" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pillow" },
-    { name = "scipy" },
-    { name = "tifffile" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/83/e5/496a74ccfc1206666b9c7164a16657febdfeb6df0e458cb61286b20102c9/scikit_image-0.25.1.tar.gz", hash = "sha256:d4ab30540d114d37c35fe5c837f89b94aaba2a7643afae8354aa353319e9bbbb", size = 22697578 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/a8/7d56f4401c05a186a5e82aab53977029a3f88cc0f1bd6c1fb4f4dd524262/scikit_image-0.25.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:ebf83699d60134909647395a0bf07db3859646de7192b088e656deda6bc15e95", size = 13982151 },
-    { url = "https://files.pythonhosted.org/packages/80/0e/d78876faaf552cf575205160aa82849fc493977a5b0cdf093f6bbb1586fe/scikit_image-0.25.1-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:408086520eed036340e634ab7e4f648e00238f711bac61ab933efeb11464a238", size = 13231342 },
-    { url = "https://files.pythonhosted.org/packages/e0/ae/78a8dba652cdaed8a5f5dd56cf8f11ed64e44151a4813e3312916a7dff46/scikit_image-0.25.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5bd709faa87795869ccd21f32490c37989ca5846571495822f4b9430fb42c34c", size = 14173769 },
-    { url = "https://files.pythonhosted.org/packages/d7/77/6d1da74cb0b7ba07750d6ef7e48f87807b53df1cf4a090775115dd9cc5ea/scikit_image-0.25.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a6b15c0265c072a46ff4720784d756d8f8e5d63567639aa8451f6673994d6846", size = 15002945 },
-    { url = "https://files.pythonhosted.org/packages/df/ad/cddec5c0bcde8936c15f07593419f6d94ed33b058737948a0d59fb1142a0/scikit_image-0.25.1-cp312-cp312-win_amd64.whl", hash = "sha256:a689a0d091e0bd97d7767309abdeb27c43be210d075abb34e71657add920c22b", size = 12895262 },
-    { url = "https://files.pythonhosted.org/packages/ba/af/daa3af90cfb3bafb63ba60626953a8382d5615d625de4356da60802ae343/scikit_image-0.25.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:f070f899d6572a125ab106c4b26d1a5fb784dc60ba6dea45c7816f08c3a4fb4d", size = 13917946 },
-    { url = "https://files.pythonhosted.org/packages/d6/16/1683990534ce057de3d8f1e71f452301f7ce27fdef95285d57870165a402/scikit_image-0.25.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:cc9538d8db7670878aa68ea79c0b1796b6c771085e8d50f5408ee617da3281b6", size = 13192400 },
-    { url = "https://files.pythonhosted.org/packages/5a/b6/3abdffb764cd422115ac6b7c84e70b38d730b23babb14e008fa6687d16ea/scikit_image-0.25.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:caa08d4fa851e1f421fcad8eac24d32f2810971dc61f1d72dc950ca9e9ec39b1", size = 14113854 },
-    { url = "https://files.pythonhosted.org/packages/fe/95/6d3e66e90f84b63fc042c2ec486eeb9bacb2ec67b49d6d8736874239e972/scikit_image-0.25.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c9923aa898b7921fbcf503d32574d48ed937a7cff45ce8587be4868b39676e18", size = 14975069 },
-    { url = "https://files.pythonhosted.org/packages/0d/ae/3d8dba0055ec00e1e664ab2be7ceefff0458bc032cf766055e76ae084c08/scikit_image-0.25.1-cp313-cp313-win_amd64.whl", hash = "sha256:6c7bba6773ab8c39ee8b1cbb17c7f98965bacdb8cd8da337942be6acc38fc562", size = 12880768 },
-]
-
-[[package]]
 name = "scikit-learn"
 version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2690,21 +2613,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/54/32fa2ee591af44507eac86406fa6bba968d1eb22831494470d0a2e4a1eb1/scikit_learn-1.6.1-cp313-cp313t-macosx_12_0_arm64.whl", hash = "sha256:6a7aa5f9908f0f28f4edaa6963c0a6183f1911e63a69aa03782f0d924c830a35", size = 11100530 },
     { url = "https://files.pythonhosted.org/packages/3f/58/55856da1adec655bdce77b502e94a267bf40a8c0b89f8622837f89503b5a/scikit_learn-1.6.1-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0650e730afb87402baa88afbf31c07b84c98272622aaba002559b614600ca691", size = 12433852 },
     { url = "https://files.pythonhosted.org/packages/ff/4f/c83853af13901a574f8f13b645467285a48940f185b690936bb700a50863/scikit_learn-1.6.1-cp313-cp313t-win_amd64.whl", hash = "sha256:3f59fe08dc03ea158605170eb52b22a105f238a5d512c4470ddeca71feae8e5f", size = 11337256 },
-]
-
-[[package]]
-name = "scikit-misc"
-version = "0.5.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/09/c5/87ff89128cf05f560ba70c762f8d6cb79011054ea5d5d6e21fa5fc2f6ce7/scikit_misc-0.5.1.tar.gz", hash = "sha256:c5c1f69ac5f84e0103f40525c7d28ecc0ee028314cbc9f07c497cc39143e52a3", size = 298630 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/f0/047b2b1742c679327d49a16e7c7cf4acfc8e66126ff45a1ced72514961df/scikit_misc-0.5.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:e036e0f57cb7317ef7499497d2c0506274eb1b18513d54fe188c9e5619e3cef3", size = 170091 },
-    { url = "https://files.pythonhosted.org/packages/49/01/e2886b471a8a3dbf8292cbb1ef133e3fc727850b88caaefde3529fdd9b42/scikit_misc-0.5.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:34aa6f468234be81f70374bc22b1ec159991c72148ea664308c2b194d7255a95", size = 161862 },
-    { url = "https://files.pythonhosted.org/packages/6d/7c/014980a1b5fe2ee990c222ae5c9b1602fe7b64359643319123d8e1df5009/scikit_misc-0.5.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8237509cbb1c4420d99d2d3cccfde8a2ca45ca6ea86fbd17516e5d6a0867d8b4", size = 183556 },
-    { url = "https://files.pythonhosted.org/packages/63/2e/1da9f27515bdb92364bc5a8796b8e7d10e7b1f667b722681c5ceae168854/scikit_misc-0.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:fd350ade48b79b930d8d7bdc8bd659349193afc319cb34f2ddbedada6f2464e0", size = 157041 },
 ]
 
 [[package]]
@@ -3087,18 +2995,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bd/55/b5148dcbf72f5cde221f8bfe3b6a540da7aa1842f6b491ad979a6c8b84af/threadpoolctl-3.5.0.tar.gz", hash = "sha256:082433502dd922bf738de0d8bcc4fdcbf0979ff44c42bd40f5af8a282f6fa107", size = 41936 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4b/2c/ffbf7a134b9ab11a67b0cf0726453cedd9c5043a4fe7a35d1cefa9a1bcfb/threadpoolctl-3.5.0-py3-none-any.whl", hash = "sha256:56c1e26c150397e58c4926da8eeee87533b1e32bef131bd4bf6a2f45f3185467", size = 18414 },
-]
-
-[[package]]
-name = "tifffile"
-version = "2025.1.10"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/fc/697d8dac6936a81eda88e7d4653d567fcb0d504efad3fd28f5272f96fcf9/tifffile-2025.1.10.tar.gz", hash = "sha256:baaf0a3b87bf7ec375fa1537503353f70497eabe1bdde590f2e41cc0346e612f", size = 365585 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/50/7bef6a1259a2c4b81823653a69d2d51074f7b8095db2abae5abee962ab87/tifffile-2025.1.10-py3-none-any.whl", hash = "sha256:ed24cf4c99fb13b4f5fb29f8a0d5605e60558c950bccbdca2a6470732a27cfb3", size = 227551 },
 ]
 
 [[package]]
