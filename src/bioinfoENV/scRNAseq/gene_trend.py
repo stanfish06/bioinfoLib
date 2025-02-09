@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.utils import issparse
+from scipy.sparse import issparse
 
 
 def rolling_mean(t, y, w, s, min_n=50):
@@ -49,12 +49,12 @@ def compute_gene_trends(
                 lower_bound = np.percentile(covariate, lower_bound)
                 upper_bound = np.percentile(covariate, upper_bound)
                 dpt = np.clip(covariate, lower_bound, upper_bound)
-                times, means, sds = rolling_mean(
+                times, mean, sd = rolling_mean(
                     dpt, expr[branch_mask], window_size, step_size, min_n
                 )
                 trends[lineage][gene] = {
                     "covariate": times,
-                    "response_mean": means,
-                    "response_sd": sds,
+                    "response_mean": mean,
+                    "response_sd": sd,
                 }
     return trends
