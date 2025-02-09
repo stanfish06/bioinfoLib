@@ -240,6 +240,7 @@ name = "bioinfoenv"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cellrank", marker = "sys_platform == 'linux'" },
     { name = "jupyterlab" },
     { name = "magic-impute" },
     { name = "palantir" },
@@ -257,6 +258,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cellrank", marker = "sys_platform == 'linux'", specifier = ">=2.0.6" },
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "magic-impute", specifier = ">=3.0.0" },
     { name = "palantir", specifier = ">=1.3.6" },
@@ -287,6 +289,34 @@ wheels = [
 [package.optional-dependencies]
 css = [
     { name = "tinycss2" },
+]
+
+[[package]]
+name = "cellrank"
+version = "2.0.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anndata", marker = "sys_platform == 'linux'" },
+    { name = "docrep", marker = "sys_platform == 'linux'" },
+    { name = "joblib", marker = "sys_platform == 'linux'" },
+    { name = "matplotlib", marker = "sys_platform == 'linux'" },
+    { name = "networkx", marker = "sys_platform == 'linux'" },
+    { name = "numba", marker = "sys_platform == 'linux'" },
+    { name = "numpy", marker = "sys_platform == 'linux'" },
+    { name = "pandas", marker = "sys_platform == 'linux'" },
+    { name = "pygam", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13' and sys_platform == 'linux'" },
+    { name = "pygam", version = "0.9.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' and sys_platform == 'linux'" },
+    { name = "pygpcca", marker = "sys_platform == 'linux'" },
+    { name = "scanpy", marker = "sys_platform == 'linux'" },
+    { name = "scikit-learn", marker = "sys_platform == 'linux'" },
+    { name = "scipy", marker = "sys_platform == 'linux'" },
+    { name = "scvelo", marker = "sys_platform == 'linux'" },
+    { name = "seaborn", marker = "sys_platform == 'linux'" },
+    { name = "wrapt", marker = "sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/e6/f7f1759fed7504b63856a20f91c3aaf6bc1978b7b8c413a02113614a71c7/cellrank-2.0.6.tar.gz", hash = "sha256:88a9f8044d80bc7c82b5cfc68ae6a2a2fd954b344c10f7e3ddf9b3a3262a6f50", size = 193434 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0f/b7/8cdeb2efe63f5ae5ed9a7e0773227f7f19412843cd21afdcbdbc0bc212f6/cellrank-2.0.6-py3-none-any.whl", hash = "sha256:165d618e9588e1c5b92efc3648d4cb6e3d5b769771f00b68dd175841a466023b", size = 225796 },
 ]
 
 [[package]]
@@ -972,10 +1002,34 @@ wheels = [
 
 [[package]]
 name = "jinja2"
+version = "3.0.3"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "markupsafe", marker = "sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/a5/429efc6246119e1e3fbf562c00187d04e83e54619249eb732bb423efa6c6/Jinja2-3.0.3.tar.gz", hash = "sha256:611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7", size = 269196 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/9a/e5d9ec41927401e41aea8af6d16e78b5e612bca4699d417f646a9610a076/Jinja2-3.0.3-py3-none-any.whl", hash = "sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8", size = 133630 },
+]
+
+[[package]]
+name = "jinja2"
 version = "3.1.5"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+]
 dependencies = [
-    { name = "markupsafe" },
+    { name = "markupsafe", marker = "sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/af/92/b3130cbbf5591acf9ade8708c365f3238046ac7cb8ccba6e81abccb0ccff/jinja2-3.1.5.tar.gz", hash = "sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb", size = 244674 }
 wheels = [
@@ -1116,7 +1170,8 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "argon2-cffi" },
-    { name = "jinja2" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "jupyter-client" },
     { name = "jupyter-core" },
     { name = "jupyter-events" },
@@ -1160,7 +1215,8 @@ dependencies = [
     { name = "async-lru" },
     { name = "httpx" },
     { name = "ipykernel" },
-    { name = "jinja2" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "jupyter-core" },
     { name = "jupyter-lsp" },
     { name = "jupyter-server" },
@@ -1191,7 +1247,8 @@ version = "2.27.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "babel" },
-    { name = "jinja2" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "json5" },
     { name = "jsonschema" },
     { name = "jupyter-server" },
@@ -1679,7 +1736,8 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "bleach", extra = ["css"] },
     { name = "defusedxml" },
-    { name = "jinja2" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "jupyter-core" },
     { name = "jupyterlab-pygments" },
     { name = "markupsafe" },
@@ -2338,6 +2396,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7c/2d/c3338d48ea6cc0feb8446d8e6937e1408088a72a39937982cc6111d17f84/pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f", size = 4968581 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/0b/9fcc47d19c48b59121088dd6da2488a49d5f72dacf8262e2790a1d2c7d15/pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c", size = 1225293 },
+]
+
+[[package]]
+name = "pygpcca"
+version = "1.0.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docrep", marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "numpy", marker = "sys_platform == 'linux'" },
+    { name = "scipy", marker = "sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/5d/6cd08d5822de8c482e8fc5c4299e6f139e4e1eb39cf5d999e5ba374a4baa/pygpcca-1.0.4.tar.gz", hash = "sha256:5e3b49279abc62d25133811daeee050715f995ff02042c46e2a2034331d090d1", size = 106212 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/a6/c415c9faa7c4c8749fbac0c54523def0cf9efb94d70f09188370c0da74c8/pygpcca-1.0.4-py3-none-any.whl", hash = "sha256:e541059418032cd51d2997638adfe6aac9629717bbd6b78d8876ffb4bf4018c7", size = 68745 },
 ]
 
 [[package]]
@@ -3152,7 +3225,7 @@ resolution-markers = [
 dependencies = [
     { name = "filelock", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "fsspec", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
-    { name = "jinja2", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "networkx", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "setuptools", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "sympy", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
@@ -3176,7 +3249,7 @@ resolution-markers = [
 dependencies = [
     { name = "filelock", marker = "sys_platform == 'linux'" },
     { name = "fsspec", marker = "sys_platform == 'linux'" },
-    { name = "jinja2", marker = "sys_platform == 'linux'" },
+    { name = "jinja2", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
     { name = "networkx", marker = "sys_platform == 'linux'" },
     { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "nvidia-cuda-cupti-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
@@ -3213,7 +3286,7 @@ resolution-markers = [
 dependencies = [
     { name = "filelock", marker = "sys_platform == 'win32'" },
     { name = "fsspec", marker = "sys_platform == 'win32'" },
-    { name = "jinja2", marker = "sys_platform == 'win32'" },
+    { name = "jinja2", version = "3.1.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
     { name = "networkx", marker = "sys_platform == 'win32'" },
     { name = "setuptools", marker = "sys_platform == 'win32'" },
     { name = "sympy", marker = "sys_platform == 'win32'" },
