@@ -236,7 +236,7 @@ wheels = [
 ]
 
 [[package]]
-name = "bioinfoenv"
+name = "bioinfolib"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
