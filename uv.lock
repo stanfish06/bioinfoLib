@@ -241,6 +241,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "cellrank", marker = "sys_platform == 'linux'" },
+    { name = "ipython" },
     { name = "jupyterlab" },
     { name = "magic-impute" },
     { name = "matplotlib" },
@@ -249,6 +250,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pyvista" },
     { name = "scanpy", extra = ["leiden"] },
+    { name = "scikit-misc" },
     { name = "scvelo" },
     { name = "scvi-tools" },
     { name = "seaborn" },
@@ -263,6 +265,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cellrank", marker = "sys_platform == 'linux'", specifier = ">=2.0.6" },
+    { name = "ipython", specifier = ">=8.32.0" },
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "magic-impute", specifier = ">=3.0.0" },
     { name = "matplotlib", specifier = ">=3.10.0" },
@@ -271,6 +274,7 @@ requires-dist = [
     { name = "pandas", specifier = "<2.0.0" },
     { name = "pyvista", specifier = ">=0.44.2" },
     { name = "scanpy", extras = ["leiden"], specifier = ">=1.10.4" },
+    { name = "scikit-misc", specifier = ">=0.5.1" },
     { name = "scvelo", specifier = ">=0.3.3" },
     { name = "scvi-tools", specifier = ">=1.2.2.post2" },
     { name = "seaborn", specifier = ">=0.13.2" },
@@ -2832,6 +2836,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/54/32fa2ee591af44507eac86406fa6bba968d1eb22831494470d0a2e4a1eb1/scikit_learn-1.6.1-cp313-cp313t-macosx_12_0_arm64.whl", hash = "sha256:6a7aa5f9908f0f28f4edaa6963c0a6183f1911e63a69aa03782f0d924c830a35", size = 11100530 },
     { url = "https://files.pythonhosted.org/packages/3f/58/55856da1adec655bdce77b502e94a267bf40a8c0b89f8622837f89503b5a/scikit_learn-1.6.1-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0650e730afb87402baa88afbf31c07b84c98272622aaba002559b614600ca691", size = 12433852 },
     { url = "https://files.pythonhosted.org/packages/ff/4f/c83853af13901a574f8f13b645467285a48940f185b690936bb700a50863/scikit_learn-1.6.1-cp313-cp313t-win_amd64.whl", hash = "sha256:3f59fe08dc03ea158605170eb52b22a105f238a5d512c4470ddeca71feae8e5f", size = 11337256 },
+]
+
+[[package]]
+name = "scikit-misc"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/c5/87ff89128cf05f560ba70c762f8d6cb79011054ea5d5d6e21fa5fc2f6ce7/scikit_misc-0.5.1.tar.gz", hash = "sha256:c5c1f69ac5f84e0103f40525c7d28ecc0ee028314cbc9f07c497cc39143e52a3", size = 298630 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/f0/047b2b1742c679327d49a16e7c7cf4acfc8e66126ff45a1ced72514961df/scikit_misc-0.5.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:e036e0f57cb7317ef7499497d2c0506274eb1b18513d54fe188c9e5619e3cef3", size = 170091 },
+    { url = "https://files.pythonhosted.org/packages/49/01/e2886b471a8a3dbf8292cbb1ef133e3fc727850b88caaefde3529fdd9b42/scikit_misc-0.5.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:34aa6f468234be81f70374bc22b1ec159991c72148ea664308c2b194d7255a95", size = 161862 },
+    { url = "https://files.pythonhosted.org/packages/6d/7c/014980a1b5fe2ee990c222ae5c9b1602fe7b64359643319123d8e1df5009/scikit_misc-0.5.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8237509cbb1c4420d99d2d3cccfde8a2ca45ca6ea86fbd17516e5d6a0867d8b4", size = 183556 },
+    { url = "https://files.pythonhosted.org/packages/63/2e/1da9f27515bdb92364bc5a8796b8e7d10e7b1f667b722681c5ceae168854/scikit_misc-0.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:fd350ade48b79b930d8d7bdc8bd659349193afc319cb34f2ddbedada6f2464e0", size = 157041 },
 ]
 
 [[package]]
