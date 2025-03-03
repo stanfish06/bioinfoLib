@@ -25,18 +25,18 @@ dependencies = [
   "torch",
   "torchvision",
   "tensorflow-intel ; sys_platform == 'win32'",
-  "tensorflow ; sys_platform == 'linux'",
+  "tensorflow[and-cuda] ; sys_platform == 'linux'",
 ]
 
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cu126", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cu124", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
 ]
 
 torchvision = [
   { index = "pytorch-cu126", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cu124", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
 ]
 
 [[tool.uv.index]]
