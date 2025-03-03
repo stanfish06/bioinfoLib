@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "cellrank>=2.0.6 ; sys_platform == 'linux'",
+  "dynamo-release>=1.4.1",
   "ipython>=8.32.0",
   "jupyterlab>=4.3.5",
   "magic-impute>=3.0.0",
@@ -14,13 +15,17 @@ dependencies = [
   "palantir>=1.3.6",
   "pandas<2.0.0",
   "pyvista>=0.44.2",
-  "scanpy[leiden]>=1.10.4",
+  "scanpy[leiden]>=1.11",
+  "scikit-image>=0.25.1",
   "scikit-misc>=0.5.1",
   "scvelo>=0.3.3",
   "scvi-tools>=1.2.2.post2",
   "seaborn>=0.13.2",
+  "stardist>=0.9.1",
   "torch",
   "torchvision",
+  "tensorflow-intel ; sys_platform == 'win32'",
+  "tensorflow ; sys_platform == 'linux'",
 ]
 
 [tool.uv.sources]
