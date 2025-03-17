@@ -1,7 +1,7 @@
 [project]
 name = "bioinfoLib"
 version = "0.1.0"
-description = "Add your description here"
+description = "a general library for bioinformatics"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -26,6 +26,7 @@ dependencies = [
   "torchvision",
   "tensorflow-intel ; sys_platform == 'win32'",
   "tensorflow[and-cuda] ; sys_platform == 'linux'",
+  "deeptools>=3.5.5 ; sys_platform = 'linux'",
 ]
 
 [tool.uv.sources]
