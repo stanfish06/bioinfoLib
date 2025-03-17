@@ -26,7 +26,7 @@ dependencies = [
   "torchvision",
   "tensorflow-intel ; sys_platform == 'win32'",
   "tensorflow[and-cuda] ; sys_platform == 'linux'",
-  "deeptools>=3.5.5 ; sys_platform = 'linux'",
+  "deeptools>=3.5.5 ; sys_platform == 'linux'",
 ]
 
 [tool.uv.sources]
