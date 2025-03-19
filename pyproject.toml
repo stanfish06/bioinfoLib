@@ -52,5 +52,14 @@ url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>74.1", "cython"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+ext-modules = [
+  {name = "bioinfoLib.GP.simulator", sources = ["./src/bioinfoLib/GP/simulator.pyx"]}
+]
+
+[project.urls]
+Homepage = "https://github.com/stanfish06/bioinfoLib"
+Issues = "https://github.com/stanfish06/bioinfoLib/issues"
