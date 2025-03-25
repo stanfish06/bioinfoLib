@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "cellrank>=2.0.6 ; sys_platform == 'linux'",
-  "dynamo-release>=1.4.1",
   "ipython>=8.32.0",
   "jupyterlab>=4.3.5",
   "magic-impute>=3.0.0",
@@ -60,6 +59,15 @@ build-backend = "setuptools.build_meta"
 ext-modules = [
   {name = "bioinfoLib.GP.simulator", sources = ["./src/bioinfoLib/GP/simulator.pyx"]}
 ]
+
+# explicitly add deeptoolsintervals meta otherwise uv is not functional on windows
+# might need to be updated in the future
+[[tool.uv.dependency-metadata]]
+name = "deeptoolsintervals"
+version = "0.1.9"
+requires-python = ">=3.7"
+dependencies = []
+platforms = ["linux"]
 
 [project.urls]
 Homepage = "https://github.com/stanfish06/bioinfoLib"
