@@ -344,7 +344,7 @@ requires-dist = [
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
     { name = "scvelo", specifier = ">=0.3.3" },
-    { name = "scvi-tools", specifier = ">=1.2.2.post2" },
+    { name = "scvi-tools", specifier = ">=1.3.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "stardist", specifier = ">=0.9.1" },
     { name = "tensorflow", extras = ["and-cuda"], marker = "sys_platform == 'linux'" },

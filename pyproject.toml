@@ -19,7 +19,7 @@ dependencies = [
   "scikit-image>=0.25.1",
   "scikit-misc>=0.5.1",
   "scvelo>=0.3.3",
-  "scvi-tools>=1.2.2.post2",
+  "scvi-tools>=1.3.0",
   "seaborn>=0.13.2",
   "stardist>=0.9.1",
   "torch",
