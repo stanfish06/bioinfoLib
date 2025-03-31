@@ -28,6 +28,7 @@ dependencies = [
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
   "optuna>=4.2.1",
+  "cellpose[gui]>=3.1.1.1",
 ]
 
 [tool.uv.sources]
