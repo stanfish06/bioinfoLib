@@ -29,6 +29,7 @@ dependencies = [
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
   "optuna>=4.2.1",
   "cellpose[gui]>=3.1.1.1",
+  "cython>=3.0.12",
 ]
 
 [tool.uv.sources]
