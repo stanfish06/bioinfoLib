@@ -30,6 +30,7 @@ dependencies = [
   "optuna>=4.2.1",
   "cellpose[gui]>=3.1.1.1",
   "cython>=3.0.12",
+  "fa2-modified>=0.3.10",
 ]
 
 [tool.uv.sources]

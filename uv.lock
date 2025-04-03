@@ -309,6 +309,7 @@ dependencies = [
     { name = "cellrank", marker = "sys_platform == 'linux'" },
     { name = "cython" },
     { name = "deeptools", marker = "sys_platform == 'linux'" },
+    { name = "fa2-modified" },
     { name = "ipython" },
     { name = "jupyterlab" },
     { name = "magic-impute" },
@@ -341,6 +342,7 @@ requires-dist = [
     { name = "cellrank", marker = "sys_platform == 'linux'", specifier = ">=2.0.6" },
     { name = "cython", specifier = ">=3.0.12" },
     { name = "deeptools", marker = "sys_platform == 'linux'", specifier = ">=3.5.5" },
+    { name = "fa2-modified", specifier = ">=0.3.10" },
     { name = "ipython", specifier = ">=8.32.0" },
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "magic-impute", specifier = ">=3.0.0" },
@@ -904,6 +906,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/91/50/a9d80c47ff289c611
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/8f/c4d9bafc34ad7ad5d8dc16dd1347ee0e507a52c3adb6bfa8887e1c6a26ba/executing-2.2.0-py2.py3-none-any.whl", hash = "sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa", size = 26702 },
 ]
+
+[[package]]
+name = "fa2-modified"
+version = "0.3.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e4/e6/9841a4124555999b360eb122e8bd2486f5b5ef8b60598a8192ef224f16c4/fa2_modified-0.3.10.tar.gz", hash = "sha256:6e527bbec70454dc3f85ffeb651a0e293540f4fc83ca98fac0aeb55211322f4e", size = 474259 }
 
 [[package]]
 name = "fastjsonschema"
@@ -3744,10 +3757,15 @@ dependencies = [
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/09/c5/87ff89128cf05f560ba70c762f8d6cb79011054ea5d5d6e21fa5fc2f6ce7/scikit_misc-0.5.1.tar.gz", hash = "sha256:c5c1f69ac5f84e0103f40525c7d28ecc0ee028314cbc9f07c497cc39143e52a3", size = 298630 }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/a5/bd/25d2295e052b939e131352d2572875c7d8cc4873c90d74e3cb6fcfed5c3b/scikit_misc-0.5.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:266ff5f0eb4889eb9ec5d9c94e1900d93b8b96500c3b120134bff04cd986e8ad", size = 170069 },
     { url = "https://files.pythonhosted.org/packages/81/f0/047b2b1742c679327d49a16e7c7cf4acfc8e66126ff45a1ced72514961df/scikit_misc-0.5.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:e036e0f57cb7317ef7499497d2c0506274eb1b18513d54fe188c9e5619e3cef3", size = 170091 },
     { url = "https://files.pythonhosted.org/packages/49/01/e2886b471a8a3dbf8292cbb1ef133e3fc727850b88caaefde3529fdd9b42/scikit_misc-0.5.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:34aa6f468234be81f70374bc22b1ec159991c72148ea664308c2b194d7255a95", size = 161862 },
     { url = "https://files.pythonhosted.org/packages/6d/7c/014980a1b5fe2ee990c222ae5c9b1602fe7b64359643319123d8e1df5009/scikit_misc-0.5.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8237509cbb1c4420d99d2d3cccfde8a2ca45ca6ea86fbd17516e5d6a0867d8b4", size = 183556 },
     { url = "https://files.pythonhosted.org/packages/63/2e/1da9f27515bdb92364bc5a8796b8e7d10e7b1f667b722681c5ceae168854/scikit_misc-0.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:fd350ade48b79b930d8d7bdc8bd659349193afc319cb34f2ddbedada6f2464e0", size = 157041 },
+    { url = "https://files.pythonhosted.org/packages/15/55/72c6f3c9862d95e51d96477fd1fe4c88f9a73149f1f500b3110da49e5341/scikit_misc-0.5.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:1132a5b1fe249791afea00a6454e0ef921883f1c40af4a3bd7648aa78e6d1b27", size = 168736 },
+    { url = "https://files.pythonhosted.org/packages/98/4a/e51722b0f18301451472b0857fc6e043f4c8826aee709ed82589e62318d6/scikit_misc-0.5.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:718873b355ab4b78e167c7a27a3f413e00f54a2399ec1a68050016273d03f0f5", size = 160743 },
+    { url = "https://files.pythonhosted.org/packages/43/12/f899915eca292018e1174767e6d8aa2a260ce9f211a4708b775829008f3a/scikit_misc-0.5.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fdccf8bf3588f95c0dc38098456740e5939614b697ce041951f4a20df56034f0", size = 182952 },
+    { url = "https://files.pythonhosted.org/packages/4f/ff/a02130345fed22b9bd8fb1769fc39b35d54ef17c5193d6d879878cc2357d/scikit_misc-0.5.1-cp313-cp313-win_amd64.whl", hash = "sha256:5d7b7dceb88bebd09faa57bf2162d98da806d384d6b904529e695f291fba8691", size = 156451 },
 ]
 
 [[package]]

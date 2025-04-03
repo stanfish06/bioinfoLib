@@ -4,6 +4,7 @@ import numpy as np
 import scanpy as sc
 
 # Idse's gene list: 3/22/24
+# TODO: implement a function to score each gene module in the dataset. This might be useful to check integration/clustering quality?
 coremarkers = ["SOX2", "TBXT", "SOX17", "ISL1"]
 epiblast = [
     "PODXL",
