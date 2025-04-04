@@ -318,9 +318,11 @@ dependencies = [
     { name = "optuna" },
     { name = "palantir" },
     { name = "pandas" },
+    { name = "phate" },
     { name = "pygenometracks", marker = "sys_platform == 'linux'" },
     { name = "pyvista" },
     { name = "scanpy", extra = ["leiden"] },
+    { name = "scarches" },
     { name = "scikit-image" },
     { name = "scikit-misc" },
     { name = "scvelo" },
@@ -343,7 +345,7 @@ requires-dist = [
     { name = "cython", specifier = ">=3.0.12" },
     { name = "deeptools", marker = "sys_platform == 'linux'", specifier = ">=3.5.5" },
     { name = "fa2-modified", specifier = ">=0.3.10" },
-    { name = "ipython", specifier = ">=8.32.0" },
+    { name = "ipython", specifier = "<9.0.0" },
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "magic-impute", specifier = ">=3.0.0" },
     { name = "matplotlib", specifier = "<3.9" },
@@ -351,9 +353,11 @@ requires-dist = [
     { name = "optuna", specifier = ">=4.2.1" },
     { name = "palantir", specifier = ">=1.3.6" },
     { name = "pandas", specifier = "<2.0.0" },
+    { name = "phate", specifier = ">=1.0.11" },
     { name = "pygenometracks", marker = "sys_platform == 'linux'", specifier = ">=3.9" },
     { name = "pyvista", specifier = ">=0.44.2" },
     { name = "scanpy", extras = ["leiden"], specifier = ">=1.11" },
+    { name = "scarches", specifier = ">=0.6.1" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
     { name = "scvelo", specifier = ">=0.3.3" },
@@ -1109,6 +1113,21 @@ wheels = [
 ]
 
 [[package]]
+name = "gdown"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "filelock" },
+    { name = "requests", extra = ["socks"] },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/6a/37e6b70c5bda3161e40265861e63b64a86bfc6ca6a8f1c35328a675c84fd/gdown-5.2.0.tar.gz", hash = "sha256:2145165062d85520a3cd98b356c9ed522c5e7984d408535409fd46f94defc787", size = 284647 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/70/e07c381e6488a77094f04c85c9caf1c8008cdc30778f7019bc52e5285ef0/gdown-5.2.0-py3-none-any.whl", hash = "sha256:33083832d82b1101bdd0e9df3edd0fbc0e1c5f14c9d8c38d2a35bf1683b526d6", size = 18235 },
+]
+
+[[package]]
 name = "gffutils"
 version = "0.13"
 source = { registry = "https://pypi.org/simple" }
@@ -1438,12 +1457,11 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "9.0.0"
+version = "8.34.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "decorator" },
-    { name = "ipython-pygments-lexers" },
     { name = "jedi" },
     { name = "matplotlib-inline" },
     { name = "pexpect", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
@@ -1452,21 +1470,9 @@ dependencies = [
     { name = "stack-data" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/39/264894738a202ddaf6abae39b3f84671ddee23fd292dbb3e10039e70300c/ipython-9.0.0.tar.gz", hash = "sha256:9368d65b3d4a471e9a698fed3ea486bbf6737e45111e915279c971b77f974397", size = 4364165 }
+sdist = { url = "https://files.pythonhosted.org/packages/13/18/1a60aa62e9d272fcd7e658a89e1c148da10e1a5d38edcbcd834b52ca7492/ipython-8.34.0.tar.gz", hash = "sha256:c31d658e754673ecc6514583e7dda8069e47136eb62458816b7d1e6625948b5a", size = 5508477 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/a1/894e4c0b6ac994045c6edeb2b6fdf69c59f20fcd2e348a42f4e40889181c/ipython-9.0.0-py3-none-any.whl", hash = "sha256:2cce23069b830a54a5b9d3d66ccd6433047c1503a7b9a3b34593c0b5c2c08477", size = 592040 },
-]
-
-[[package]]
-name = "ipython-pygments-lexers"
-version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pygments" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/4c/5dd1d8af08107f88c7f741ead7a40854b8ac24ddf9ae850afbcf698aa552/ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81", size = 8393 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/33/1f075bf72b0b747cb3288d011319aaf64083cf2efef8354174e3ed4540e2/ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c", size = 8074 },
+    { url = "https://files.pythonhosted.org/packages/04/78/45615356bb973904856808183ae2a5fba1f360e9d682314d79766f4b88f2/ipython-8.34.0-py3-none-any.whl", hash = "sha256:0419883fa46e0baa182c5d50ebb8d6b49df1889fdb70750ad6d8cfe678eda6e3", size = 826731 },
 ]
 
 [[package]]
@@ -2302,6 +2308,30 @@ wheels = [
 ]
 
 [[package]]
+name = "muon"
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anndata" },
+    { name = "h5py" },
+    { name = "matplotlib" },
+    { name = "mudata" },
+    { name = "numba" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "protobuf" },
+    { name = "scanpy" },
+    { name = "scikit-learn" },
+    { name = "seaborn" },
+    { name = "tqdm" },
+    { name = "umap-learn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/69/82/c85efa0df83275172feefc76751fd2a7fb524faafc0ba6b86048708332e4/muon-0.1.7.tar.gz", hash = "sha256:6bd7cb15e3bee700517ef1dec0197bc77590acb4ccef96c7d0939c6ca50f400a", size = 164020 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/53/06e32c4a6431efd4df0ff4465777c635809f5811e78de8d5f5f4b931f50c/muon-0.1.7-py3-none-any.whl", hash = "sha256:e14387714478a6ddd4ce8584262078c469d7c90683c9e0c90ee4a4ba9484a007", size = 293732 },
+]
+
+[[package]]
 name = "namex"
 version = "0.0.8"
 source = { registry = "https://pypi.org/simple" }
@@ -2416,6 +2446,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fd/1d/06475e1cd5264c0b870ea2cc6fdb3e37177c1e565c43f56ff17a10e3937f/networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1", size = 2151368 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b9/54/dd730b32ea14ea797530a4479b2ed46a6fb250f682a9cfb997e968bf0261/networkx-3.4.2-py3-none-any.whl", hash = "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f", size = 1723263 },
+]
+
+[[package]]
+name = "newick"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/2e/c4ce2a521e7ed409dfd5a0cf9a60fd8d6ae37c059e248e95d4d51a16c304/newick-1.0.0.tar.gz", hash = "sha256:d8b16760dad7c39fcff8863575072990c92ea920a2af13b028551b2fb277cd3f", size = 6814 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/1b/e47a990ef159820442b0b84752329a7a16c0ad08b0536c4872e8975bcfd4/newick-1.0.0-py2.py3-none-any.whl", hash = "sha256:90dcaa3eb408dc54abb326f1b3ce1468da516fc7f4027518b8c085652a582d45", size = 10648 },
 ]
 
 [[package]]
@@ -2859,6 +2898,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/c3/059298687310d527a58bb01f3b1965787ee3b40dce76752eda8b44e9a2c5/pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523", size = 63772 },
+]
+
+[[package]]
+name = "phate"
+version = "1.0.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "deprecated" },
+    { name = "future" },
+    { name = "graphtools" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "s-gd2" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "scprep" },
+    { name = "tasklogger" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/1a/423539b13ab54f5ca81d09e0c16a5a48ad801cfec5b5e7259a3fa03928a8/phate-1.0.11.tar.gz", hash = "sha256:10162e9edd09ce5d0e667b0767e96eed6bda5ee877667202ffff0a578ab5076d", size = 23512 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/7e/85ea7d79b1150b08edcf5aac5bc6b601074f2b5cc43e8f3936b10d6e3b0a/phate-1.0.11-py3-none-any.whl", hash = "sha256:5b20755a0068b99725c36723cf292ff0674fd679fd24217d95f0b12f86e57642", size = 23261 },
 ]
 
 [[package]]
@@ -3341,6 +3401,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pysocks"
+version = "1.7.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/11/293dd436aea955d45fc4e8a35b6ae7270f5b8e00b53cf6c024c83b657a11/PySocks-1.7.1.tar.gz", hash = "sha256:3f8804571ebe159c380ac6de37643bb4685970655d3bba243530d6558b799aa0", size = 284429 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/59/b4572118e098ac8e46e399a1dd0f2d85403ce8bbaad9ec79373ed6badaf9/PySocks-1.7.1-py3-none-any.whl", hash = "sha256:2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5", size = 16725 },
+]
+
+[[package]]
 name = "pytest"
 version = "8.3.5"
 source = { registry = "https://pypi.org/simple" }
@@ -3569,6 +3638,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6", size = 64928 },
 ]
 
+[package.optional-dependencies]
+socks = [
+    { name = "pysocks" },
+]
+
 [[package]]
 name = "rfc3339-validator"
 version = "0.1.4"
@@ -3663,6 +3737,15 @@ wheels = [
 ]
 
 [[package]]
+name = "s-gd2"
+version = "1.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/47/fb/d85945c9eceaba37552b369c819945d9e9413240643ef49ef3395c357243/s_gd2-1.8.1.tar.gz", hash = "sha256:977597da6d7f6f4b7a479732e374e48d34369e047090720c5d78ca3ca59dc269", size = 53963 }
+
+[[package]]
 name = "scanpy"
 version = "1.11.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3698,6 +3781,53 @@ wheels = [
 leiden = [
     { name = "igraph" },
     { name = "leidenalg" },
+]
+
+[[package]]
+name = "scarches"
+version = "0.6.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anndata" },
+    { name = "gdown" },
+    { name = "h5py" },
+    { name = "leidenalg" },
+    { name = "matplotlib" },
+    { name = "muon" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "requests" },
+    { name = "scanpy" },
+    { name = "schpl" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "scvi-tools" },
+    { name = "torch", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+    { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7b/8d/f896d1e929be59cd16e9f58837747deb0a2450cfe8b36f68714f9e8ee800/scArches-0.6.1.tar.gz", hash = "sha256:187463c25781d5c5586c129ad137d96327a9f8604d530a696d5f568a9225d77c", size = 39774774 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/bd/d689eefd2c23fd6a29add41c900f804f31f00f4b673b4d128d8c30765801/scArches-0.6.1-py3-none-any.whl", hash = "sha256:90b4980db84ec2d6854dbc69076ea30283de3bed5ba5fb401a311d52cbdb6b75", size = 130165 },
+]
+
+[[package]]
+name = "schpl"
+version = "1.0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anndata" },
+    { name = "matplotlib" },
+    { name = "newick" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "seaborn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/1c/42f29f32fe0d0e8620025dfd5e12900abde310696e56250132cc2e17be23/scHPL-1.0.5.tar.gz", hash = "sha256:3eb62b2e65b1faba04b7bcb86f7bf6967a6301866a605551211b8f14fd27eced", size = 20480 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/c0/ffa98fba041fa01e7863d424422b20cceade8ef9eec68c7058848cdb0ecd/scHPL-1.0.5-py3-none-any.whl", hash = "sha256:1d1ba8464b1853d1d72bc0ad278e51a670a028adb3d71264da2e186045bce225", size = 22215 },
 ]
 
 [[package]]
