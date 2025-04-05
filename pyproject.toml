@@ -33,6 +33,7 @@ dependencies = [
   "fa2-modified>=0.3.10",
   "phate>=1.0.11",
   "scarches>=0.6.1",
+  "adjusttext>=1.3.0",
 ]
 
 [tool.uv.sources]
@@ -59,6 +60,11 @@ explicit = true
 [build-system]
 requires = ["setuptools>74.1", "cython"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.4",
+]
 
 [tool.setuptools]
 ext-modules = [
