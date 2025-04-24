@@ -68,14 +68,17 @@ requires = ["setuptools>74.1", "cython"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
-dev = [
-    "ruff>=0.11.4",
-]
+dev = ["ruff>=0.11.4"]
 
 [tool.setuptools]
+package-dir = { "" = "src" }
 ext-modules = [
-  {name = "bioinfoLib.GP.simulator", sources = ["./src/bioinfoLib/GP/simulator.pyx"]},
-  {name = "bioinfoLib.linalg.gauss_mod2", sources = ["./src/bioinfoLib/linalg/gauss_mod2.pyx"]}
+  { name = "bioinfoLib.GP.simulator", sources = [
+    "./src/bioinfoLib/GP/simulator.pyx",
+  ] },
+  { name = "bioinfoLib.linearAlgebra.gauss_mod2", sources = [
+    "./src/bioinfoLib/linearAlgebra/gauss_mod2.pyx",
+  ] },
 ]
 
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows

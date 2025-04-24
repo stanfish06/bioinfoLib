@@ -5,10 +5,24 @@ from libcpp cimport bool
 cdef bool mod2Solve(vector[vector[bool]] Ab):
     nr = Ab.size()
     nc = Ab[0].size()
-    row = 0
+
+    # If there is a row of 0s and the rhs is 1
+    # we know it is not solvable
+    for i in range(0, nr):
+        if Ab[i][nc - 1]:
+            allzero = True;
+            for j in range(0, nc - 1):
+                if Ab[i][j]:
+                    allzero = False;
+                    break;
+            if allzero:
+                return False;
+
+    # this stores the next pivot
+    row = 1
     for i in range(0,nc-1):
         pivot = -1
-        for j in range(row, nr+1):
+        for j in range(row, nr):
             if Ab[j][i]:
                 pivot = j
                 break
@@ -19,7 +33,10 @@ cdef bool mod2Solve(vector[vector[bool]] Ab):
                 if j != row and Ab[j][i]:
                     for k in range(0, nc):
                         Ab[j][k] = Ab[j][k] ^ Ab[row][k];
+            if row == nr:
+                return True
             row = row + 1;
+
     for i in range(row - 1, nr):
         if Ab[i][nc - 1]:
             allzero = True;
@@ -42,5 +59,6 @@ def mod2Solve_py(A, b):
             row.push_back(aij)
         row.push_back(bi)
         Ab.push_back(row)
+
     return mod2Solve(Ab)
 
