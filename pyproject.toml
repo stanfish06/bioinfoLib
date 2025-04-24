@@ -37,6 +37,9 @@ dependencies = [
   "pytometry>=0.1.6",
   "shapely>=2.1.0",
   "matplotlib-backend-wezterm>=2.1.2",
+  "juliacall>=0.9.24",
+  "juliapkg>=0.1.16",
+  "networkx>=3.4.2",
 ]
 
 [tool.uv.sources]
@@ -71,7 +74,8 @@ dev = [
 
 [tool.setuptools]
 ext-modules = [
-  {name = "bioinfoLib.GP.simulator", sources = ["./src/bioinfoLib/GP/simulator.pyx"]}
+  {name = "bioinfoLib.GP.simulator", sources = ["./src/bioinfoLib/GP/simulator.pyx"]},
+  {name = "bioinfoLib.linalg.gauss_mod2", sources = ["./src/bioinfoLib/linalg/gauss_mod2.pyx"]}
 ]
 
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows

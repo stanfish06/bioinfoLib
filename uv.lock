@@ -326,10 +326,13 @@ dependencies = [
     { name = "deeptools", marker = "sys_platform == 'linux'" },
     { name = "fa2-modified" },
     { name = "ipython" },
+    { name = "juliacall" },
+    { name = "juliapkg" },
     { name = "jupyterlab" },
     { name = "magic-impute" },
     { name = "matplotlib" },
     { name = "matplotlib-backend-wezterm" },
+    { name = "networkx" },
     { name = "numpy" },
     { name = "optuna" },
     { name = "palantir" },
@@ -370,10 +373,13 @@ requires-dist = [
     { name = "deeptools", marker = "sys_platform == 'linux'", specifier = ">=3.5.5" },
     { name = "fa2-modified", specifier = ">=0.3.10" },
     { name = "ipython", specifier = "<9.0.0" },
+    { name = "juliacall", specifier = ">=0.9.24" },
+    { name = "juliapkg", specifier = ">=0.1.16" },
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "magic-impute", specifier = ">=3.0.0" },
     { name = "matplotlib", specifier = "<3.9" },
     { name = "matplotlib-backend-wezterm", specifier = ">=2.1.2" },
+    { name = "networkx", specifier = ">=3.4.2" },
     { name = "numpy", specifier = "<2.0.0" },
     { name = "optuna", specifier = ">=4.2.1" },
     { name = "palantir", specifier = ">=1.3.6" },
@@ -1718,6 +1724,31 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/10/db/58f950c996c793472e336ff3655b13fbcf1e3b359dcf52dcf3ed3b52c352/jsonschema_specifications-2024.10.1.tar.gz", hash = "sha256:0f38b83639958ce1152d02a7f062902c41c8fd20d558b0c34344292d417ae272", size = 15561 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/0f/8910b19ac0670a0f80ce1008e5e751c4a57e14d2c4c13a482aa6079fa9d6/jsonschema_specifications-2024.10.1-py3-none-any.whl", hash = "sha256:a09a0680616357d9a0ecf05c12ad234479f549239d0f5b55f3deea67475da9bf", size = 18459 },
+]
+
+[[package]]
+name = "juliacall"
+version = "0.9.24"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "juliapkg" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/4b/63965b6ebc97c861b5b565bdfc5fbe942aaf6ac99b1b17427e1369fb4bec/juliacall-0.9.24.tar.gz", hash = "sha256:31bed223489b535e4e8db46bfff4596350c24f757b9c2d17296c07397f75948b", size = 470319 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2b/88/bc544390a0bbf1eb425540b2ba2abe0d478c31d3002a703fdb640f4abc2a/juliacall-0.9.24-py3-none-any.whl", hash = "sha256:f1d7b718228c477aeba770290647f3b2d0052f683da891b4e9f88c1e1da0a394", size = 11950 },
+]
+
+[[package]]
+name = "juliapkg"
+version = "0.1.16"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "filelock" },
+    { name = "semver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/9b/e1f13314e95864c861234bfb5a2b82466f0e68a4ce2a45c15d405fdb7b36/juliapkg-0.1.16.tar.gz", hash = "sha256:f26cc314f2a3194428bf7492270b1c371194ce288806ffbac5baa0eb9468a120", size = 16753 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a5/65/302c3fc0a669660730d091ccc268c9988864c387ab2aaf5b8a70e6bed822/juliapkg-0.1.16-py3-none-any.whl", hash = "sha256:def06f89ec1f27e290b6b4ad856290a8fdcfe257f002fbe1becdf3ba0ad4579c", size = 16404 },
 ]
 
 [[package]]
@@ -4201,6 +4232,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/86/59/a451d7420a77ab0b98f7affa3a1d78a313d2f7281a57afb1a34bae8ab412/seaborn-0.13.2.tar.gz", hash = "sha256:93e60a40988f4d65e9f4885df477e2fdaff6b73a9ded434c1ab356dd57eefff7", size = 1457696 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl", hash = "sha256:636f8336facf092165e27924f223d3c62ca560b1f2bb5dff7ab7fad265361987", size = 294914 },
+]
+
+[[package]]
+name = "semver"
+version = "3.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/d1/d3159231aec234a59dd7d601e9dd9fe96f3afff15efd33c1070019b26132/semver-3.0.4.tar.gz", hash = "sha256:afc7d8c584a5ed0a11033af086e8af226a9c0b206f313e0301f8dd7b6b589602", size = 269730 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/24/4d91e05817e92e3a61c8a21e08fd0f390f5301f1c448b137c57c4bc6e543/semver-3.0.4-py3-none-any.whl", hash = "sha256:9c824d87ba7f7ab4a1890799cec8596f15c1241cb473404ea1cb0c55e4b04746", size = 17912 },
 ]
 
 [[package]]

@@ -72,6 +72,9 @@ from bioinfoLib import imageAnalysis as img
 
 # Gaussian Process modeling
 from bioinfoLib import GP
+
+# Install julia dependencies.
+bio.jl.setup.install_packages()
 ```
 
 ## Documentation

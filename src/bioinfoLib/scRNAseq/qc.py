@@ -178,6 +178,26 @@ def normalize_and_select_hvg(
     n_top_genes=2000,
     batch_key="sample_labels",
 ):
+    """
+    normalize_and_select_hvg(adata, do_norm, compute_hvg, target_sum, n_top_genes, batch_key)
+
+    Perform preprocessing on the input anndata.
+
+    Parameters
+    ----------
+    adata: anndata
+        Input anndata object to be processed.
+    do_norm: bool
+        Whether to perform library size normalization and log1p transformation.
+    compute_hvg: bool
+        Whether to compute highly variable genes (HVG). (seurat_v3)
+    target_sum: int
+        Target sum for library size normalization.
+    n_top_genes: int
+        Number of top highly variable genes to select.
+    batch_key: str
+        Key for batch information in adata.obs.
+    """
     done_hvg = "hvg" in adata.uns
     done_norm = "log1p" in adata.uns
     counts_available = "counts" in adata.layers
