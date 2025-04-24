@@ -5,8 +5,8 @@ build/
 dist/
 wheels/
 *.egg-info
-*.c
-*.cp*
+*.so
+*.o
 
 # Virtual environments
 .venv
