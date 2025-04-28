@@ -62,7 +62,7 @@ On Linux systems, you may need to install additional CUDA dependencies:
 ## Usage
 
 ```python
-import bioinfoLib as bio
+import bioinfoLib as binf
 
 # Single-cell RNA sequencing analysis
 from bioinfoLib import scRNAseq as scr

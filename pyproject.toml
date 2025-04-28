@@ -79,6 +79,9 @@ ext-modules = [
   { name = "bioinfoLib.linearAlgebra.gauss_mod2", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2.pyx",
   ] },
+  { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
+    "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
+  ], libraries = ["m4ri"]},
 ]
 
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows

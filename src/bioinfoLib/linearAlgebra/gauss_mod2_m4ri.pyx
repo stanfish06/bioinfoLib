@@ -20,6 +20,8 @@ def mod2Solve_m4ri_py(A, b):
     nr = len(A)
     nc = len(A[0])
 
+    assert nr >= nc, "number of rows must be greater than or equal to the number of columns" 
+
     cdef mzd_t *A2 = mzd_init(nr, nc);
     cdef mzd_t *b2 = mzd_init(nr, 1);
     
