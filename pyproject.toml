@@ -64,7 +64,7 @@ url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
 [build-system]
-requires = ["setuptools>74.1", "cython"]
+requires = ["setuptools>74.1", "Cython"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
@@ -78,12 +78,15 @@ ext-modules = [
   ] },
   { name = "bioinfoLib.linearAlgebra.gauss_mod2", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2.pyx",
-  ] },
+  ], language = "c++"},
+  { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
+    "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
+  ], language = "c++", libraries = ["linbox", "givaro", "gmp"]},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
-  ], libraries = ["m4ri"]},
+  ], language = "c", optional = true, libraries = ["m4ri"]}, 
 ]
-
+  
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows
 # might need to be updated in the future
 [[tool.uv.dependency-metadata]]

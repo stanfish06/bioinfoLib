@@ -38,27 +38,38 @@ int main(int argc, char **argv) {
   F2.assign(b1[1], F2.one);
   F2.assign(b2[2], F2.one);
 
-  solve(
-    x1,
-    A,
-    b1,
-    RingCategories::ModularTag(),
-    Method::Blackbox());
+  Method::SparseElimination W;
+  // BW.blockingFactor = 4;
+  try {
+    solve(
+      x1,
+      A,
+      b1,
+      RingCategories::ModularTag(),
+      W);
+  } catch (const LinboxError&) {    
+    std::cout << "b1 not solved" << "\n";
+  }
 
-  solve(
-    x2,
-    A,
-    b2,
-    RingCategories::ModularTag(),
-    Method::Blackbox());
+  try {
+    solve(
+      x2,
+      A,
+      b2,
+      RingCategories::ModularTag(),
+      W);
+  } catch (const LinboxError&) {
+    std::cout << "b2 not solved" << "\n";
+  }
 
   A.apply(b1s, x1);
   A.apply(b2s, x2);
+  VectorDomain<Field> VD(F2);
 
-  if (b1s == b1) {
+  if (VD.areEqual(b1s, b1)) {
     std::cout << "b1 solved" << "\n";
   }
-  if (b2s == b2) {
+  if (VD.areEqual(b2s, b2)) {
     std::cout << "b2 solved" << "\n";
   }
 
