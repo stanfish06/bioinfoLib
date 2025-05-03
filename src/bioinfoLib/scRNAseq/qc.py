@@ -208,7 +208,7 @@ def normalize_and_select_hvg(
                 UserWarning,
             )
         else:
-            if not np.all(np.equal(np.mod(adata.X.toarray(), 1), 0)):
+            if not np.all(np.equal(np.mod(adata.X.data, 1), 0)):
                 raise ValueError(
                     "adata.X contains non integer values, check if it is library normalized"
                 )
