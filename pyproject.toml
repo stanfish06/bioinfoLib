@@ -81,7 +81,7 @@ ext-modules = [
   ], language = "c++"},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
-  ], language = "c++", libraries = ["linbox", "givaro", "gmp"]},
+  ], language = "c++", optional = false, libraries = ["linbox", "givaro", "gmp", "openblas"]},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
   ], language = "c", optional = true, libraries = ["m4ri"]}, 
@@ -99,3 +99,7 @@ platforms = ["linux"]
 [project.urls]
 Homepage = "https://github.com/stanfish06/bioinfoLib"
 Issues = "https://github.com/stanfish06/bioinfoLib/issues"
+
+# force install package
+[tool.uv]
+package = true
