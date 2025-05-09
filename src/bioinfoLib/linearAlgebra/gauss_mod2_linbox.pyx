@@ -67,7 +67,6 @@ cdef extern from "linbox/solutions/solve.h" namespace "LinBox":
         const ModularTag& tag,
         const Wiedemann& m
     ) except +
-    
 
 def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):
     cdef Modular_uint64 * F2 = new Modular_uint64(2)
