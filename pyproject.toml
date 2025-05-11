@@ -23,8 +23,8 @@ dependencies = [
   # "stardist>=0.9.1",
   "torch",
   "torchvision",
-  # "tensorflow-intel ; sys_platform == 'win32'",
-  # "tensorflow[and-cuda] ; sys_platform == 'linux'",
+  "tensorflow-intel ; sys_platform == 'win32'",
+  "tensorflow[and-cuda] ; sys_platform == 'linux'",
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
   "optuna>=4.2.1",
@@ -84,7 +84,7 @@ ext-modules = [
   ], language = "c++"},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
-  ], language = "c++", optional = true, libraries = ["linbox", "givaro", "gmp", "openblas"]},
+  ], language = "c++", optional = true, libraries = ["linbox", "givaro", "gmp", "openblas", "ntl"]},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
   ], language = "c", optional = true, libraries = ["m4ri"]}, 
