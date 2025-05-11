@@ -24,7 +24,7 @@ dependencies = [
   "torch",
   "torchvision",
   "tensorflow-intel ; sys_platform == 'win32'",
-  "tensorflow[and-cuda] ; sys_platform == 'linux'",
+  "tensorflow ; sys_platform == 'linux'",
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
   "optuna>=4.2.1",
@@ -75,6 +75,7 @@ dev = ["ruff>=0.11.4"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
+package-data = { "bioinfoLib.julia" = ["*.jl"] }
 ext-modules = [
   { name = "bioinfoLib.GP.simulator", sources = [
     "./src/bioinfoLib/GP/simulator.pyx",
