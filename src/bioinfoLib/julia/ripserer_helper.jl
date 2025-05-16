@@ -3,9 +3,9 @@ using Base.Threads
 
 function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
     n_threads = Threads.nthreads()
-    thread_buffer = Vector{Vector{Tuple{Int, Int, Int}}}()
+    thread_buffer = Vector{Vector{Tuple}}()
     for i in 1:n_threads
-        push!(thread_buffer, Tuple{Int, Int, Int}[])
+        push!(thread_buffer, Tuple[])
     end
     num_vertices = Ripserer.nv(filtration)
     Threads.@threads for i = 1:num_vertices
@@ -13,7 +13,8 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
             Threads.@threads for k = (j +1):num_vertices
                 sim = Ripserer.simplex(filtration, Val(2), (i, j, k))
                 if (sim != nothing && sim.birth <= thresh)
-                    push!(thread_buffer[Threads.threadid()],Ripserer.vertices(sim))
+                    vs = Ripserer.vertices(sim)
+                    push!(thread_buffer[Threads.threadid()],Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
                 end
             end
         end

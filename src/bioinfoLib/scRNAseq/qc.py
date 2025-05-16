@@ -231,6 +231,12 @@ def normalize_and_select_hvg(
             if not counts_available:
                 raise ValueError("counts layer is not available, cannot compute HVG")
             print("save X to raw before hvg")
+            if batch_key not in adata.obs:
+                warnings.warn(
+                    f"batch_key {batch_key} not found in adata.obs. Will compute HVG on all cells.",
+                    UserWarning,
+                )
+                batch_key = None
             adata.raw = adata
             sc.pp.highly_variable_genes(
                 adata,
