@@ -278,6 +278,7 @@ dependencies = [
     { name = "scanpy", extra = ["leiden"] },
     { name = "scikit-image" },
     { name = "scikit-misc" },
+    { name = "scikit-sparse" },
     { name = "scprep" },
     { name = "scvelo" },
     { name = "seaborn" },
@@ -327,6 +328,7 @@ requires-dist = [
     { name = "scanpy", extras = ["leiden"], specifier = ">=1.11" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
+    { name = "scikit-sparse", specifier = ">=0.4.16" },
     { name = "scprep", specifier = ">=1.1.0" },
     { name = "scvelo", specifier = ">=0.3.3" },
     { name = "seaborn", specifier = ">=0.13.2" },
@@ -3468,6 +3470,16 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/43/12/f899915eca292018e1174767e6d8aa2a260ce9f211a4708b775829008f3a/scikit_misc-0.5.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fdccf8bf3588f95c0dc38098456740e5939614b697ce041951f4a20df56034f0", size = 182952 },
     { url = "https://files.pythonhosted.org/packages/4f/ff/a02130345fed22b9bd8fb1769fc39b35d54ef17c5193d6d879878cc2357d/scikit_misc-0.5.1-cp313-cp313-win_amd64.whl", hash = "sha256:5d7b7dceb88bebd09faa57bf2162d98da806d384d6b904529e695f291fba8691", size = 156451 },
 ]
+
+[[package]]
+name = "scikit-sparse"
+version = "0.4.16"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/f2/b391faf6120b72b994b574caef9dac5ea2b7667de59fbd3c8336c07403b3/scikit_sparse-0.4.16.tar.gz", hash = "sha256:3baf49ac98ae8cc4357005af49a0df93a6a53f4e61708705da2942ea4fa61a56", size = 214435 }
 
 [[package]]
 name = "scipy"

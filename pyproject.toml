@@ -42,7 +42,8 @@ dependencies = [
   "networkx>=3.4.2",
   "statsmodels>=0.14.4",
   "scprep>=1.1.0",
-  "mudata>=0.3.1"
+  "mudata>=0.3.1",
+  "scikit-sparse>=0.4.16",
 ]
 
 [tool.uv.sources]
@@ -85,10 +86,10 @@ ext-modules = [
   ], language = "c++"},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
-  ], language = "c++", optional = true, libraries = ["linbox", "givaro", "gmp", "openblas", "ntl"]},
+  ], language = "c++", optional = false, libraries = ["linbox", "givaro", "gmp", "openblas", "ntl"]},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
-  ], language = "c", optional = true, libraries = ["m4ri"]}, 
+  ], language = "c", optional = false, libraries = ["m4ri"]}, 
 ]
   
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows

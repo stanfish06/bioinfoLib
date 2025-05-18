@@ -11,7 +11,8 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
     Threads.@threads for i = 1:num_vertices
         Threads.@threads for j = (i + 1):num_vertices
             Threads.@threads for k = (j +1):num_vertices
-                sim = Ripserer.simplex(filtration, Val(2), (i, j, k))
+                # make vertices absolute just in case the simplex is oriented
+                sim = abs(Ripserer.simplex(filtration, Val(2), (i, j, k)))
                 if (sim != nothing && sim.birth <= thresh)
                     vs = Ripserer.vertices(sim)
                     push!(thread_buffer[Threads.threadid()],Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
@@ -20,6 +21,21 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
         end
     end
     return vcat(thread_buffer...)
+end
+
+function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
+    faces = Vector{Tuple}()
+    edges = Ripserer.edges(filtration_thresh)
+    triangles = Ripserer.columns_to_reduce(filtration_thresh, edges)
+    for trig in triangles
+        sim = abs(trig)
+        vs = Ripserer.vertices(sim)
+        push!(faces, vs[[1, 2]])
+        push!(faces, vs[[1, 3]])
+        push!(faces, vs[[2, 3]])
+        # push!(faces, Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
+    end
+    return faces
 end
 
 function boundary_mat_fill_hole(filtration::Ripserer.AbstractFiltration, rep_cycle, thresh_trig::Float64, thresh_hole_birth::Float64, thresh_hole_life::Float64)
@@ -32,7 +48,7 @@ function boundary_mat_fill_hole(filtration::Ripserer.AbstractFiltration, rep_cyc
     Threads.@threads for i = 1:num_vertices
         Threads.@threads for j = (i + 1):num_vertices
             Threads.@threads for k = (j + 1):num_vertices
-                sim = Ripserer.simplex(filtration, Val(2), (i, j, k))
+                sim = abs(Ripserer.simplex(filtration, Val(2), (i, j, k)))
                 if (sim != nothing && sim.birth <= thresh_trig)
                     vs = Ripserer.vertices(sim)
                     push!(thread_buffer[Threads.threadid()],Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
