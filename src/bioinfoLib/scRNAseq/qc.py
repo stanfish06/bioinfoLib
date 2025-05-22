@@ -1,7 +1,9 @@
 import warnings
 
+from anndata import AnnData
 import numpy as np
 import scanpy as sc
+from pydantic import validate_call, Field
 
 # Idse's gene list: 3/22/24
 # TODO: implement a function to score each gene module in the dataset. This might be useful to check integration/clustering quality?
@@ -170,13 +172,14 @@ allgenes_re_symbol = list(np.unique(allmarkers + EMT + allsignaling))
 allgenes = ["^" + g + "($| )" for g in allgenes]
 
 
+@validate_call(config={"arbitrary_types_allowed": True})
 def normalize_and_select_hvg(
-    adata,
-    do_norm=True,
-    compute_hvg=True,
-    target_sum=1e4,
-    n_top_genes=2000,
-    batch_key="sample_labels",
+    adata: AnnData,
+    do_norm: bool = True,
+    compute_hvg: bool = True,
+    target_sum: int = 1e4,
+    n_top_genes: int = 2000,
+    batch_key: str = "sample_labels",
 ):
     """
     normalize_and_select_hvg(adata, do_norm, compute_hvg, target_sum, n_top_genes, batch_key)

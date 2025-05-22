@@ -57,6 +57,10 @@ On Linux systems, you may need to install additional CUDA dependencies:
 ```bash
 # Install cusparselt (for Linux)
 # Download from: https://developer.nvidia.com/cusparselt-downloads
+# Install cuDNN
+# Download from https://developer.nvidia.com/cudnn-downloads
+# Install nccl
+# Download from https://developer.nvidia.com/nccl/nccl-download
 ```
 
 ## Usage
