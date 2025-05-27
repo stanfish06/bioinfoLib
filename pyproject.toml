@@ -18,7 +18,7 @@ dependencies = [
   "scikit-image>=0.25.1",
   "scikit-misc>=0.5.1",
   "scvelo>=0.3.3",
-  # "scvi-tools>=1.3.0",
+  "scvi-tools",
   "seaborn>=0.13.2",
   # "stardist>=0.9.1",
   "torch",
@@ -82,16 +82,16 @@ package-data = { "bioinfoLib.julia" = ["*.jl"] }
 ext-modules = [
   { name = "bioinfoLib.GP.simulator", sources = [
     "./src/bioinfoLib/GP/simulator.pyx",
-  ] },
+  ], optional = true},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2.pyx",
-  ], language = "c++"},
+  ], language = "c++", optional = true},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
-  ], language = "c++", optional = false, libraries = ["linbox", "givaro", "gmp", "openblas", "ntl"]},
+  ], language = "c++", optional = true, libraries = ["linbox", "givaro", "gmp", "openblas", "ntl"]},
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx",
-  ], language = "c", optional = false, libraries = ["m4ri"]}, 
+  ], language = "c", optional = true, libraries = ["m4ri"]}, 
 ]
   
 # explicitly add deeptoolsintervals meta otherwise uv is not functional on windows

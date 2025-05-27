@@ -1,9 +1,9 @@
 import warnings
 
-from anndata import AnnData
 import numpy as np
 import scanpy as sc
-from pydantic import validate_call, Field
+from anndata import AnnData
+from pydantic import validate_call
 
 # Idse's gene list: 3/22/24
 # TODO: implement a function to score each gene module in the dataset. This might be useful to check integration/clustering quality?

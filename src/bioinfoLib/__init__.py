@@ -5,10 +5,22 @@ bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 __version__ = "0.1.0"
 
 # Import main modules
-from . import GP
-from . import julia as jl
-from . import linearAlgebra as la
-from . import scRNAseq as scr
+try:
+    from . import GP
+except ImportError as e:
+    print(f"Could not import GP modules {e}")
+try:
+    from . import julia as jl
+except ImportError as e:
+    print(f"Could not import julia modules {e}")
+try:
+    from . import linearAlgebra as la
+except ImportError as e:
+    print(f"Could not import linearAlgebra modules {e}")
+try:
+    from . import scRNAseq as scr
+except ImportError as e:
+    print(f"Could not import scRNAseq modules {e}")
 
 # Export commonly used components
 __all__ = ["scr", "GP", "jl", "la"]
