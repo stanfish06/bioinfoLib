@@ -1,7 +1,13 @@
 import sys
 
-from . import gauss_mod2 as gmod2
+try:
+    from . import gauss_mod2 as gmod2
+except Exception as e:
+    print(f"Could not import gauss_mod2 {e}")
 
 if sys.platform == "linux":
-    from . import gauss_mod2_linbox as gmod2_linbox
-    from . import gauss_mod2_m4ri as gmod2_m4ri
+    try:
+        from . import gauss_mod2_linbox as gmod2_linbox
+        from . import gauss_mod2_m4ri as gmod2_m4ri
+    except Exception as e:
+        print(f"Could not import gauss_mod2_linbox/m4ri {e}")
