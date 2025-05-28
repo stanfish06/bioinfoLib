@@ -61,6 +61,11 @@ On Linux systems, you may need to install additional CUDA dependencies:
 # Download from https://developer.nvidia.com/cudnn-downloads
 # Install nccl
 # Download from https://developer.nvidia.com/nccl/nccl-download
+
+# on hpc, if you cannot install those manually, you can use conda to install them and set env variable to the conda lib folder
+conda install nvidia::libcusparse conda-force::nccl nvidia::cuda-toolkit
+# then
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 ```
 
 ## Usage
