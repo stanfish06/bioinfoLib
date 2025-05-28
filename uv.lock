@@ -359,7 +359,6 @@ dependencies = [
     { name = "scarches" },
     { name = "scikit-image" },
     { name = "scikit-misc" },
-    { name = "scikit-sparse" },
     { name = "scprep" },
     { name = "scvelo" },
     { name = "scvi-tools" },
@@ -384,6 +383,9 @@ deeptools = [
 seg = [
     { name = "cellpose", extra = ["gui"] },
     { name = "stardist" },
+]
+sksparse = [
+    { name = "scikit-sparse" },
 ]
 
 [package.dev-dependencies]
@@ -421,7 +423,7 @@ requires-dist = [
     { name = "scarches" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
-    { name = "scikit-sparse", specifier = ">=0.4.16" },
+    { name = "scikit-sparse", marker = "extra == 'sksparse'", specifier = ">=0.4.16" },
     { name = "scprep", specifier = ">=1.1.0" },
     { name = "scvelo", specifier = ">=0.3.3" },
     { name = "scvi-tools" },
