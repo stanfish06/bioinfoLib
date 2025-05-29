@@ -180,6 +180,7 @@ def normalize_and_select_hvg(
     target_sum: int = 1e4,
     n_top_genes: int = 2000,
     batch_key: str = "sample_labels",
+    subset: bool = True
 ):
     """
     normalize_and_select_hvg(adata, do_norm, compute_hvg, target_sum, n_top_genes, batch_key)
@@ -215,9 +216,9 @@ def normalize_and_select_hvg(
                 raise ValueError(
                     "adata.X contains non integer values, check if it is library normalized"
                 )
-            if not counts_available:
+            if not counts_available and not done_norm:
                 print(
-                    "counts layer is not available. Copy X to counts before normalization"
+                    "counts layer is not available and X is not log1p transformed. Copy X to counts before normalization"
                 )
                 adata.layers["counts"] = adata.X.copy()
                 counts_available = True
@@ -233,18 +234,21 @@ def normalize_and_select_hvg(
         else:
             if not counts_available:
                 raise ValueError("counts layer is not available, cannot compute HVG")
-            print("save X to raw before hvg")
             if batch_key not in adata.obs:
                 warnings.warn(
                     f"batch_key {batch_key} not found in adata.obs. Will compute HVG on all cells.",
                     UserWarning,
                 )
                 batch_key = None
-            adata.raw = adata
+
+            if not adata.raw:
+                print("no raw in adata, so save X to raw before computing hvg")
+                adata.raw = adata
+
             sc.pp.highly_variable_genes(
                 adata,
                 n_top_genes=n_top_genes,
-                subset=True,
+                subset=subset,
                 flavor="seurat_v3",
                 layer="counts",
                 batch_key=batch_key,
