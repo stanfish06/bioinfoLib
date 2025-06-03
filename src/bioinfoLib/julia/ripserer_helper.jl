@@ -38,6 +38,17 @@ function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
     return faces
 end
 
+function inter_arrival_filtration(filtration_thresh::Ripserer.AbstractFiltration)
+    birth = Vector()
+    edges = Ripserer.edges(filtration_thresh)
+    triangles = Ripserer.columns_to_reduce(filtration_thresh, edges)
+    for trig in triangles
+        sim = abs(trig)
+        push!(birth, sim.birth)
+    end
+    return birth
+end
+
 function boundary_mat_fill_hole(filtration::Ripserer.AbstractFiltration, rep_cycle, thresh_trig::Float64, thresh_hole_birth::Float64, thresh_hole_life::Float64)
     n_threads = Threads.nthreads()
     thread_buffer = Vector{Vector{Tuple}}()
