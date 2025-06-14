@@ -361,11 +361,9 @@ source = { editable = "." }
 dependencies = [
     { name = "adjusttext" },
     { name = "anndata" },
-    { name = "bbknn" },
     { name = "cellrank", marker = "sys_platform == 'linux'" },
     { name = "cython" },
     { name = "fa2-modified" },
-    { name = "harmonypy" },
     { name = "ipython" },
     { name = "juliacall" },
     { name = "juliapkg" },
@@ -375,26 +373,19 @@ dependencies = [
     { name = "mudata" },
     { name = "networkx" },
     { name = "numpy" },
-    { name = "optuna" },
     { name = "palantir" },
     { name = "pandas" },
     { name = "phate" },
     { name = "pydantic" },
-    { name = "pygenometracks", marker = "sys_platform == 'linux'" },
-    { name = "pytometry" },
     { name = "pyvista" },
     { name = "scanpy", extra = ["leiden"] },
-    { name = "scarches" },
     { name = "scikit-image" },
     { name = "scikit-misc" },
     { name = "scprep" },
     { name = "scvelo" },
-    { name = "scvi-tools" },
     { name = "seaborn" },
     { name = "shapely" },
     { name = "statsmodels" },
-    { name = "tensorflow", extra = ["and-cuda"], marker = "sys_platform == 'linux'" },
-    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
     { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "torch", version = "2.7.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torchvision", version = "0.21.0", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or sys_platform == 'win32'" },
@@ -403,8 +394,23 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-deeptools = [
+epigenomics = [
     { name = "deeptools", marker = "sys_platform == 'linux'" },
+    { name = "pygenometracks", marker = "sys_platform == 'linux'" },
+]
+flow = [
+    { name = "pytometry" },
+]
+integration = [
+    { name = "bbknn" },
+    { name = "harmonypy" },
+    { name = "scarches" },
+    { name = "scvi-tools" },
+    { name = "tensorflow", extra = ["and-cuda"], marker = "sys_platform == 'linux'" },
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
+]
+ml = [
+    { name = "optuna" },
 ]
 seg = [
     { name = "cellpose", extra = ["gui"] },
@@ -423,13 +429,13 @@ dev = [
 requires-dist = [
     { name = "adjusttext", specifier = ">=1.3.0" },
     { name = "anndata", specifier = ">=0.11.4" },
-    { name = "bbknn", specifier = ">=1.6.0" },
+    { name = "bbknn", marker = "extra == 'integration'", specifier = ">=1.6.0" },
     { name = "cellpose", extras = ["gui"], marker = "extra == 'seg'", specifier = ">=3.1.1.1" },
     { name = "cellrank", marker = "sys_platform == 'linux'", specifier = ">=2.0.6" },
     { name = "cython", specifier = ">=3.0.12" },
-    { name = "deeptools", marker = "sys_platform == 'linux' and extra == 'deeptools'", specifier = ">=3.5.5" },
+    { name = "deeptools", marker = "sys_platform == 'linux' and extra == 'epigenomics'", specifier = ">=3.5.5" },
     { name = "fa2-modified", specifier = ">=0.3.10" },
-    { name = "harmonypy", specifier = ">=0.0.10" },
+    { name = "harmonypy", marker = "extra == 'integration'", specifier = ">=0.0.10" },
     { name = "ipython", specifier = "<9.0.0" },
     { name = "juliacall", specifier = ">=0.9.24" },
     { name = "juliapkg", specifier = ">=0.1.16" },
@@ -439,28 +445,28 @@ requires-dist = [
     { name = "mudata", specifier = ">=0.3.1" },
     { name = "networkx", specifier = ">=3.4.2" },
     { name = "numpy", specifier = "<2.0.0" },
-    { name = "optuna", specifier = ">=4.2.1" },
+    { name = "optuna", marker = "extra == 'ml'", specifier = ">=4.2.1" },
     { name = "palantir", specifier = ">=1.3.6" },
     { name = "pandas", specifier = "<=2.2.0" },
     { name = "phate", specifier = ">=1.0.11" },
     { name = "pydantic", specifier = ">=2.11.4" },
-    { name = "pygenometracks", marker = "sys_platform == 'linux'", specifier = ">=3.9" },
-    { name = "pytometry", specifier = ">=0.1.6" },
+    { name = "pygenometracks", marker = "sys_platform == 'linux' and extra == 'epigenomics'", specifier = ">=3.9" },
+    { name = "pytometry", marker = "extra == 'flow'", specifier = ">=0.1.6" },
     { name = "pyvista", specifier = ">=0.44.2" },
-    { name = "scanpy", extras = ["leiden"], specifier = ">=1.11" },
-    { name = "scarches" },
+    { name = "scanpy", extras = ["leiden"], specifier = "==1.11.2" },
+    { name = "scarches", marker = "extra == 'integration'", specifier = ">=0.5.0" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
     { name = "scikit-sparse", marker = "extra == 'sksparse'", specifier = ">=0.4.16" },
-    { name = "scprep", specifier = ">=1.1.0" },
+    { name = "scprep", specifier = "==1.2.3" },
     { name = "scvelo", specifier = ">=0.3.3" },
-    { name = "scvi-tools" },
+    { name = "scvi-tools", marker = "extra == 'integration'", specifier = ">=1.2.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "shapely", specifier = ">=2.1.0" },
     { name = "stardist", marker = "extra == 'seg'", specifier = ">=0.9.1" },
-    { name = "statsmodels", specifier = ">=0.14.4" },
-    { name = "tensorflow", extras = ["and-cuda"], marker = "sys_platform == 'linux'" },
-    { name = "tensorflow-intel", marker = "sys_platform == 'win32'" },
+    { name = "statsmodels", specifier = "==0.14.4" },
+    { name = "tensorflow", extras = ["and-cuda"], marker = "sys_platform == 'linux' and extra == 'integration'" },
+    { name = "tensorflow-intel", marker = "sys_platform == 'win32' and extra == 'integration'" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", marker = "sys_platform == 'linux'", index = "https://download.pytorch.org/whl/cu126" },
     { name = "torch", marker = "sys_platform == 'win32'", index = "https://download.pytorch.org/whl/cu126" },
@@ -3151,7 +3157,7 @@ wheels = [
 
 [[package]]
 name = "pandas"
-version = "2.2.0"
+version = "2.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -3159,16 +3165,7 @@ dependencies = [
     { name = "pytz" },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/d2/6fb05f20ee1b3961c7b283c1f8bafc6de752155d075c5db61c173de0de62/pandas-2.2.0.tar.gz", hash = "sha256:30b83f7c3eb217fb4d1b494a57a2fda5444f17834f5df2de6b2ffff68dc3c8e2", size = 4390211 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/1e/d708cda584a2d70e6d3c930d102d07ee3d65bec3b2861f416b086cc518a8/pandas-2.2.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:a41d06f308a024981dcaa6c41f2f2be46a6b186b902c94c2674e8cb5c42985bc", size = 12458750 },
-    { url = "https://files.pythonhosted.org/packages/72/33/e873f8bdeac9a954f93f33fb6fbdf3ded68e0096b154008855616559c64c/pandas-2.2.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:159205c99d7a5ce89ecfc37cb08ed179de7783737cea403b295b5eda8e9c56d1", size = 11740624 },
-    { url = "https://files.pythonhosted.org/packages/65/f9/1ff0f7dac2493f2c3a86cdb6106de8a7a6da75735f27e1c6a106b3d26e6e/pandas-2.2.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eb1e1f3861ea9132b32f2133788f3b14911b68102d562715d71bd0013bc45440", size = 15185059 },
-    { url = "https://files.pythonhosted.org/packages/b2/a5/7f14d11f5bb3ca5681f6827616ccfbb03ec9504322674e4f962a5e9e404b/pandas-2.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:761cb99b42a69005dec2b08854fb1d4888fdf7b05db23a8c5a099e4b886a2106", size = 12723033 },
-    { url = "https://files.pythonhosted.org/packages/dc/68/b42aea61273d47dbac1ba465739c90310e55081be4a33a0d44022194fb0a/pandas-2.2.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:a20628faaf444da122b2a64b1e5360cde100ee6283ae8effa0d8745153809a2e", size = 15855969 },
-    { url = "https://files.pythonhosted.org/packages/dc/c3/0df8f14482f9edee3d23b55edfb1c9d94376e78e4a815e0b2f7cf2776fe7/pandas-2.2.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:f5be5d03ea2073627e7111f61b9f1f0d9625dc3c4d8dda72cc827b0c58a1d042", size = 13381916 },
-    { url = "https://files.pythonhosted.org/packages/87/03/fe50521919aa981f6a1c197037da4623a267b0e5f42246d69ba048e86da3/pandas-2.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:a626795722d893ed6aacb64d2401d017ddc8a2341b49e0384ab9bf7112bdec30", size = 11464015 },
-]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/a7/824332581e258b5aa4f3763ecb2a797e5f9a54269044ba2e50ac19936b32/pandas-2.0.3.tar.gz", hash = "sha256:c02f372a88e0d17f36d3093a644c73cfc1788e876a7c4bcb4020a77512e2043c", size = 5284455 }
 
 [[package]]
 name = "pandocfilters"
@@ -4177,7 +4174,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/47/fb/d85945c9eceaba375
 
 [[package]]
 name = "scanpy"
-version = "1.11.1"
+version = "1.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
@@ -4202,9 +4199,9 @@ dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.13'" },
     { name = "umap-learn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/3c/321ba22a9881c3d1e451bd49f2383c9cc26c5de43d96720787d3033a6b01/scanpy-1.11.1.tar.gz", hash = "sha256:4a88692f631d80f1b6a91d660a443d9534876173a0de236f25397ee396c2cace", size = 13959151 }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/a9/4f619c500e75267897d5d65ee8c864355a1693d22da03af09d90f43dc717/scanpy-1.11.2.tar.gz", hash = "sha256:cde3a142aa12bd3a6894756d50c245cd6ec7776bba4b244c5099b0666f7455bd", size = 14087080 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/ef/48779cf7cb7aa06be0cdb27ee3ae62d5efae0edffc15861f655be822ee98/scanpy-1.11.1-py3-none-any.whl", hash = "sha256:7eeed12b1221699dc5cc6fd9a52022d26e031118ed88d93cceccbd980c1d59b0", size = 2096238 },
+    { url = "https://files.pythonhosted.org/packages/f5/7b/f58f238bc3062aa7cd17a1c26bbe539233c3776bd6acd819545c269731ad/scanpy-1.11.2-py3-none-any.whl", hash = "sha256:a97d5b74c1ae2d60caf504fd530a83f2e61e46d889f8d19f797a2bbc2d64dff3", size = 2100108 },
 ]
 
 [package.optional-dependencies]
@@ -4392,7 +4389,7 @@ wheels = [
 
 [[package]]
 name = "scprep"
-version = "1.1.0"
+version = "1.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "decorator" },
@@ -4402,9 +4399,9 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/08/97/bced1293ae41248bb52370489a5142901cfbbc9f4fdc241e6c81b4425406/scprep-1.1.0.tar.gz", hash = "sha256:1276773585a77a673f6ac4948a14c3ad106c502c2ab946df050d1a0a1f3b9828", size = 103802 }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/71/9295d94b62bad558c8a7f48e8dc2a3621424cdacf28359ca4693af1032da/scprep-1.2.3.tar.gz", hash = "sha256:cc4ba4cedbba256935298f2ba6a973b4e74ea8cb9ad2632b693b6d4e6ab77c3f", size = 107981 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/91/dfb35608ffae7eb0f45b565e702d3083d784988200ab6a967fd3f60d833e/scprep-1.1.0-py3-none-any.whl", hash = "sha256:338af5565321d3b54a15a7635e5bc5160f84569bb889e1c369d4c3b3afecdc40", size = 104410 },
+    { url = "https://files.pythonhosted.org/packages/2a/d2/72a06c97668b07ef703ffdc392cbd5ce004733d14978f6ae2ae71a09df41/scprep-1.2.3-py3-none-any.whl", hash = "sha256:31c75956baee3fc7a079957ce4e01821b36012163bd9d34e48afc74b42b5d875", size = 94085 },
 ]
 
 [[package]]
@@ -5483,16 +5480,16 @@ wheels = [
 
 [[package]]
 name = "xarray"
-version = "2025.4.0"
+version = "2024.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
     { name = "pandas" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/29/37761364e137db13898cf5a790574dd7883f7355d5dfb42b66ee7a9a6318/xarray-2025.4.0.tar.gz", hash = "sha256:2a89cd6a1dfd589aa90ac45f4e483246f31fc641836db45dd2790bb78bd333dc", size = 2974151 }
+sdist = { url = "https://files.pythonhosted.org/packages/84/e8/8ee12706df0d34ad04b3737621a73432458d47bc8abfbd6f049e51ca89c3/xarray-2024.7.0.tar.gz", hash = "sha256:4cae512d121a8522d41e66d942fb06c526bc1fd32c2c181d5fe62fe65b671638", size = 3728663 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/1e/96fd96419fec1a37da998a1ca3d558f2cae2f6f3cd5015170371b05a2b6b/xarray-2025.4.0-py3-none-any.whl", hash = "sha256:b27defd082c5cb85d32c695708de6bb05c2838fb7caaf3f952982e602a35b9b8", size = 1290171 },
+    { url = "https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl", hash = "sha256:1b0fd51ec408474aa1f4a355d75c00cc1c02bd425d97b2c2e551fd21810e7f64", size = 1176466 },
 ]
 
 [[package]]

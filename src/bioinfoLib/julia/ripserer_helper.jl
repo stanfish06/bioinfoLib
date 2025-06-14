@@ -25,17 +25,19 @@ end
 
 function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
     faces = Vector{Tuple}()
+    birth_t = Vector()
     edges = Ripserer.edges(filtration_thresh)
     triangles = Ripserer.columns_to_reduce(filtration_thresh, edges)
     for trig in triangles
         sim = abs(trig)
+        push!(birth_t, sim.birth)
         vs = Ripserer.vertices(sim)
         push!(faces, vs[[1, 2]])
         push!(faces, vs[[1, 3]])
         push!(faces, vs[[2, 3]])
         # push!(faces, Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
     end
-    return faces
+    return (faces, birth_t)
 end
 
 function inter_arrival_filtration(filtration_thresh::Ripserer.AbstractFiltration)
