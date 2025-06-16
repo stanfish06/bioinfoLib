@@ -3,6 +3,7 @@ import pickle
 import uuid
 from dataclasses import dataclass, field
 from itertools import product
+from multiprocessing import Pool
 from typing import Tuple
 
 import numpy as np
@@ -14,7 +15,7 @@ from scipy.stats import binom, false_discovery_control, gamma
 from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
-from .utils import edge_idx_encode, evaluate_match
+from .utils import edge_idx_encode, evaluate_match_worker
 
 
 @dataclass
@@ -205,6 +206,10 @@ class HomologyData:
         n_neighbors=1,
         fresh_start=False,
         verbose=False,
+        n_process_frechet=4,
+        chunk_size_frechet=50,
+        n_process_hamming=1,
+        chunk_size_hamming=1,
     ):
         if not self.bd_mat:
             raise ValueError("compute boundary matrix first")
@@ -307,40 +312,74 @@ class HomologyData:
             except ValueError:
                 continue
             if success:
-
-                def evaluate_match_tmp(p, do_regression, source_loop_birth_t=None):
-                    return evaluate_match(
-                        max_frechet_dist=max_frechet_dist,
-                        n_search=n_search,
-                        ncol_A=self.bd_mat[3],
-                        nrow_A=self.bd_mat[2],
-                        one_cidx_A=self.bd_mat[1],
-                        one_ridx_A=self.bd_mat[0],
-                        ridge_coef_a=ridge_coef_a,
-                        ridge_coef_b=ridge_coef_b,
-                        source_loop_coords=source_loop_coords_pool[p[0]],
-                        target_loop_coords=rep_all[p[1]],
-                        source_loop_edges=source_loop_eidx_pool[p[0]],
-                        target_loop_edges=loop_eidx_boot[p[1]],
-                        do_regression=do_regression,
-                        do_approximation=do_approximation,
-                        n_neighbors=n_neighbors,
-                        bd_column_birth_t=self.bd_column_birth_t,
-                        source_loop_birth_t=source_loop_birth_t,
-                    )
-
-                # print("start initial matching", flush=True)
+                # def evaluate_match_tmp(p, do_regression, source_loop_birth_t=None):
+                #     return evaluate_match(
+                #         max_frechet_dist=max_frechet_dist,
+                # n_search=n_search,
+                # ncol_A=self.bd_mat[3],
+                # nrow_A=self.bd_mat[2],
+                # one_cidx_A=self.bd_mat[1],
+                # one_ridx_A=self.bd_mat[0],
+                # ridge_coef_a=ridge_coef_a,
+                # ridge_coef_b=ridge_coef_b,
+                # source_loop_coords=source_loop_coords_pool[p[0]],
+                # target_loop_coords=rep_all[p[1]],
+                # source_loop_edges=source_loop_eidx_pool[p[0]],
+                # target_loop_edges=loop_eidx_boot[p[1]],
+                # do_regression=do_regression,
+                # do_approximation=do_approximation,
+                # n_neighbors=n_neighbors,
+                # bd_column_birth_t=self.bd_column_birth_t,
+                # source_loop_birth_t=source_loop_birth_t,
+                #     )
                 pairs = [
                     ((i, j), source_loop_birth_t[i])
                     for i, j in product(
                         range(len(source_loop_eidx_pool)), range(len(loop_eidx_boot))
                     )
                 ]
-                if verbose:
-                    result = [evaluate_match_tmp(p, False) for p, _ in tqdm(pairs)]
-                else:
-                    result = [evaluate_match_tmp(p, False) for p, _ in pairs]
-                # print("done initial matching", flush=True)
+                args_list = [
+                    (
+                        self.bd_mat[2],
+                        self.bd_mat[3],
+                        max_frechet_dist,
+                        ridge_coef_a,
+                        ridge_coef_b,
+                        n_search,
+                        source_loop_eidx_pool[p[0]],
+                        loop_eidx_boot[p[1]],
+                        source_loop_coords_pool[p[0]],
+                        rep_all[p[1]],
+                        self.bd_mat[0],
+                        self.bd_mat[1],
+                        False,
+                        do_approximation,
+                        n_neighbors,
+                        self.bd_column_birth_t,
+                        source_loop_birth_t[p[0]],
+                    )
+                    for p, _ in pairs
+                ]
+                with Pool(n_process_frechet) as p:
+                    if verbose:
+                        result = list(
+                            tqdm(
+                                p.imap(
+                                    evaluate_match_worker,
+                                    args_list,
+                                    chunksize=chunk_size_frechet,
+                                ),
+                                total=len(pairs),
+                            )
+                        )
+                    else:
+                        result = list(
+                            p.map(
+                                evaluate_match_worker,
+                                args_list,
+                                chunksize=chunk_size_frechet,
+                            ),
+                        )
                 pairs_filt = []
                 for si in range(len(source_loop_eidx_pool)):
                     n_best_matches = []
@@ -358,19 +397,53 @@ class HomologyData:
                     pairs_filt.extend(
                         [(pairs[k], haus_dist) for k, haus_dist in n_best_matches]
                     )
+
                 self.loops_eidx_boot.append(loop_eidx_boot)
                 self.loops_coords_boot.append(rep_all)
                 self.persistence_diagram_boot.append(np.vstack([birth_t, death_t]).T)
                 if pairs_filt:
-                    if verbose:
-                        result = [
-                            evaluate_match_tmp(p[0], True, p[1])
-                            for p, _ in tqdm(pairs_filt)
-                        ]
-                    else:
-                        result = [
-                            evaluate_match_tmp(p[0], True, p[1]) for p, _ in pairs_filt
-                        ]
+                    args_list = [
+                        (
+                            self.bd_mat[2],
+                            self.bd_mat[3],
+                            max_frechet_dist,
+                            ridge_coef_a,
+                            ridge_coef_b,
+                            n_search,
+                            source_loop_eidx_pool[p[0][0]],
+                            loop_eidx_boot[p[0][1]],
+                            source_loop_coords_pool[p[0][0]],
+                            rep_all[p[0][1]],
+                            self.bd_mat[0],
+                            self.bd_mat[1],
+                            True,
+                            do_approximation,
+                            n_neighbors,
+                            self.bd_column_birth_t,
+                            source_loop_birth_t[p[0][0]],
+                        )
+                        for p, _ in pairs_filt
+                    ]
+                    with Pool(n_process_hamming) as p:
+                        if verbose:
+                            result = list(
+                                tqdm(
+                                    p.imap(
+                                        evaluate_match_worker,
+                                        args_list,
+                                        chunksize=chunk_size_hamming,
+                                    ),
+                                    total=len(pairs_filt),
+                                )
+                            )
+                        else:
+                            result = list(
+                                p.map(
+                                    evaluate_match_worker,
+                                    args_list,
+                                    chunksize=chunk_size_hamming,
+                                ),
+                            )
                     df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
                     df["hamming_dist"] = result
                     self.matching_df.append(df.copy())
@@ -384,15 +457,6 @@ class HomologyData:
                         self.n_booted = self.n_booted + 1
                         continue
                     df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
-                    # seems problematic
-                    # df = (
-                    #     df.sort_values(by=["hamming_dist", "frechet_dist"])
-                    #     .groupby("target", as_index=False)
-                    #     .first()
-                    #     .sort_values(by=["hamming_dist", "frechet_dist"])
-                    #     .groupby("source", as_index=False)
-                    #     .first()
-                    # )
                     cost_matrix_sub = df.pivot(
                         index="source", columns="target", values="frechet_dist"
                     ).fillna(np.inf)

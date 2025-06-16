@@ -107,48 +107,6 @@ def edge_idx_encode(i, j):
     return ((i + j) * (i + j + 1)) // 2 + j
 
 
-def donut_2d_iso(r1, r2, n_points, noise, seed):
-    np.random.seed(seed)
-    rho = (r1 - r2) * np.sqrt(np.random.rand(n_points)) + r2
-    theta = 2 * np.pi * np.random.rand(n_points)
-    x = rho * np.cos(theta) + np.random.normal(0, noise, n_points)
-    y = rho * np.sin(theta) + np.random.normal(0, noise, n_points)
-    return (x, y)
-
-
-def disk_2d_iso(r, n_points, noise, seed):
-    np.random.seed(seed)
-    rho = r * np.sqrt(np.random.rand(n_points))
-    theta = 2 * np.pi * np.random.rand(n_points)
-    x = rho * np.cos(theta) + np.random.normal(0, noise, n_points)
-    y = rho * np.sin(theta) + np.random.normal(0, noise, n_points)
-    return (x, y)
-
-
-def disk_2d_two_holes_iso(r, r1, r2, c1_x, c1_y, c2_x, c2_y, n_points, noise, seed):
-    np.random.seed(seed)
-    rho = r * np.sqrt(np.random.rand(n_points * 2))
-    theta = 2 * np.pi * np.random.rand(n_points * 2)
-    x = rho * np.cos(theta)
-    y = rho * np.sin(theta)
-
-    x1 = x - c1_x
-    y1 = y - c1_y
-    mask1 = np.sqrt(np.power(x1, 2) + np.power(y1, 2)) < r1
-
-    x2 = x - c2_x
-    y2 = y - c2_y
-    mask2 = np.sqrt(np.power(x2, 2) + np.power(y2, 2)) < r2
-
-    x = x[~np.logical_or(mask1, mask2)]
-    y = y[~np.logical_or(mask1, mask2)]
-
-    idx_keep = np.random.choice(np.arange(len(x)), size=n_points, replace=False)
-    x = x[idx_keep] + np.random.normal(0, noise, n_points)
-    y = y[idx_keep] + np.random.normal(0, noise, n_points)
-    return (x, y)
-
-
 def evaluate_match(
     nrow_A,
     ncol_A,
@@ -240,3 +198,86 @@ def evaluate_match(
         # end_time = time.time()
         # print(f"\ndone in {end_time - start_time}s")
         return ham_dist
+
+
+def evaluate_match_worker(args):
+    (
+        nrow_A,
+        ncol_A,
+        max_frechet_dist,
+        ridge_coef_a,
+        ridge_coef_b,
+        n_search,
+        source_loop_edges,
+        target_loop_edges,
+        source_loop_coords,
+        target_loop_coords,
+        one_ridx_A,
+        one_cidx_A,
+        do_regression,
+        do_approximation,
+        n_neighbors,
+        bd_column_birth_t,
+        source_loop_birth_t,
+    ) = args
+    return evaluate_match(
+        nrow_A,
+        ncol_A,
+        max_frechet_dist,
+        ridge_coef_a,
+        ridge_coef_b,
+        n_search,
+        source_loop_edges,
+        target_loop_edges,
+        source_loop_coords,
+        target_loop_coords,
+        one_ridx_A,
+        one_cidx_A,
+        do_regression,
+        do_approximation,
+        n_neighbors,
+        bd_column_birth_t,
+        source_loop_birth_t,
+    )
+
+
+def donut_2d_iso(r1, r2, n_points, noise, seed):
+    np.random.seed(seed)
+    rho = (r1 - r2) * np.sqrt(np.random.rand(n_points)) + r2
+    theta = 2 * np.pi * np.random.rand(n_points)
+    x = rho * np.cos(theta) + np.random.normal(0, noise, n_points)
+    y = rho * np.sin(theta) + np.random.normal(0, noise, n_points)
+    return (x, y)
+
+
+def disk_2d_iso(r, n_points, noise, seed):
+    np.random.seed(seed)
+    rho = r * np.sqrt(np.random.rand(n_points))
+    theta = 2 * np.pi * np.random.rand(n_points)
+    x = rho * np.cos(theta) + np.random.normal(0, noise, n_points)
+    y = rho * np.sin(theta) + np.random.normal(0, noise, n_points)
+    return (x, y)
+
+
+def disk_2d_two_holes_iso(r, r1, r2, c1_x, c1_y, c2_x, c2_y, n_points, noise, seed):
+    np.random.seed(seed)
+    rho = r * np.sqrt(np.random.rand(n_points * 2))
+    theta = 2 * np.pi * np.random.rand(n_points * 2)
+    x = rho * np.cos(theta)
+    y = rho * np.sin(theta)
+
+    x1 = x - c1_x
+    y1 = y - c1_y
+    mask1 = np.sqrt(np.power(x1, 2) + np.power(y1, 2)) < r1
+
+    x2 = x - c2_x
+    y2 = y - c2_y
+    mask2 = np.sqrt(np.power(x2, 2) + np.power(y2, 2)) < r2
+
+    x = x[~np.logical_or(mask1, mask2)]
+    y = y[~np.logical_or(mask1, mask2)]
+
+    idx_keep = np.random.choice(np.arange(len(x)), size=n_points, replace=False)
+    x = x[idx_keep] + np.random.normal(0, noise, n_points)
+    y = y[idx_keep] + np.random.normal(0, noise, n_points)
+    return (x, y)

@@ -35,6 +35,7 @@ dependencies = [
   "anndata>=0.11.4",
   "statsmodels==0.14.4",
   "scikit-sparse>=0.4.16",
+  "joblib>=1.4.2",
 ]
 
 [project.optional-dependencies]
