@@ -1,11 +1,11 @@
 [project]
 name = "bioinfoLib"
-version = "0.1.0"
+version = "0.1.1"
 description = "a general library for bioinformatics"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "cellrank>=2.0.6 ; sys_platform == 'linux'",
+  "cellrank ; sys_platform == 'linux'",
   "ipython<9.0.0",
   "jupyterlab>=4.3.5",
   "magic-impute>=3.0.0",
@@ -34,6 +34,7 @@ dependencies = [
   "pydantic>=2.11.4",
   "anndata>=0.11.4",
   "statsmodels==0.14.4",
+  "scikit-sparse>=0.4.16",
 ]
 
 [project.optional-dependencies]
@@ -44,9 +45,6 @@ seg = [
 epigenomics = [
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
-]
-sksparse = [
-  "scikit-sparse>=0.4.16",
 ]
 flow = [
   "pytometry>=0.1.6",
@@ -126,3 +124,9 @@ Issues = "https://github.com/stanfish06/bioinfoLib/issues"
 # force install package
 [tool.uv]
 package = true
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true

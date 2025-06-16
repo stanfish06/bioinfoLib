@@ -356,7 +356,7 @@ wheels = [
 
 [[package]]
 name = "bioinfolib"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "adjusttext" },
@@ -381,6 +381,7 @@ dependencies = [
     { name = "scanpy", extra = ["leiden"] },
     { name = "scikit-image" },
     { name = "scikit-misc" },
+    { name = "scikit-sparse" },
     { name = "scprep" },
     { name = "scvelo" },
     { name = "seaborn" },
@@ -416,9 +417,6 @@ seg = [
     { name = "cellpose", extra = ["gui"] },
     { name = "stardist" },
 ]
-sksparse = [
-    { name = "scikit-sparse" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -431,7 +429,7 @@ requires-dist = [
     { name = "anndata", specifier = ">=0.11.4" },
     { name = "bbknn", marker = "extra == 'integration'", specifier = ">=1.6.0" },
     { name = "cellpose", extras = ["gui"], marker = "extra == 'seg'", specifier = ">=3.1.1.1" },
-    { name = "cellrank", marker = "sys_platform == 'linux'", specifier = ">=2.0.6" },
+    { name = "cellrank", marker = "sys_platform == 'linux'" },
     { name = "cython", specifier = ">=3.0.12" },
     { name = "deeptools", marker = "sys_platform == 'linux' and extra == 'epigenomics'", specifier = ">=3.5.5" },
     { name = "fa2-modified", specifier = ">=0.3.10" },
@@ -457,7 +455,7 @@ requires-dist = [
     { name = "scarches", marker = "extra == 'integration'", specifier = ">=0.5.0" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scikit-misc", specifier = ">=0.5.1" },
-    { name = "scikit-sparse", marker = "extra == 'sksparse'", specifier = ">=0.4.16" },
+    { name = "scikit-sparse", specifier = ">=0.4.16" },
     { name = "scprep", specifier = "==1.2.3" },
     { name = "scvelo", specifier = ">=0.3.3" },
     { name = "scvi-tools", marker = "extra == 'integration'", specifier = ">=1.2.0" },

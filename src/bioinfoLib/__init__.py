@@ -2,7 +2,7 @@
 bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # Import main modules
 try:
@@ -21,6 +21,10 @@ try:
     from . import scRNAseq as scr
 except Exception as e:
     print(f"Could not import scRNAseq modules {e}")
+try:
+    from . import topology as tp
+except Exception as e:
+    print(f"Could not import topology modules {e}")
 
 # Export commonly used components
-__all__ = ["scr", "GP", "jl", "la"]
+__all__ = ["scr", "GP", "jl", "la", "tp"]
