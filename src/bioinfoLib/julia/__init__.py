@@ -15,4 +15,4 @@ for package, (uuid, version) in packages.items():
         print(f"Error installing {package}: {e}")
         raise e
 juliapkg.resolve()
-from . import setup, utils
+from . import utils

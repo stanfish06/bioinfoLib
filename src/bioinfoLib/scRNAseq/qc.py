@@ -180,7 +180,7 @@ def normalize_and_select_hvg(
     target_sum: int = 1e4,
     n_top_genes: int = 2000,
     batch_key: str = "sample_labels",
-    subset: bool = True
+    subset: bool = True,
 ):
     """
     normalize_and_select_hvg(adata, do_norm, compute_hvg, target_sum, n_top_genes, batch_key)

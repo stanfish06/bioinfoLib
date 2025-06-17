@@ -1,5 +1,6 @@
 import ast
 import pickle
+import sys
 import uuid
 from dataclasses import dataclass, field
 from itertools import product
@@ -370,6 +371,7 @@ class HomologyData:
                                     chunksize=chunk_size_frechet,
                                 ),
                                 total=len(pairs),
+                                file=sys.stdout,
                             )
                         )
                     else:
@@ -434,6 +436,7 @@ class HomologyData:
                                         chunksize=chunk_size_hamming,
                                     ),
                                     total=len(pairs_filt),
+                                    file=sys.stdout,
                                 )
                             )
                         else:
