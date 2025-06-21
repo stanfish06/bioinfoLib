@@ -37,6 +37,9 @@ dependencies = [
   "scikit-sparse>=0.4.16",
   "umap-learn>=0.5.7",
   "glasbey>=0.3.0",
+  "mysql-connector-python>=9.3.0",
+  "fuzzywuzzy>=0.18.0",
+  "python-levenshtein>=0.27.1",
 ]
 
 [project.optional-dependencies]
