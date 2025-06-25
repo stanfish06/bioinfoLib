@@ -5,4 +5,4 @@ uv = "latest"
 python.uv_venv_auto = true
 
 [tasks.build]
-run = "uv build"
+run = "uv sync && uv build"

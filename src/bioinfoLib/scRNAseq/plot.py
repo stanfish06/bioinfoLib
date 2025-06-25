@@ -1,6 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scanpy as sc
 from adjustText import adjust_text
+
+
+def volcano_plot_differential_expression(adata, group: str):
+    df = sc.get.rank_genes_groups_df(adata, group=group)
 
 
 def embedding_label_repl(

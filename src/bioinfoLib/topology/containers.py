@@ -22,6 +22,7 @@ from .utils import edge_idx_encode, evaluate_match_worker
 @dataclass
 class HomologyData:
     data_original: np.ndarray
+    data_plot: np.ndarray
     sample_label: str = ""
     n_true_loops: int = 0
     loop_size: list[float] = field(default_factory=list)
@@ -32,6 +33,7 @@ class HomologyData:
     )
     loops_eidx_original: list[np.ndarray] = field(default_factory=list)
     loops_coords_original: list[np.ndarray] = field(default_factory=list)
+    loops_coords_original_plot: list[np.ndarray] = field(default_factory=list)
     bd_mat: Tuple = ()
     bd_column_birth_t: np.ndarray = field(
         default_factory=lambda: np.array([], dtype=float)
@@ -98,10 +100,14 @@ class HomologyData:
                 if len(rep_ridx) > 0:
                     self.loops_eidx_original.append(np.array(rep_ridx))
                     loop_i_coords = []
+                    loop_i_coords_plot = []
                     for i, (v1, v2) in enumerate(rep):
                         if i == 0:
                             loop_i_coords.extend(
                                 self.data_original[[v1 - 1, v2 - 1], :]
+                            )
+                            loop_i_coords_plot.extend(
+                                self.data_plot[[v1 - 1, v2 - 1], :]
                             )
                         elif i == 1:
                             e0 = loop_i_coords[:2]
@@ -111,10 +117,13 @@ class HomologyData:
                             i0, j0 = np.where(dist_e0_e1 == 0)
                             if i0 == 0:
                                 loop_i_coords = loop_i_coords[::-1]
+                                loop_i_coords_plot = loop_i_coords_plot[::-1]
                             if j0 == 1:
                                 loop_i_coords.append(self.data_original[v1 - 1, :])
+                                loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
                             else:
                                 loop_i_coords.append(self.data_original[v2 - 1, :])
+                                loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
                         else:
                             e0 = np.expand_dims(loop_i_coords[-1], 0)
                             dist_e0_e1 = cdist(
@@ -123,9 +132,24 @@ class HomologyData:
                             i0, j0 = np.where(dist_e0_e1 == 0)
                             if j0 == 1:
                                 loop_i_coords.append(self.data_original[v1 - 1, :])
+                                loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
                             else:
                                 loop_i_coords.append(self.data_original[v2 - 1, :])
+                                loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
                     self.loops_coords_original.append(np.array(loop_i_coords))
+                    self.loops_coords_original_plot.append(np.array(loop_i_coords_plot))
+                else:
+                    # TODO: may lead to bugs, check boot
+                    self.loops_eidx_original.append(np.array([]))
+                    self.loops_coords_original.append(np.array([]))
+                    self.loops_coords_original_plot.append(np.array([]))
+            for i in range(len(self.loops_eidx_original)):
+                sloop_birth_t = self.persistence_diagram_original[i, 0]
+                if f"(0,{i})" not in self.tracks:
+                    self.tracks[f"(0,{i})"] = {
+                        "birth_t": sloop_birth_t,
+                        "loops": [(0, i)],
+                    }
 
     def clean_boot(self):
         self.tracks = {}

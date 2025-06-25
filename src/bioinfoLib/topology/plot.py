@@ -24,12 +24,14 @@ def plot_distribution(
         created_fig = False
 
     if mode == "lifetime":
-        lifetime_full = np.concatenate(
-            [
-                data.persistence_diagram_original,
-                np.concatenate(data.persistence_diagram_boot),
-            ]
-        )
+        lifetime_full = data.persistence_diagram_original
+        if data.persistence_diagram_boot:
+            lifetime_full = np.concatenate(
+                [
+                    lifetime_full,
+                    np.concatenate(data.persistence_diagram_boot),
+                ]
+            )
         lifetime_full = lifetime_full[:, 1] - lifetime_full[:, 0]
         _, bins, _ = ax.hist(lifetime_full, bins="fd", density=True)
         params = data.parameters["gamma_fit"]
@@ -84,6 +86,7 @@ def plot_tracks(
     track_ids: list = [],
     ax: Optional[Axes] = None,
     components: list = [0, 1],
+    s: float = 1,
     **kwargs,
 ) -> Axes:
     n_tracks = len(track_ids)
@@ -100,6 +103,7 @@ def plot_tracks(
             data.persistence_diagram_original[:, 0],
             data.persistence_diagram_original[:, 1],
             color="lightgray",
+            s=s,
             **kwargs,
         )
         for ph_boot in data.persistence_diagram_boot:
@@ -107,6 +111,7 @@ def plot_tracks(
                 ph_boot[:, 0],
                 ph_boot[:, 1],
                 color="lightgray",
+                s=s,
                 **kwargs,
             )
         for i, src_tid in enumerate(track_ids):
@@ -117,6 +122,7 @@ def plot_tracks(
                         data.persistence_diagram_original[tid[1], 0],
                         data.persistence_diagram_original[tid[1], 1],
                         color=cmap[i],
+                        s=s,
                         **kwargs,
                     )
                 else:
@@ -124,6 +130,7 @@ def plot_tracks(
                         data.persistence_diagram_boot[tid[0] - 1][tid[1], 0],
                         data.persistence_diagram_boot[tid[0] - 1][tid[1], 1],
                         color=cmap[i],
+                        s=s,
                         **kwargs,
                     )
         xlim = ax.get_xlim()
@@ -147,31 +154,35 @@ def plot_tracks(
         ax.set_xticks(ticks, tick_labs)
         ax.set_yticks(ticks, tick_labs)
     elif mode == "lifetime_plot":
-        lifetime_full = np.concatenate(
-            [
-                data.persistence_diagram_original,
-                np.concatenate(data.persistence_diagram_boot),
-            ]
-        )
+        lifetime_full = data.persistence_diagram_original
+        if data.persistence_diagram_boot:
+            lifetime_full = np.concatenate(
+                [
+                    lifetime_full,
+                    np.concatenate(data.persistence_diagram_boot),
+                ]
+            )
         lifetime_full = lifetime_full[:, 1] - lifetime_full[:, 0]
-        idx = np.concatenate(
+        idx = np.vstack(
             [
-                np.vstack(
-                    [
-                        np.repeat(0, data.persistence_diagram_original.shape[0]),
-                        np.arange(data.persistence_diagram_original.shape[0]),
-                    ]
-                ).T,
-                np.concatenate(
-                    [
-                        np.vstack(
-                            [np.repeat(i + 1, ph.shape[0]), np.arange(ph.shape[0])]
-                        ).T
-                        for i, ph in enumerate(data.persistence_diagram_boot)
-                    ]
-                ),
+                np.repeat(0, data.persistence_diagram_original.shape[0]),
+                np.arange(data.persistence_diagram_original.shape[0]),
             ]
-        )
+        ).T
+        if data.persistence_diagram_boot:
+            idx = np.concatenate(
+                [
+                    idx,
+                    np.concatenate(
+                        [
+                            np.vstack(
+                                [np.repeat(i + 1, ph.shape[0]), np.arange(ph.shape[0])]
+                            ).T
+                            for i, ph in enumerate(data.persistence_diagram_boot)
+                        ]
+                    ),
+                ]
+            )
         sort_idx = np.argsort(np.argsort(lifetime_full))
         ax.barh(
             sort_idx,
@@ -202,6 +213,7 @@ def plot_tracks(
             data.data_original[:, components[0]],
             data.data_original[:, components[1]],
             color="lightgray",
+            s=s,
             **kwargs,
         )
         for i, src_tid in enumerate(track_ids):
@@ -209,8 +221,8 @@ def plot_tracks(
             for tid in tracks:
                 if tid[0] == 0:
                     ax.plot(
-                        data.loops_coords_original[tid[1]][:, components[0]],
-                        data.loops_coords_original[tid[1]][:, components[1]],
+                        data.loops_coords_original_plot[tid[1]][:, components[0]],
+                        data.loops_coords_original_plot[tid[1]][:, components[1]],
                         color=cmap[i],
                         **kwargs,
                     )
