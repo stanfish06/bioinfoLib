@@ -6,10 +6,10 @@ def grouped_obs_mean(adata, group_key, use_raw=True, layer=None, genes=None):
     if genes:
         if use_raw:
             genes = adata.raw.var_names[
-                adata.raw.var_names.str.contains(genes.join("|"))
+                adata.raw.var_names.str.contains("|".join(genes))
             ]
         else:
-            genes = adata.var_names[adata.var_names.str.contains(genes.join("|"))]
+            genes = adata.var_names[adata.var_names.str.contains("|".join(genes))]
     else:
         if use_raw:
             genes = adata.raw.var_names
