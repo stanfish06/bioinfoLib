@@ -1,24 +1,31 @@
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 from adjustText import adjust_text
+from anndata import AnnData
+from matplotlib.axes import Axes
+from pydantic import Field, validate_call
 
 
 def volcano_plot_differential_expression(adata, group: str):
     df = sc.get.rank_genes_groups_df(adata, group=group)
 
 
+@validate_call(config={"arbitrary_types_allowed": True})
 def embedding_label_repl(
-    adata,
-    basis,
-    groupby,
-    exclude=(),
-    ax=None,
-    adjust_kwargs=None,
-    text_kwargs=None,
-    color_by_group=False,
-    palette=None,
-    text_path_effect=None,
+    adata: AnnData,
+    basis: tuple,
+    groupby: str,
+    exclude: list[str],
+    ax: Optional[Axes] = None,
+    components: tuple = (0, 1),
+    adjust_kwargs: dict = Field(default_factory=dict),
+    text_kwargs: dict = Field(default_factory=dict),
+    color_by_group: bool = False,
+    palette: dict = Field(default_factory=dict),
+    text_path_effect: dict = Field(default_factory=dict),
 ):
     if adjust_kwargs is None:
         adjust_kwargs = {"text_from_points": False}
@@ -30,7 +37,7 @@ def embedding_label_repl(
     for g, g_idx in adata.obs.groupby(groupby).groups.items():
         if g in exclude:
             continue
-        medians[g] = np.median(adata[g_idx].obsm[basis], axis=0)
+        medians[g] = np.median(adata[g_idx].obsm[basis][:, components], axis=0)
 
     # Fill the text colors dictionary
     text_colors = {group: None for group in adata.obs[groupby].cat.categories}

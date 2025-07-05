@@ -40,6 +40,7 @@ dependencies = [
   "mysql-connector-python>=9.3.0",
   "fuzzywuzzy>=0.18.0",
   "python-levenshtein>=0.27.1",
+  "ty>=0.0.1a12",
 ]
 
 [project.optional-dependencies]

@@ -78,6 +78,49 @@ class HomologyData:
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
         self.parameters["filtration_bd_matrix"] = thresh
 
+    def compute_original_loops_no_bd(self, thresh, top_n):
+        loop_coords = []
+        loop_coords_plot = []
+        dist_mat = pairwise_distances(self.data_original)
+        dist_mat = (dist_mat + dist_mat.T) / 2
+        filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+        result_cycle = julia.ripserer(filt, reps=1)
+        for n in range(len(result_cycle[1]) - top_n, len(result_cycle[1])):
+            rep = result_cycle[1][n]
+            rep = julia.Ripserer.reconstruct_cycle(filt, rep, rep.birth)
+            loop_i_coords = []
+            loop_i_coords_plot = []
+            for i, (v1, v2) in enumerate(rep):
+                if i == 0:
+                    loop_i_coords.extend(self.data_original[[v1 - 1, v2 - 1], :])
+                    loop_i_coords_plot.extend(self.data_plot[[v1 - 1, v2 - 1], :])
+                elif i == 1:
+                    e0 = loop_i_coords[:2]
+                    dist_e0_e1 = cdist(e0, self.data_original[[v1 - 1, v2 - 1], :])
+                    i0, j0 = np.where(dist_e0_e1 == 0)
+                    if i0 == 0:
+                        loop_i_coords = loop_i_coords[::-1]
+                        loop_i_coords_plot = loop_i_coords_plot[::-1]
+                    if j0 == 1:
+                        loop_i_coords.append(self.data_original[v1 - 1, :])
+                        loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
+                    else:
+                        loop_i_coords.append(self.data_original[v2 - 1, :])
+                        loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
+                else:
+                    e0 = np.expand_dims(loop_i_coords[-1], 0)
+                    dist_e0_e1 = cdist(e0, self.data_original[[v1 - 1, v2 - 1], :])
+                    i0, j0 = np.where(dist_e0_e1 == 0)
+                    if j0 == 1:
+                        loop_i_coords.append(self.data_original[v1 - 1, :])
+                        loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
+                    else:
+                        loop_i_coords.append(self.data_original[v2 - 1, :])
+                        loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
+            loop_coords.append(np.array(loop_i_coords))
+            loop_coords_plot.append(np.array(loop_i_coords_plot))
+        return (loop_coords, loop_coords_plot)
+
     def compute_original_loops(self, thresh):
         if not self.bd_mat:
             raise ValueError("compute boundary matrix first")
