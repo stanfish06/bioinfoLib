@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -47,17 +49,27 @@ def pairwise_differential_expression(
     label_key: str,
     targets: list[str],
     reference: list[str] = ["others"],
-    max_pval: float = 0.05,
-    min_lfc: float = 1.0,
-    min_exp_target: float = 0.0,
-    mode: str = "balanced",
+    mode: Literal["balanced", "pool"] = "balanced",
 ):
+    """Differnetial expression
+
+    Args:
+        adata (AnnData): AnnData object
+        label_key (str): Categorical key in obs
+        targets (list[str]): Target groups, can have multiple groups
+        reference (list[str], optional): Reference groups, can have multiple groups. If others, groups except target groups are included. Defaults to ["others"].
+        mode (str, optional): Either balanced or pool. Defaults to "balanced".
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
+    """
     group_column = np.full(adata.shape[0], "others", dtype=object)
     group_column_subgroups = np.full(adata.shape[0], "others", dtype=object)
     reference_group = "others"
     if reference:
         if "others" not in reference:
-            refernce_group = "|".join(f"({r})" for r in reference)
+            reference_group = "|".join(f"({r})" for r in reference)
             for r in reference:
                 group_column[adata.obs[label_key] == r] = reference_group
                 group_column_subgroups[adata.obs[label_key] == r] = r
@@ -84,7 +96,10 @@ def pairwise_differential_expression(
         group_exp = grouped_obs_mean(adata, groupby + "_sub")
         target_means = group_exp.loc[:, targets].mean(axis=1)
         reference_means = group_exp.loc[:, reference].mean(axis=1)
-        lfc_balanced = target_means - reference_means
+        joint_means = (target_means + reference_means) / 2
+        lfc_balanced = np.log2(
+            (np.expm1(target_means) + 1e-9) / (np.expm1(reference_means) + 1e-9)
+        )
         # TODO: potentially make DE balanced as well
         sc.tl.rank_genes_groups(
             adata,
@@ -94,16 +109,31 @@ def pairwise_differential_expression(
             key_added=groupby,
         )
         de_df = sc.get.rank_genes_groups_df(adata, group=target_group, key=groupby)
-        de_df[f"{target_group}_balanced_mean"] = target_means[
-            de_df["names"]
-        ].__array__()
-        de_df[f"{reference_group}_balanced_mean"] = reference_means[
-            de_df["names"]
-        ].__array__()
-        de_df["balanced_lfc"] = lfc_balanced[de_df["names"]].__array__()
+        de_df["target_mean"] = target_means[de_df["names"]].__array__()
+        de_df["reference_mean"] = reference_means[de_df["names"]].__array__()
+        de_df["joint_mean"] = joint_means[de_df["names"]].__array__()
+        de_df["lfc"] = lfc_balanced[de_df["names"]].__array__()
     elif mode == "pool":
         group_exp = grouped_obs_mean(adata, groupby)
+        target_means = group_exp.loc[:, target_group]
+        reference_means = group_exp.loc[:, reference_group]
+        joint_means = (target_means + reference_means) / 2
+        lfc = np.log2(
+            (np.expm1(target_means) + 1e-9) / (np.expm1(reference_means) + 1e-9)
+        )
+        sc.tl.rank_genes_groups(
+            adata,
+            groups=[target_group],
+            groupby=groupby,
+            reference=reference_group,
+            key_added=groupby,
+        )
+        de_df = sc.get.rank_genes_groups_df(adata, group=target_group, key=groupby)
+        de_df["target_mean"] = target_means[de_df["names"]].__array__()
+        de_df["reference_mean"] = reference_means[de_df["names"]].__array__()
+        de_df["joint_mean"] = joint_means[de_df["names"]].__array__()
+        de_df["lfc"] = lfc[de_df["names"]].__array__()
     else:
         raise ValueError("mean mode unsupported")
 
-    adata.uns[groupby] = de_df
+    adata.uns[groupby] = {"mode": mode, "result": de_df}

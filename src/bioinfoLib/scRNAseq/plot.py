@@ -1,16 +1,183 @@
-from typing import Optional
+from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scanpy as sc
 from adjustText import adjust_text
 from anndata import AnnData
 from matplotlib.axes import Axes
+from matplotlib.lines import Line2D
 from pydantic import Field, validate_call
 
 
-def volcano_plot_differential_expression(adata, group: str):
-    df = sc.get.rank_genes_groups_df(adata, group=group)
+def volcano_plot_differential_expression(
+    adata: AnnData,
+    key: str,
+    max_pval: float = 0.01,
+    min_lfc: float = 1.0,
+    min_exp: float = 0.0,
+    x_mode: Literal["target", "joint"] = "joint",
+    y_annot_up: str = "",
+    y_annot_down: str = "",
+    y_annot_xpos: float = 0.75,
+    y_annot_ypos: float = 0.75,
+    ax: Optional[Axes] = None,
+    **kwargs,
+) -> Axes:
+    if ax is None:
+        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (5, 5)))
+        created_fig = True
+    else:
+        created_fig = False
+    de_mode = adata.uns[key]["mode"]
+    print(f"result was generated with the {de_mode} mode")
+    result = adata.uns[key]["result"].copy()
+    if x_mode == "joint":
+        xval = "joint_mean"
+    elif x_mode == "target":
+        result = result.loc[result["lfc"] >= 0, :]
+        xval = "target_mean"
+    np.random.seed(42)
+    result = result.iloc[np.random.permutation(result.shape[0]), :]
+    result["scatter_color"] = "#000000"
+    result.loc[result["pvals_adj"] < max_pval, "scatter_color"] = "#ADD8E6"
+    result_sig = result.query(
+        f"{xval} > {min_exp} & pvals_adj < {max_pval} & (lfc >= {min_lfc} | lfc <= -{min_lfc})"
+    )
+
+    ax.scatter(
+        result[xval],
+        result["lfc"],
+        c=result["scatter_color"],
+        s=0.5,
+        alpha=0.5,
+    )
+    ax.scatter(
+        result_sig[xval],
+        result_sig["lfc"],
+        color="red",
+        s=4,
+        alpha=0.5,
+    )
+    texts = []
+
+    for _, row in result_sig.iterrows():
+        texts.append(
+            ax.text(
+                x=row[xval],
+                y=row["lfc"],
+                s=row["names"].split()[0],
+                fontsize=8,
+                alpha=1.0,
+                ha="left",
+                va="bottom",
+                bbox=dict(
+                    boxstyle="round,pad=0.1", facecolor="white", edgecolor="black"
+                ),
+            )
+        )
+
+    ylims = ax.get_ylim()
+    ymax = np.max(ylims) * 1.1
+    ymin = -0.5 if x_mode == "target" else -np.max(ylims) * 1.1
+    xlims = ax.get_xlim()
+    xmin = -0.5
+    xmax = xlims[1] * 1.1
+
+    adjust_text(
+        texts,
+        arrowprops=dict(
+            arrowstyle="-",
+            color="black",
+            lw=1,
+            alpha=0.5,
+            shrinkA=10,
+            shrinkB=0,
+        ),
+        expand=(1.25, 1.25),
+        avoid_text=True,
+        avoid_point=True,
+        prevent_crossings=True,
+        min_arrow_len=1,
+        max_move=[15, 15],
+    )
+
+    ax.text(
+        x=xmax * y_annot_xpos,
+        y=ymax * y_annot_ypos,
+        s=y_annot_up,  # assuming gene names are in 'names' column
+        fontsize=16,
+        alpha=1.0,
+        ha="left",  # horizontal alignment
+        va="bottom",  # vertical alignment
+    )
+    ax.text(
+        x=xmax * y_annot_xpos,
+        y=-ymax * y_annot_ypos,
+        s=y_annot_down,  # assuming gene names are in 'names' column
+        fontsize=16,
+        alpha=1.0,
+        ha="left",  # horizontal alignment
+        va="bottom",  # vertical alignment
+    )
+    ax.annotate(
+        "",
+        xy=(xmax * y_annot_xpos, ymax * y_annot_ypos * 0.95),
+        xytext=(xmax * y_annot_xpos, ymax * y_annot_ypos * 0.6),
+        arrowprops=dict(arrowstyle="->", color="black", lw=2),
+    )
+    ax.annotate(
+        "",
+        xy=(xmax * y_annot_xpos, -ymax * y_annot_ypos * 0.95),
+        xytext=(xmax * y_annot_xpos, -ymax * y_annot_ypos * 0.6),
+        arrowprops=dict(arrowstyle="->", color="black", lw=2),
+    )
+    legend_elements = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor="black",
+            markersize=6,
+            label="not differentially expressed",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor="#ADD8E6",
+            markersize=6,
+            label="differentially expressed",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor="red",
+            markersize=6,
+            label="unique markers",
+        ),
+    ]
+    ax.legend(
+        handles=legend_elements,
+        loc="upper right",
+        frameon=True,
+        fancybox=True,
+        shadow=True,
+        fontsize=8,
+    )
+    ax.set_xticks(np.round(np.linspace(0, xmax, 5)))
+    yticks = np.round(np.linspace(0, ymax, 4))
+    yticks = np.unique(np.concatenate([-yticks, yticks]))
+    ax.set_yticks(yticks)
+    ax.set_ylabel(r"Log$_{2}$ Fold Change")
+    ax.set_xlabel("Mean Expression")
+
+    ax.set_ylim([ymin, ymax])
+    ax.set_xlim([xmin, xmax])
+    return ax
 
 
 @validate_call(config={"arbitrary_types_allowed": True})
