@@ -20,6 +20,9 @@ def volcano_plot_differential_expression(
     y_annot_down: str = "",
     y_annot_xpos: float = 0.75,
     y_annot_ypos: float = 0.75,
+    y_max: float = np.inf,
+    legend_loc: str = "upper right",
+    gene_domain: list[str] = None,
     ax: Optional[Axes] = None,
     **kwargs,
 ) -> Axes:
@@ -42,29 +45,42 @@ def volcano_plot_differential_expression(
     result.loc[result["pvals_adj"] < max_pval, "scatter_color"] = "#ADD8E6"
     result_sig = result.query(
         f"{xval} > {min_exp} & pvals_adj < {max_pval} & (lfc >= {min_lfc} | lfc <= -{min_lfc})"
-    )
+    ).reset_index()
+
+    ymax = max(np.max(result["lfc"]), np.max(-result["lfc"]))
+    ymax = min(ymax, y_max)
+    ymin = -0.5 if x_mode == "target" else -ymax * 1.1
+    y_clip = result["lfc"].__array__()
+    y_clip[y_clip > ymax] = ymax
+    y_clip[y_clip < -ymax] = -ymax
+    y_sig_clip = result_sig["lfc"].__array__()
+    y_sig_clip[y_sig_clip > ymax] = ymax
+    y_sig_clip[y_sig_clip < -ymax] = -ymax
 
     ax.scatter(
         result[xval],
-        result["lfc"],
+        y_clip,
         c=result["scatter_color"],
         s=0.5,
         alpha=0.5,
     )
     ax.scatter(
         result_sig[xval],
-        result_sig["lfc"],
+        y_sig_clip,
         color="red",
         s=4,
         alpha=0.5,
     )
     texts = []
 
-    for _, row in result_sig.iterrows():
+    for i, row in result_sig.iterrows():
+        if gene_domain is not None:
+            if row["names"].split()[0] not in gene_domain:
+                continue
         texts.append(
             ax.text(
                 x=row[xval],
-                y=row["lfc"],
+                y=y_sig_clip[i],
                 s=row["names"].split()[0],
                 fontsize=8,
                 alpha=1.0,
@@ -76,30 +92,9 @@ def volcano_plot_differential_expression(
             )
         )
 
-    ylims = ax.get_ylim()
-    ymax = np.max(ylims) * 1.1
-    ymin = -0.5 if x_mode == "target" else -np.max(ylims) * 1.1
     xlims = ax.get_xlim()
     xmin = -0.5
     xmax = xlims[1] * 1.1
-
-    adjust_text(
-        texts,
-        arrowprops=dict(
-            arrowstyle="-",
-            color="black",
-            lw=1,
-            alpha=0.5,
-            shrinkA=10,
-            shrinkB=0,
-        ),
-        expand=(1.25, 1.25),
-        avoid_text=True,
-        avoid_point=True,
-        prevent_crossings=True,
-        min_arrow_len=1,
-        max_move=[15, 15],
-    )
 
     ax.text(
         x=xmax * y_annot_xpos,
@@ -117,7 +112,7 @@ def volcano_plot_differential_expression(
         fontsize=16,
         alpha=1.0,
         ha="left",  # horizontal alignment
-        va="bottom",  # vertical alignment
+        va="top",  # vertical alignment
     )
     ax.annotate(
         "",
@@ -162,21 +157,42 @@ def volcano_plot_differential_expression(
     ]
     ax.legend(
         handles=legend_elements,
-        loc="upper right",
+        loc=legend_loc,
         frameon=True,
         fancybox=True,
         shadow=True,
         fontsize=8,
     )
     ax.set_xticks(np.round(np.linspace(0, xmax, 5)))
-    yticks = np.round(np.linspace(0, ymax, 4))
-    yticks = np.unique(np.concatenate([-yticks, yticks]))
-    ax.set_yticks(yticks)
+    yticks = np.round(np.linspace(0, ymax, 4), 1)
+    yticks = np.sort(np.unique(np.concatenate([-yticks, yticks])))
+    yticks_lab = yticks.astype(str)
+    yticks_lab[0] = f"<= -{ymax}"
+    yticks_lab[-1] = f">= {ymax}"
+    ax.set_yticks(yticks, labels=yticks_lab)
     ax.set_ylabel(r"Log$_{2}$ Fold Change")
     ax.set_xlabel("Mean Expression")
 
-    ax.set_ylim([ymin, ymax])
+    ax.set_ylim([ymin, ymax * 1.1])
     ax.set_xlim([xmin, xmax])
+
+    adjust_text(
+        texts,
+        arrowprops=dict(
+            arrowstyle="-",
+            color="black",
+            lw=1,
+            alpha=0.5,
+            shrinkA=10,
+            shrinkB=0,
+        ),
+        expand=(1.25, 1.25),
+        avoid_text=True,
+        avoid_point=True,
+        prevent_crossings=True,
+        min_arrow_len=1,
+        max_move=[15, 15],
+    )
     return ax
 
 
