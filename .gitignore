@@ -4,6 +4,7 @@ __pycache__/
 build/
 dist/
 wheels/
+.opencode/
 *.egg-info
 *.so
 *.o
