@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 from scipy.sparse import csr_matrix, diags
 from scipy.spatial.distance import hamming
@@ -7,6 +5,9 @@ from shapely import LineString, frechet_distance
 from sksparse.cholmod import cholesky
 
 
+# TODO: grid search, adjust radius based on gaussian prior
+# TODO: generate a set of representative loops through custom distance function
+# TODO: pair up loops from two sets though frechet distance and do regression based matching
 def sp_ridge_regression_mod2(
     one_ridx_A,
     one_cidx_A,
@@ -15,9 +16,10 @@ def sp_ridge_regression_mod2(
     b,
     ridge_coef_a,
     ridge_coef_b,
-    n_search,
     n_neighbors,
     do_approximation,
+    n_search_cutoff=100,
+    n_optimize=10,
 ):
     # simplify A by only considering the neighborhood of the loop
     if do_approximation:
@@ -48,15 +50,6 @@ def sp_ridge_regression_mod2(
             np.ones(nrow_A_new) * (n_ones_per_row // 2) * -2,
         ]
     )
-    # weight matrix
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        W = diags(
-            b * (len(b) / np.sum(b) - len(b) / (len(b) - np.sum(b)))
-            + len(b) / (len(b) - np.sum(b))
-        )
-    # W = diags(np.repeat(1, nrow_A))
-    # as suggested in sksparse's docment, make A csr so that its transpose is csc
     A = csr_matrix(
         (
             data,
@@ -67,28 +60,33 @@ def sp_ridge_regression_mod2(
         ),
         shape=(nrow_A, ncol_A + nrow_A_new),
     )
-    B = A.transpose().dot(W).dot(A) + diags(
-        np.concatenate(
-            [
-                np.repeat(ridge_coef_a, ncol_A),
-                np.repeat(ridge_coef_b, nrow_A_new),
-            ]
-        )
-    )
+    ridge_coef_emp = ridge_coef_a * ridge_coef_b / (ridge_coef_a + ridge_coef_b)
+    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_emp, ncol_A + nrow_A_new))
+    factor_emp = cholesky(B)
+    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_a, ncol_A + nrow_A_new))
     factor = cholesky(B)
     best_diff = np.Inf
     best_s = None
-    for i in np.linspace(0, 1, n_search):
-        for j in np.linspace(0, 1, n_search):
-            s = factor(
-                A.transpose().dot(W.dot(b))
-                + np.concatenate(
-                    [
-                        np.repeat(ridge_coef_a * i, ncol_A),
-                        np.repeat(ridge_coef_b * j, nrow_A_new),
-                    ]
+    best_c = None
+    for i, mu_i in enumerate(np.linspace(0, 1, n_optimize)):
+        x = factor_emp(
+            A.transpose().dot(b) + np.repeat(ridge_coef_emp * mu_i, ncol_A + nrow_A_new)
+        )
+        c = (ridge_coef_a * x + ridge_coef_b * mu_i) / (ridge_coef_a + ridge_coef_b)
+        for j, cut_j in enumerate(np.linspace(0, 1, n_search_cutoff)):
+            c_scale = (c - cut_j) / (2 * np.max(c - cut_j)) + 0.5
+            if best_s is not None:
+                c_scale = c_scale * np.power(
+                    np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
+                    i * n_search_cutoff + j,
+                ) + best_s * (
+                    1
+                    - np.power(
+                        np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
+                        i * n_search_cutoff + j,
+                    )
                 )
-            )
+            s = factor(A.transpose().dot(b) + ridge_coef_a * c_scale)
             s[s >= 0.5] = 1
             s[s < 0.5] = 0
             pred = A[:, :ncol_A].dot(s[:ncol_A]) % 2
@@ -96,6 +94,7 @@ def sp_ridge_regression_mod2(
             if diff < best_diff:
                 best_diff = diff
                 best_s = s
+                best_c = c
     return (A[:, :ncol_A], best_s[:ncol_A])
 
 

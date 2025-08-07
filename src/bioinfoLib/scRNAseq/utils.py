@@ -92,6 +92,7 @@ def pairwise_differential_expression(
     groupby = f"de_{target_group}_to_{reference_group}"
     adata.obs[groupby] = group_column
     adata.obs[groupby + "_sub"] = group_column_subgroups
+    # TODO: add separate mode that does rank gene for each target group and get shared markers
     if mode == "balanced":
         group_exp = grouped_obs_mean(adata, groupby + "_sub")
         target_means = group_exp.loc[:, targets].mean(axis=1)
