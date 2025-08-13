@@ -76,15 +76,24 @@ def sp_ridge_regression_mod2(
         for j, cut_j in enumerate(np.linspace(0, 1, n_search_cutoff)):
             c_scale = (c - cut_j) / (2 * np.max(c - cut_j)) + 0.5
             if best_s is not None:
-                c_scale = c_scale * np.power(
-                    np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
-                    i * n_search_cutoff + j,
-                ) + best_s * (
-                    1
-                    - np.power(
-                        np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
-                        i * n_search_cutoff + j,
+                c_scale = (
+                    0.5
+                    * (
+                        c_scale
+                        * np.power(
+                            np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
+                            i * n_search_cutoff + j,
+                        )
+                        + best_s
+                        * (
+                            1
+                            - np.power(
+                                np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
+                                i * n_search_cutoff + j,
+                            )
+                        )
                     )
+                    + 0.5 * 0.5
                 )
             s = factor(A.transpose().dot(b) + ridge_coef_a * c_scale)
             s[s >= 0.5] = 1

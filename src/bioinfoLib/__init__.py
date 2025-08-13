@@ -18,6 +18,10 @@ try:
 except Exception as e:
     print(f"Could not import linearAlgebra modules {e}")
 try:
+    from . import RNAseq as rn
+except Exception as e:
+    print(f"Could not import RNAseq modules {e}")
+try:
     from . import scRNAseq as scr
 except Exception as e:
     print(f"Could not import scRNAseq modules {e}")
@@ -27,4 +31,4 @@ except Exception as e:
     print(f"Could not import topology modules {e}")
 
 # Export commonly used components
-__all__ = ["scr", "GP", "jl", "la", "tp"]
+__all__ = ["rn", "scr", "GP", "jl", "la", "tp"]
