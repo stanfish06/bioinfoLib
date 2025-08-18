@@ -44,6 +44,7 @@ dependencies = [
   "xgboost>=3.0.2",
   "python-dotenv>=1.1.1",
   "rpy2[all]>=3.6.1",
+  "pytest>=8.4.0",
 ]
 
 [project.optional-dependencies]
@@ -127,8 +128,6 @@ ext-modules = [
 name = "deeptoolsintervals"
 version = "0.1.9"
 requires-python = ">=3.7"
-dependencies = []
-platforms = ["linux"]
 
 [project.urls]
 Homepage = "https://github.com/stanfish06/bioinfoLib"

@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 from scipy.sparse import csr_matrix, diags
 from scipy.spatial.distance import hamming
@@ -16,10 +18,12 @@ def sp_ridge_regression_mod2(
     b,
     ridge_coef_a,
     ridge_coef_b,
-    n_neighbors,
-    do_approximation,
-    n_search_cutoff=100,
-    n_optimize=10,
+    n_neighbors=10,
+    do_approximation=False,
+    n_search_cutoff=10,
+    max_bits_flip=10,
+    max_bits_comb=10,
+    n_post_process=10,
 ):
     # simplify A by only considering the neighborhood of the loop
     if do_approximation:
@@ -67,43 +71,63 @@ def sp_ridge_regression_mod2(
     factor = cholesky(B)
     best_diff = np.Inf
     best_s = None
-    best_c = None
-    for i, mu_i in enumerate(np.linspace(0, 1, n_optimize)):
-        x = factor_emp(
-            A.transpose().dot(b) + np.repeat(ridge_coef_emp * mu_i, ncol_A + nrow_A_new)
-        )
-        c = (ridge_coef_a * x + ridge_coef_b * mu_i) / (ridge_coef_a + ridge_coef_b)
-        for j, cut_j in enumerate(np.linspace(0, 1, n_search_cutoff)):
-            c_scale = (c - cut_j) / (2 * np.max(c - cut_j)) + 0.5
-            if best_s is not None:
-                c_scale = (
-                    0.5
-                    * (
-                        c_scale
-                        * np.power(
-                            np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
-                            i * n_search_cutoff + j,
-                        )
-                        + best_s
-                        * (
-                            1
-                            - np.power(
-                                np.power(0.01, 1 / (n_optimize * n_search_cutoff - 1)),
-                                i * n_search_cutoff + j,
-                            )
-                        )
-                    )
-                    + 0.5 * 0.5
-                )
-            s = factor(A.transpose().dot(b) + ridge_coef_a * c_scale)
-            s[s >= 0.5] = 1
-            s[s < 0.5] = 0
-            pred = A[:, :ncol_A].dot(s[:ncol_A]) % 2
+
+    x = factor_emp(
+        A.transpose().dot(b) + np.repeat(ridge_coef_emp * 0.5, ncol_A + nrow_A_new)
+    )
+    c = (ridge_coef_a * x + ridge_coef_b * 0.5) / (ridge_coef_a + ridge_coef_b)
+    min_cut = np.min(c)
+    max_cut = np.max(c)
+    for cut_i in np.linspace(min_cut, max_cut, n_search_cutoff):
+        c_scale = (c - cut_i) / (2 * (np.max(np.abs(c - cut_i))) + 1e-6) + 0.5
+        s = factor(A.transpose().dot(b) + ridge_coef_a * c_scale)
+        min_cut_s = np.min(s)
+        max_cut_s = np.max(s)
+        for cut_j in np.linspace(min_cut_s, max_cut_s, n_search_cutoff):
+            s_bin = s.copy()
+            s_bin[s >= cut_j] = 1
+            s_bin[s < cut_j] = 0
+            pred = A[:, :ncol_A].dot(s_bin[:ncol_A]) % 2
             diff = hamming(pred, b)
             if diff < best_diff:
                 best_diff = diff
-                best_s = s
-                best_c = c
+                best_s = s_bin
+
+    for _ in range(n_post_process):
+        if best_diff == 0:
+            break
+        # try bit flip to improve solution
+        grad_vec = np.zeros(ncol_A)
+        for i in range(ncol_A):
+            best_s_tmp = best_s.copy()
+            best_s_tmp[i] = 1 - best_s_tmp[i]
+            pred = A[:, :ncol_A].dot(best_s_tmp[:ncol_A]) % 2
+            diff = hamming(pred, b)
+            grad_vec[i] = diff - best_diff
+        # find bits that improve the result
+        good_bits = np.where(grad_vec <= 0)[0]
+        if len(good_bits) > 0:
+            best_bits = np.argsort(grad_vec[good_bits])[
+                : min(max_bits_flip, len(good_bits))
+            ]
+            best_bits = good_bits[best_bits]
+            best_s_k = best_s.copy()
+            best_diff_k = best_diff
+            for n_flips in range(1, min(max_bits_comb, len(best_bits)) + 1):
+                for bit_comb in itertools.combinations(best_bits, n_flips):
+                    best_s_tmp = best_s.copy()
+                    for bit_idx in bit_comb:
+                        best_s_tmp[bit_idx] = 1 - best_s_tmp[bit_idx]
+                    pred = A[:, :ncol_A].dot(best_s_tmp[:ncol_A]) % 2
+                    diff = hamming(pred, b)
+                    if diff < best_diff:
+                        best_s_k = best_s_tmp
+                        best_diff_k = diff
+                        if diff == 0:
+                            break
+            best_s = best_s_k.copy()
+            best_diff = best_diff_k
+
     return (A[:, :ncol_A], best_s[:ncol_A])
 
 

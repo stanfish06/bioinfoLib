@@ -6,3 +6,9 @@ python.uv_venv_auto = true
 
 [tasks.build]
 run = "uv sync && uv build"
+
+[tasks.info]
+run = "uv --version && python --version"
+
+[tasks.test]
+run = "uv run pytest -s tests/*"

@@ -89,3 +89,10 @@ function boundary_mat_fill_hole(filtration::Ripserer.AbstractFiltration, rep_cyc
     end
     return vcat(thread_buffer...)
 end
+
+function recontstruct_multiple_cycles(
+    filtration::Ripserer.AbstractFiltration,
+    interval
+)
+    
+end
