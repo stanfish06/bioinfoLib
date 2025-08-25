@@ -1,0 +1,6 @@
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+import bioinfoLib as binf
+import scanpy as sc
+#+END_SRC
+
+#+RESULTS:

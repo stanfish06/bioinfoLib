@@ -10,6 +10,7 @@ from sksparse.cholmod import cholesky
 # TODO: grid search, adjust radius based on gaussian prior
 # TODO: generate a set of representative loops through custom distance function
 # TODO: pair up loops from two sets though frechet distance and do regression based matching
+# TODO: if I generate a set of homologous loops, can I statistically test if a query loop is different or the same as this set?
 def sp_ridge_regression_mod2(
     one_ridx_A,
     one_cidx_A,
