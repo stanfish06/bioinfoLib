@@ -1,6 +1,46 @@
 #+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
 import bioinfoLib as binf
-import scanpy as sc
+from juliacall import Main as julia
+import numpy as np
+from sklearn.metrics import pairwise_distances
 #+END_SRC
 
 #+RESULTS:
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+points = np.array(
+    [row for row in julia.noisy_circle(100, 1, 0.5)],
+    dtype=float
+)
+dist_mat = pairwise_distances(points)
+dist_mat = (dist_mat + dist_mat.T) / 2
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+rep_cycle_multi = julia.reconstruct_n_loop_representatives(
+    dist_mat,
+    0,
+    0.25,
+    5,
+    10
+)
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+rep_list = [list(lp) for lp in rep_cycle_multi[0]]
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.scatter(points[:,0], points[:,1])
+for lp in rep_list:
+    lp_tmp = lp.copy()
+    lp_tmp.append(lp[0])
+    idx = np.array(lp_tmp) - 1
+    ax.plot(points[idx, 0], points[idx, 1])
+#+END_SRC
+
+#+RESULTS:
+[[file:./.ob-jupyter/9e33c36fe56476a95c984a34996d2c9b797880aa.png]]
