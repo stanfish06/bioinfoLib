@@ -97,15 +97,17 @@ end
 function reconstruct_n_loop_representatives(
     dist_mat,
     rep_idx,
+    n,
     life_pct=0.1,
-    n_permute=3,
-    n_cycles_per_permute=5,
-    loop_lower_pct=15,
-    loop_upper_pct=85,
+    n_permute=1,
+    n_force_deviate=4,
+    n_cycles_per_permute=4,
+    loop_lower_pct=5,
+    loop_upper_pct=95,
 )
     cycles_pool_final = Vector{Vector{Int64}}()
     cycles_dist_final = Vector{Float64}()
-    for k in 1:n_permute
+    for _ in 1:n_permute
         perm = shuffle(1:size(dist_mat, 1))
         filt = Rips(dist_mat[perm, perm])
         res = ripserer(filt, reps=1)
@@ -132,22 +134,31 @@ function reconstruct_n_loop_representatives(
             birth.(edges_filt),
             birth.(cocycles_filt) * Inf
         )
-        g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
         cycles_pool = Vector{Vector{Int64}}()
         cycles_dist = Vector{Float64}()
-        for (i, j) in Iterators.map(vertices, cocycles_filt)
-            res = yen_k_shortest_paths(g, i, j, g.weights, n_cycles_per_permute)
-            # append!(cycles_pool, res.paths)
-            for path in res.paths
-                push!(cycles_pool, perm[path])
+        for _ in 1:n_force_deviate
+            cycles_pool_tmp = Vector{Vector{Int64}}()
+            g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
+            for (i, j) in Iterators.map(vertices, cocycles_filt)
+                res = yen_k_shortest_paths(g, i, j, g.weights, n_cycles_per_permute)
+                for path in res.paths
+                    push!(cycles_pool, perm[path])
+                    push!(cycles_pool_tmp, path)
+                end
+                append!(cycles_dist, res.dists)
             end
-            append!(cycles_dist, res.dists)
+            # force deviation from the previous cycles by increasing the edge weights to infinity
+            for path in cycles_pool_tmp
+                append!(sources, path[1:end-1])
+                append!(destinations, path[2:end])
+                append!(weights, fill(Inf, length(path)-1))
+            end
         end
         cycles_pool = sort(collect(zip(cycles_dist, cycles_pool)), by = first)
-        step = (loop_upper_pct - loop_lower_pct) / (n_cycles_per_permute - 1)
         n_cycles_total = length(cycles_pool)
+        step = (loop_upper_pct - loop_lower_pct) / (n_cycles_total - 1)
         cycles_idx_pick = Vector{Int64}()
-        for i in 1:n_cycles_per_permute
+        for i in 1:n_cycles_total
             dist_pct = (loop_lower_pct + step * (i - 1)) / 100
             push!(cycles_idx_pick, min(floor(n_cycles_total * dist_pct) + 1, n_cycles_total))
         end
@@ -156,7 +167,19 @@ function reconstruct_n_loop_representatives(
         append!(cycles_pool_final, top_cycles)
         append!(cycles_dist_final, top_cycles_dist)
     end
-    return (cycles_pool_final, cycles_dist_final)
+    cycles_pool_final = sort(collect(zip(cycles_dist_final, cycles_pool_final)), by = first)
+    n_cycles_total = length(cycles_pool_final)
+    n_cycles_return = min(n_cycles_total, n)
+    step = (loop_upper_pct - loop_lower_pct) / (n_cycles_return - 1)
+    cycles_idx_pick = Vector{Int64}()
+    for i in 1:n_cycles_return
+        dist_pct = (loop_lower_pct + step * (i - 1)) / 100
+        push!(cycles_idx_pick, min(floor(n_cycles_total * dist_pct) + 1, n_cycles_total))
+    end
+    top_cycles = last.(cycles_pool_final[cycles_idx_pick])
+    top_cycles_dist = first.(cycles_pool_final[cycles_idx_pick])
+    mask = top_cycles_dist .< Inf
+    return (top_cycles[mask], top_cycles_dist[mask])
 end
 
 function noisy_circle(n, r=1, noise=0.1)
