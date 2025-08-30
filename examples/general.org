@@ -1,5 +1,6 @@
 #+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
 import bioinfoLib as binf
+from bioinfoLib.topology.containers import HomologyData
 from juliacall import Main as julia
 import numpy as np
 from sklearn.metrics import pairwise_distances
@@ -9,38 +10,62 @@ from sklearn.metrics import pairwise_distances
 
 #+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
 points = np.array(
-    [row for row in julia.noisy_circle(100, 1, 0.5)],
+    [row for row in julia.noisy_circle(500, 1, 0.5)],
     dtype=float
 )
-dist_mat = pairwise_distances(points)
-dist_mat = (dist_mat + dist_mat.T) / 2
+data = HomologyData(points)
 #+END_SRC
 
 #+RESULTS:
 
 #+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
-rep_cycle_multi = julia.reconstruct_n_loop_representatives(
-    dist_mat,
-    0,
-    0.25,
-    5,
-    10
-)
+data.compute_homology(0.5)
 #+END_SRC
 
 #+RESULTS:
 
 #+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
-rep_list = [list(lp) for lp in rep_cycle_multi[0]]
+data.compute_bd_matrix(0.3)
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+data.compute_loop_representatives(4, 4, 0.8)
+#+END_SRC
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+data.compute_loop_representatives(4, 4, 0.8)
+#+END_SRC
+
+#+RESULTS:
+: 52574032-ca88-40a5-80f0-b9bb7eab4b06
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+data.loops_coords[0][0]
+#+END_SRC
+
+#+RESULTS:
+: 3851e787-ed97-46bc-b8ab-fdf328c07a50
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots(figsize=(5, 5))
 ax.scatter(points[:,0], points[:,1])
-for lp in rep_list:
-    lp_tmp = lp.copy()
-    lp_tmp.append(lp[0])
-    idx = np.array(lp_tmp) - 1
-    ax.plot(points[idx, 0], points[idx, 1])
+for lp in data.loops_coords[0]:
+    ax.plot(lp[:, 0], lp[:, 1])
 #+END_SRC
 
 #+RESULTS:
-[[file:./.ob-jupyter/9e33c36fe56476a95c984a34996d2c9b797880aa.png]]
+[[file:./.ob-jupyter/23d1f9fb22bc5863db139f8fff3cccf17d42a510.png]]
+
+#+BEGIN_SRC jupyter-python :session py :async yes :kernel bioinfolib
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.scatter(points[:,0], points[:,1])
+for lp in data.loops_coords[0]:
+    ax.plot(lp[:, 0], lp[:, 1])
+#+END_SRC
+
+#+RESULTS:
+[[file:./.ob-jupyter/8a6dc4b8fd86851bc66faf0b379d5ec49fba6de3.png]]

@@ -21,48 +21,44 @@ from .utils import edge_idx_encode, evaluate_match_worker
 
 @dataclass
 class HomologyData:
-    data_original: np.ndarray
-    data_plot: np.ndarray
-    sample_label: str = ""
-    n_true_loops: int = 0
-    loop_size: list[float] = field(default_factory=list)
-    noise_level: float = 0.0
-    n_points: int = 0
-    persistence_diagram_original: np.ndarray = field(
-        default_factory=lambda: np.array([])
-    )
-    loops_eidx_original: list[np.ndarray] = field(default_factory=list)
-    loops_coords_original: list[np.ndarray] = field(default_factory=list)
-    loops_coords_original_plot: list[np.ndarray] = field(default_factory=list)
+    data: np.ndarray
+    data_visualization: np.ndarray = field(default_factory=lambda: np.array([]))
+    persistence_diagram: np.ndarray = field(default_factory=lambda: np.array([]))
+    loops_eidx: list[list[np.ndarray]] = field(default_factory=list)
+    loops_coords: list[list[np.ndarray]] = field(default_factory=list)
     bd_mat: Tuple = ()
     bd_column_birth_t: np.ndarray = field(
         default_factory=lambda: np.array([], dtype=float)
     )
     bd_row_id: np.ndarray = field(default_factory=lambda: np.array([], dtype=int))
-    data_boot: list[np.ndarray] = field(default_factory=list)
     persistence_diagram_boot: list[np.ndarray] = field(default_factory=list)
-    loops_eidx_boot: list[np.ndarray] = field(default_factory=list)
-    loops_coords_boot: list[np.ndarray] = field(default_factory=list)
+    loops_eidx_boot: list[list[np.ndarray]] = field(default_factory=list)
+    loops_coords_boot: list[list[np.ndarray]] = field(default_factory=list)
     matching_df: list[pd.DataFrame] = field(default_factory=list)
     tracks: dict = field(default_factory=dict)  # e.g. (1,2): [(2,3),...]
     tracks_pvals: dict = field(default_factory=dict)
     n_booted: int = 0
     loop_rank: pd.DataFrame = field(default_factory=pd.DataFrame)
     parameters: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
-    def compute_original_homology(self, thresh):
-        dist_mat = pairwise_distances(self.data_original)
+    def __post_init__(self):
+        if len(self.data_visualization) != len(self.data):
+            self.data_visualization = self.data
+
+    def compute_homology(self, thresh):
+        dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
         # don't compute representatives if only persistence diagram is needed
         result_cycle = julia.ripserer(filt, reps=False)
         birth_t = np.array([i[1] for i in result_cycle[1]])
         death_t = np.array([i[2] for i in result_cycle[1]])
-        self.persistence_diagram_original = np.vstack([birth_t, death_t]).T
-        self.parameters["max_filtration_PH_original"] = thresh
+        self.persistence_diagram = np.vstack([birth_t, death_t]).T
+        self.parameters["filtration_threshold_homology"] = thresh
 
     def compute_bd_matrix(self, thresh):
-        dist_mat = pairwise_distances(self.data_original)
+        dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
         bd, birth_t = julia.boundary_mat_d2(filt)
@@ -76,118 +72,52 @@ class HomologyData:
         ncol_A = int(len(one_ridx_A) / 3)
         one_cidx_A = np.repeat(np.arange(ncol_A), 3).astype(int)
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
-        self.parameters["filtration_bd_matrix"] = thresh
+        self.parameters["filtration_threshold_bd_matrix"] = thresh
 
-    def compute_original_loops_no_bd(self, thresh, top_n):
-        loop_coords = []
-        loop_coords_plot = []
-        dist_mat = pairwise_distances(self.data_original)
+    def compute_loop_representatives(self, n_top, n_each, life_pct=0.1):
+        dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
-        filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-        result_cycle = julia.ripserer(filt, reps=1)
-        for n in range(len(result_cycle[1]) - top_n, len(result_cycle[1])):
-            rep = result_cycle[1][n]
-            rep = julia.Ripserer.reconstruct_cycle(filt, rep, rep.birth)
-            loop_i_coords = []
-            loop_i_coords_plot = []
-            for i, (v1, v2) in enumerate(rep):
-                if i == 0:
-                    loop_i_coords.extend(self.data_original[[v1 - 1, v2 - 1], :])
-                    loop_i_coords_plot.extend(self.data_plot[[v1 - 1, v2 - 1], :])
-                elif i == 1:
-                    e0 = loop_i_coords[:2]
-                    dist_e0_e1 = cdist(e0, self.data_original[[v1 - 1, v2 - 1], :])
-                    i0, j0 = np.where(dist_e0_e1 == 0)
-                    if i0 == 0:
-                        loop_i_coords = loop_i_coords[::-1]
-                        loop_i_coords_plot = loop_i_coords_plot[::-1]
-                    if j0 == 1:
-                        loop_i_coords.append(self.data_original[v1 - 1, :])
-                        loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
-                    else:
-                        loop_i_coords.append(self.data_original[v2 - 1, :])
-                        loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
-                else:
-                    e0 = np.expand_dims(loop_i_coords[-1], 0)
-                    dist_e0_e1 = cdist(e0, self.data_original[[v1 - 1, v2 - 1], :])
-                    i0, j0 = np.where(dist_e0_e1 == 0)
-                    if j0 == 1:
-                        loop_i_coords.append(self.data_original[v1 - 1, :])
-                        loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
-                    else:
-                        loop_i_coords.append(self.data_original[v2 - 1, :])
-                        loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
-            loop_coords.append(np.array(loop_i_coords))
-            loop_coords_plot.append(np.array(loop_i_coords_plot))
-        return (loop_coords, loop_coords_plot)
+        n_total_loops = len(self.persistence_diagram)
+        n_compute = min(n_total_loops, n_top)
+        self.loops_coords = []
+        self.loops_eidx = []
+        if n_compute > 0:
+            for i in range(n_compute):
+                reps = julia.reconstruct_n_loop_representatives(
+                    dist_mat,
+                    i,
+                    n_each,
+                    self.parameters["filtration_threshold_homology"],
+                    life_pct,
+                )
+                # julia to python
+                reps = [list(lp) for lp in reps[0]]
+                reps_eidx = []
+                reps_coords = []
+                for i in range(len(reps)):
+                    rep_i_idx = [j - 1 for j in reps[i]]
+                    rep_i_idx.append(rep_i_idx[0])
+                    rep_i_coords = []
+                    rep_i_eidx = []
 
-    def compute_original_loops(self, thresh):
-        if not self.bd_mat:
-            raise ValueError("compute boundary matrix first")
-        else:
-            self.loops_eidx_original = []
-            self.loops_coords_original = []
-            self.parameters["max_filtration_PH_representative"] = thresh
-            dist_mat = pairwise_distances(self.data_original)
-            dist_mat = (dist_mat + dist_mat.T) / 2
-            filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-            result_cycle = julia.ripserer(filt, reps=1)
-            for n in range(len(result_cycle[1])):
-                rep = result_cycle[1][n]
-                rep = julia.Ripserer.reconstruct_cycle(filt, rep, rep.birth)
-                rep_ridx = []
-                for i, j in rep:
-                    edge_idx = edge_idx_encode(i - 1, j - 1)
-                    if edge_idx in self.bd_row_id:
-                        rep_ridx.append(np.where(edge_idx == self.bd_row_id)[0][0])
-                if len(rep_ridx) > 0:
-                    self.loops_eidx_original.append(np.array(rep_ridx))
-                    loop_i_coords = []
-                    loop_i_coords_plot = []
-                    for i, (v1, v2) in enumerate(rep):
-                        if i == 0:
-                            loop_i_coords.extend(
-                                self.data_original[[v1 - 1, v2 - 1], :]
+                    for j in range(1, len(rep_i_idx)):
+                        v1 = rep_i_idx[j - 1]
+                        v2 = rep_i_idx[j]
+                        edge_idx = edge_idx_encode(v1, v2)
+                        if edge_idx in self.bd_row_id:
+                            rep_i_eidx.append(
+                                np.where(edge_idx == self.bd_row_id)[0][0]
                             )
-                            loop_i_coords_plot.extend(
-                                self.data_plot[[v1 - 1, v2 - 1], :]
-                            )
-                        elif i == 1:
-                            e0 = loop_i_coords[:2]
-                            dist_e0_e1 = cdist(
-                                e0, self.data_original[[v1 - 1, v2 - 1], :]
-                            )
-                            i0, j0 = np.where(dist_e0_e1 == 0)
-                            if i0 == 0:
-                                loop_i_coords = loop_i_coords[::-1]
-                                loop_i_coords_plot = loop_i_coords_plot[::-1]
-                            if j0 == 1:
-                                loop_i_coords.append(self.data_original[v1 - 1, :])
-                                loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
-                            else:
-                                loop_i_coords.append(self.data_original[v2 - 1, :])
-                                loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
-                        else:
-                            e0 = np.expand_dims(loop_i_coords[-1], 0)
-                            dist_e0_e1 = cdist(
-                                e0, self.data_original[[v1 - 1, v2 - 1], :]
-                            )
-                            i0, j0 = np.where(dist_e0_e1 == 0)
-                            if j0 == 1:
-                                loop_i_coords.append(self.data_original[v1 - 1, :])
-                                loop_i_coords_plot.append(self.data_plot[v1 - 1, :])
-                            else:
-                                loop_i_coords.append(self.data_original[v2 - 1, :])
-                                loop_i_coords_plot.append(self.data_plot[v2 - 1, :])
-                    self.loops_coords_original.append(np.array(loop_i_coords))
-                    self.loops_coords_original_plot.append(np.array(loop_i_coords_plot))
-                else:
-                    # TODO: may lead to bugs, check boot
-                    self.loops_eidx_original.append(np.array([]))
-                    self.loops_coords_original.append(np.array([]))
-                    self.loops_coords_original_plot.append(np.array([]))
-            for i in range(len(self.loops_eidx_original)):
-                sloop_birth_t = self.persistence_diagram_original[i, 0]
+                        rep_i_coords.append(self.data_visualization[v1, :])
+                    rep_i_coords.append(self.data_visualization[v2, :])
+
+                    reps_eidx.append(np.array(rep_i_eidx))
+                    reps_coords.append(np.array(rep_i_coords))
+                self.loops_coords.append(reps_coords)
+                self.loops_eidx.append(reps_eidx)
+
+            for i in range(len(self.loops_eidx)):
+                sloop_birth_t = self.persistence_diagram[i, 0]
                 if f"(0,{i})" not in self.tracks:
                     self.tracks[f"(0,{i})"] = {
                         "birth_t": sloop_birth_t,
@@ -197,7 +127,6 @@ class HomologyData:
     def clean_boot(self):
         self.tracks = {}
         self.n_booted = 0
-        self.data_boot = []
         self.loops_coords_boot = []
         self.loops_eidx_boot = []
         self.persistence_diagram_boot = []
@@ -228,10 +157,7 @@ class HomologyData:
             for src_loop, n, p in presence_probs
         ]
         # null distribution for lifetime
-        lifetimes = [
-            self.persistence_diagram_original[:, 1]
-            - self.persistence_diagram_original[:, 0]
-        ]
+        lifetimes = [self.persistence_diagram[:, 1] - self.persistence_diagram[:, 0]]
         for boot_ph in self.persistence_diagram_boot:
             lifetimes.append(boot_ph[:, 1] - boot_ph[:, 0])
         lifetimes_full = np.concatenate(lifetimes)
@@ -311,14 +237,12 @@ class HomologyData:
 
         for i in range(n):
             boot_idx = np.random.choice(
-                self.data_original.shape[0],
-                size=self.data_original.shape[0],
+                self.data.shape[0],
+                size=self.data.shape[0],
                 replace=True,
             )
-            x_boot = self.data_original[boot_idx]
-            x_boot = x_boot + np.random.normal(
-                scale=0.0001, size=self.data_original.shape
-            )
+            x_boot = self.data[boot_idx]
+            x_boot = x_boot + np.random.normal(scale=0.0001, size=self.data.shape)
             dist_mat = pairwise_distances(x_boot)
             dist_mat = (dist_mat + dist_mat.T) / 2
             filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)

@@ -98,20 +98,23 @@ function reconstruct_n_loop_representatives(
     dist_mat,
     rep_idx,
     n,
+    threshold,
     life_pct=0.1,
     n_permute=1,
     n_force_deviate=4,
     n_cycles_per_permute=4,
     loop_lower_pct=5,
     loop_upper_pct=95,
+    n_max_cocycles=10
 )
     cycles_pool_final = Vector{Vector{Int64}}()
     cycles_dist_final = Vector{Float64}()
     for _ in 1:n_permute
         perm = shuffle(1:size(dist_mat, 1))
-        filt = Rips(dist_mat[perm, perm])
+        filt = Rips(dist_mat[perm, perm], sparse=true, threshold=threshold)
         res = ripserer(filt, reps=1)
         rep = res[2][length(res[2]) - rep_idx]
+        print(life_pct)
         filt_t = birth(rep) + (death(rep) - birth(rep)) * life_pct
         # get all cocycle representatives
         cocycles_filt = filter!(simplex.(representative(rep))) do sx
@@ -139,13 +142,18 @@ function reconstruct_n_loop_representatives(
         for _ in 1:n_force_deviate
             cycles_pool_tmp = Vector{Vector{Int64}}()
             g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
+            n_cocycles_used = 0
             for (i, j) in Iterators.map(vertices, cocycles_filt)
+                if n_cocycles_used == n_max_cocycles
+                    break
+                end
                 res = yen_k_shortest_paths(g, i, j, g.weights, n_cycles_per_permute)
                 for path in res.paths
                     push!(cycles_pool, perm[path])
                     push!(cycles_pool_tmp, path)
                 end
                 append!(cycles_dist, res.dists)
+                n_cocycles_used = n_cocycles_used + 1
             end
             # force deviation from the previous cycles by increasing the edge weights to infinity
             for path in cycles_pool_tmp
