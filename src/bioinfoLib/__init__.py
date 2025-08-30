@@ -29,6 +29,10 @@ try:
     from . import topology as tp
 except Exception as e:
     print(f"Could not import topology modules {e}")
+try:
+    from . import image as im
+except Exception as e:
+    print(f"Could not import image modules {e}")
 
 # Export commonly used components
-__all__ = ["rn", "scr", "GP", "jl", "la", "tp"]
+__all__ = ["rn", "scr", "GP", "jl", "la", "tp", "im"]

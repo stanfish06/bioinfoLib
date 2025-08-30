@@ -45,6 +45,7 @@ dependencies = [
   "python-dotenv>=1.1.1",
   "rpy2[all]>=3.6.1",
   "pytest>=8.4.0",
+  "python-bioformats>=4.1.0",
 ]
 
 [project.optional-dependencies]
