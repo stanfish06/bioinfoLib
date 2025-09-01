@@ -33,6 +33,10 @@ try:
     from . import image as im
 except Exception as e:
     print(f"Could not import image modules {e}")
+try:
+    from . import R as r
+except Exception as e:
+    print(f"Could not import R modules {e}")
 
 # Export commonly used components
-__all__ = ["rn", "scr", "GP", "jl", "la", "tp", "im"]
+__all__ = ["rn", "scr", "GP", "jl", "la", "tp", "im", "r"]

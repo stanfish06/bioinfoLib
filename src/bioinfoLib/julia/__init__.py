@@ -8,8 +8,9 @@ packages = {
     "StatsBase": ("2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91", None),
     "Combinatorics": ("861a8166-3701-5b0c-9a16-15d98fcdc6aa", None),
     "Graphs": ("86223c79-3864-5bf0-83f7-82e725a168b6", None),
-    "SimpleWeightedGraphs": ("47aef6b3-ad0c-573a-a1e2-d07658019622", None)
+    "SimpleWeightedGraphs": ("47aef6b3-ad0c-573a-a1e2-d07658019622", None),
 }
+
 
 def get_installed_packages():
     f = io.StringIO()
@@ -18,15 +19,14 @@ def get_installed_packages():
     output = f.getvalue()
     pkg_list = []
     uuid_list = []
-    lines = output.strip().split('\n')
+    lines = output.strip().split("\n")
     pkg_section_start = False
     for ln in lines:
         ln = ln.strip()
-        print(ln)
         if ln:
             if pkg_section_start:
-                if ':' in ln:
-                    pkg_name, pkg_info = ln.split(':', 1)
+                if ":" in ln:
+                    pkg_name, pkg_info = ln.split(":", 1)
                     pkg_name = pkg_name.strip()
                     pkg_list.append(pkg_name)
                     uuid = re.search(r"'uuid':\s*'([^']+)'", pkg_info)
@@ -36,7 +36,9 @@ def get_installed_packages():
                 pkg_section_start = True
     return (pkg_list, uuid_list)
 
+
 current_packages = get_installed_packages()
+print("Julia package information:")
 for package, (uuid, version) in packages.items():
     add_pkg = False
     if package not in current_packages[0]:
@@ -45,7 +47,9 @@ for package, (uuid, version) in packages.items():
         idx = current_packages[0].index(package)
         installed_uuit = current_packages[1][idx]
         if installed_uuit != uuid:
-            print(f"{pkg_name} installed but from a different uuid. Will update its uuid")
+            print(
+                f"{pkg_name} installed but from a different uuid. Will update its uuid"
+            )
             add_pkg = True
     if add_pkg:
         try:

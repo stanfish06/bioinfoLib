@@ -1,5 +1,6 @@
 import os
 import subprocess
+from . import utils
 
 from dotenv import load_dotenv
 
@@ -11,5 +12,3 @@ r_ld_path = (
 )
 existing = os.environ.get("LD_LIBRARY_PATH", "")
 os.environ["LD_LIBRARY_PATH"] = f"{r_ld_path}:{existing}"
-
-import rpy2.robjects as robjects

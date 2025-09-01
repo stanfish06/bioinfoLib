@@ -16,5 +16,8 @@ run = "uv run ipython kernel install --name 'bioinfolib' --user"
 [tasks.julia]
 run = "uv run julia --project=./.venv/julia_env -L ./src/bioinfoLib/julia/ripserer_helper.jl"
 
+[tasks.R]
+run = "uv run Rscript ./scripts/install_bioc_packages.R"
+
 [tasks.test]
 run = "uv run pytest -s tests/*"

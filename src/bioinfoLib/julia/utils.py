@@ -1,6 +1,7 @@
 from juliacall import Main as julia
 
 
+# not sure why julia automatically load my script but this seems not required
 def ripserer_helper():
     # Initialize required Julia packages
     julia.seval("using Ripserer")
