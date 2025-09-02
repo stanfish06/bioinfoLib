@@ -1,4 +1,5 @@
 import itertools
+from itertools import product
 
 import numpy as np
 from scipy.sparse import csr_matrix, diags
@@ -19,7 +20,7 @@ def sp_ridge_regression_mod2(
     b,
     ridge_coef_a,
     ridge_coef_b,
-    n_neighbors=10,
+    n_neighbors=1,
     do_approximation=False,
     n_search_cutoff=10,
     max_bits_flip=10,
@@ -147,10 +148,10 @@ def evaluate_match(
     ridge_coef_a,
     ridge_coef_b,
     n_search,
-    source_loop_edges,
-    target_loop_edges,
-    source_loop_coords,
-    target_loop_coords,
+    source_loops_edges,
+    target_loops_edges,
+    source_loops_coords,
+    target_loops_coords,
     one_ridx_A,
     one_cidx_A,
     do_regression,
@@ -159,78 +160,87 @@ def evaluate_match(
     bd_column_birth_t,
     source_loop_birth_t,
 ):
+    n_sources = len(source_loops_edges)
+    n_targets = len(target_loops_edges)
     if not do_regression:
-        dist = min(
-            np.min(
-                [
-                    frechet_distance(
-                        LineString(
-                            np.concatenate(
-                                [source_loop_coords[i:, :], source_loop_coords[0:i, :]]
-                            )
-                        ),
-                        LineString(target_loop_coords),
-                        densify=0.5,
-                    )
-                    for i in range(source_loop_coords.shape[0])
-                ]
-            ),
-            np.min(
-                [
-                    frechet_distance(
-                        LineString(
-                            np.concatenate(
-                                [source_loop_coords[i:, :], source_loop_coords[0:i, :]]
-                            )[::-1, :]
-                        ),
-                        LineString(target_loop_coords),
-                        densify=0.5,
-                    )
-                    for i in range(source_loop_coords.shape[0])
-                ]
-            ),
-        )
+        dists = []
+        for i, j in product(range(n_sources), range(n_targets)):
+            sloop_coords = source_loops_coords[i]
+            tloop_coords = target_loops_coords[j]
+            dist = min(
+                np.min(
+                    [
+                        frechet_distance(
+                            LineString(
+                                np.concatenate(
+                                    [sloop_coords[i:, :], sloop_coords[0:i, :]]
+                                )
+                            ),
+                            LineString(tloop_coords),
+                            densify=0.5,
+                        )
+                        for i in range(sloop_coords.shape[0])
+                    ]
+                ),
+                np.min(
+                    [
+                        frechet_distance(
+                            LineString(
+                                np.concatenate(
+                                    [sloop_coords[i:, :], sloop_coords[0:i, :]]
+                                )[::-1, :]
+                            ),
+                            LineString(tloop_coords),
+                            densify=0.5,
+                        )
+                        for i in range(sloop_coords.shape[0])
+                    ]
+                ),
+            )
+            dists.append(dist)
+        dist = np.mean(dists)
         if dist > max_frechet_dist:
             return None
         else:
             return dist
     else:
-        # start_time = time.time()
-        b1 = np.zeros(nrow_A)
-        b1[source_loop_edges] = 1
-        b2 = np.zeros(nrow_A)
-        b2[target_loop_edges] = 1
-        b = np.logical_xor(b1, b2).astype(int)
-
-        # remove columns with birth t larger than the birth t of the loop
-        columns_kept = np.where(bd_column_birth_t <= source_loop_birth_t)[0]
-        if columns_kept.size == 0:
-            return np.nan
-        mask = ~np.isin(one_cidx_A, columns_kept)
-        one_ridx_A = one_ridx_A[~mask]
-        one_cidx_A = one_cidx_A[~mask]
-        ncol_A = np.max(one_cidx_A) + 1
-        A, s = sp_ridge_regression_mod2(
-            one_ridx_A,
-            one_cidx_A,
-            nrow_A,
-            ncol_A,
-            b,
-            ridge_coef_a,
-            ridge_coef_b,
-            n_search,
-            n_neighbors,
-            do_approximation,
-        )
-        pred = np.round(A.dot(s)) % 2
-        # ham_dist = hamming(pred, b) * nrow_A / np.sum(b)
-        if np.sum(np.logical_or(pred, b)) == 0:
-            return np.nan
-        ham_dist = 1 - np.sum(np.logical_and(pred, b)) / np.sum(np.logical_or(pred, b))
-
-        # end_time = time.time()
-        # print(f"\ndone in {end_time - start_time}s")
-        return ham_dist
+        dists = []
+        for i, j in product(range(n_sources), range(n_targets)):
+            sloop_eidx = source_loops_edges[i]
+            tloop_eidx = target_loops_edges[j]
+            b1 = np.zeros(nrow_A)
+            b1[sloop_eidx] = 1
+            b2 = np.zeros(nrow_A)
+            b2[tloop_eidx] = 1
+            b = np.logical_xor(b1, b2).astype(int)
+            # remove columns with birth t larger than the birth t of the loop
+            columns_kept = np.where(bd_column_birth_t <= source_loop_birth_t)[0]
+            if columns_kept.size == 0:
+                return np.nan
+            mask = ~np.isin(one_cidx_A, columns_kept)
+            one_ridx_A = one_ridx_A[~mask]
+            one_cidx_A = one_cidx_A[~mask]
+            ncol_A = np.max(one_cidx_A) + 1
+            A, s = sp_ridge_regression_mod2(
+                one_ridx_A,
+                one_cidx_A,
+                nrow_A,
+                ncol_A,
+                b,
+                ridge_coef_a,
+                ridge_coef_b,
+                do_approximation=do_approximation,
+            )
+            pred = np.round(A.dot(s)) % 2
+            if np.sum(np.logical_or(pred, b)) == 0:
+                dist = np.nan
+            else:
+                dist = 1 - np.sum(np.logical_and(pred, b)) / np.sum(
+                    np.logical_or(pred, b)
+                )
+            dists.append(dist)
+        dist = np.nanmean(dists)
+        return dist
 
 
 def evaluate_match_worker(args):

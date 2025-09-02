@@ -1,22 +1,19 @@
 import ast
 import pickle
-import sys
 import uuid
 from dataclasses import dataclass, field
 from itertools import product
-from multiprocessing import Pool
 from typing import Tuple
 
 import numpy as np
 import pandas as pd
 from juliacall import Main as julia
+from rich.progress import Progress
 from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import cdist
 from scipy.stats import binom, false_discovery_control, gamma
 from sklearn.metrics import pairwise_distances
-from tqdm import tqdm
 
-from .utils import edge_idx_encode, evaluate_match_worker
+from .utils import edge_idx_encode, evaluate_match
 
 
 @dataclass
@@ -124,6 +121,228 @@ class HomologyData:
                         "loops": [(0, i)],
                     }
 
+    def boot(
+        self,
+        n,
+        thresh,
+        max_frechet_dist,
+        max_hamming_dist,
+        n_reps_per_loop=4,
+        rep_life_pct=0.1,
+        n_nearest_loops=20,
+        n_search=4,
+        ridge_coef_a=0.1,
+        ridge_coef_b=0.1,
+        do_approximation=True,
+        n_neighbors=1,
+        fresh_start=False,
+    ):
+        if not self.bd_mat:
+            raise ValueError("compute boundary matrix first")
+        if not self.loops_eidx:
+            raise ValueError("compute original loops first")
+        if fresh_start:
+            self.clean_boot()
+        source_loop_eidx_pool = self.loops_eidx.copy()
+        source_loop_coords_pool = self.loops_coords.copy()
+        source_loop_key = []
+        source_loop_birth_t = []
+        for i in range(len(self.loops_eidx)):
+            sloop_birth_t = self.persistence_diagram[i, 0]
+            if f"(0,{i})" not in self.tracks:
+                self.tracks[f"(0,{i})"] = {"birth_t": sloop_birth_t, "loops": [(0, i)]}
+            source_loop_key.append(f"(0,{i})")
+            source_loop_birth_t.append(sloop_birth_t)
+        # if there are tracks/heads in tracks, send them to source loop
+        if self.tracks:
+            for sid in self.tracks.keys():
+                # boot idx start from 1, 0 is the original batch
+                batch_id, loop_id = ast.literal_eval(sid)
+                if batch_id > 0:
+                    source_loop_eidx_pool.append(
+                        self.loops_eidx_boot[batch_id - 1][loop_id]
+                    )
+                    source_loop_coords_pool.append(
+                        self.loops_coords_boot[batch_id - 1][loop_id]
+                    )
+                    source_loop_key.append(sid)
+        with Progress() as progress:
+            task_boot = progress.add_task("[bold #FFA500]Booting", total=n)
+            task_frechet = progress.add_task("[bold green]Calculate Frechet distance")
+            task_homology = progress.add_task(
+                "[bold green]Assess Homological equivalence"
+            )
+            n_success = 0
+            for i in range(n):
+                boot_idx = np.random.choice(
+                    self.data.shape[0],
+                    size=self.data.shape[0],
+                    replace=True,
+                )
+                x_boot = self.data[boot_idx]
+                x_boot = x_boot + np.random.normal(scale=0.0001, size=self.data.shape)
+                dist_mat = pairwise_distances(x_boot)
+                dist_mat = (dist_mat + dist_mat.T) / 2
+                filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+                result_cycle = julia.ripserer(filt, reps=1)
+                birth_t = np.array([i[1] for i in result_cycle[1]])
+                death_t = np.array([i[2] for i in result_cycle[1]])
+                reps_eidx_boot = []
+                reps_coord_boot = []
+                for nc in range(len(result_cycle[1])):
+                    try:
+                        reps = julia.reconstruct_n_loop_representatives(
+                            dist_mat,
+                            nc,
+                            n_reps_per_loop,
+                            thresh,
+                            rep_life_pct,
+                        )
+                        reps = [list(lp) for lp in reps[0]]
+                        reps_eidx = []
+                        reps_coords = []
+                        for i in range(len(reps)):
+                            rep_i_idx = [j - 1 for j in reps[i]]
+                            rep_i_idx.append(rep_i_idx[0])
+                            rep_i_coords = []
+                            rep_i_eidx = []
+
+                            for j in range(1, len(rep_i_idx)):
+                                v1 = boot_idx[rep_i_idx[j - 1]]
+                                v2 = boot_idx[rep_i_idx[j]]
+                                edge_idx = edge_idx_encode(v1, v2)
+                                if edge_idx in self.bd_row_id:
+                                    rep_i_eidx.append(
+                                        np.where(edge_idx == self.bd_row_id)[0][0]
+                                    )
+                                rep_i_coords.append(x_boot[v1, :])
+                            rep_i_coords.append(x_boot[v2, :])
+                            reps_eidx.append(np.array(rep_i_eidx))
+                            reps_coords.append(np.array(rep_i_coords))
+                        reps_eidx_boot.append(reps_eidx)
+                        reps_coord_boot.append(reps_coords)
+                    except ValueError:
+                        continue
+                pairs = [
+                    ((i, j), source_loop_birth_t[i])
+                    for i, j in product(
+                        range(len(source_loop_eidx_pool)), range(len(reps_eidx_boot))
+                    )
+                ]
+                progress.reset(task_frechet, totol=len(pairs))
+                result = []
+                for i, j in pairs:
+                    result.append(
+                        evaluate_match(
+                            self.bd_mat[2],
+                            self.bd_mat[3],
+                            max_frechet_dist,
+                            ridge_coef_a,
+                            ridge_coef_b,
+                            n_search,
+                            source_loop_eidx_pool[i],
+                            reps_eidx_boot[j],
+                            source_loop_coords_pool[i],
+                            reps_coord_boot[j],
+                            self.bd_mat[0],
+                            self.bd_mat[1],
+                            False,
+                            do_approximation,
+                            n_neighbors,
+                            self.bd_column_birth_t,
+                            source_loop_birth_t[i],
+                        )
+                    )
+                    progress.update(task_frechet, advance=1)
+                pairs_filt = []
+                for si in range(len(source_loop_eidx_pool)):
+                    n_best_matches = []
+                    for j in range(len(reps_eidx_boot)):
+                        k = si * len(reps_eidx_boot) + j
+                        if len(n_best_matches) < n_nearest_loops:
+                            if result[k] is not None:
+                                n_best_matches.append([k, result[k]])
+                                n_best_matches.sort(key=lambda x: x[1])
+                        else:
+                            if result[k] is not None:
+                                if result[k] < n_best_matches[-1][1]:
+                                    n_best_matches[-1] = [k, result[k]]
+                                    n_best_matches.sort(key=lambda x: x[1])
+                    pairs_filt.extend(
+                        [(pairs[k], frech_dist) for k, frech_dist in n_best_matches]
+                    )
+                if pairs_filt:
+                    result = []
+                    progress.reset(task_homology, total=len(pairs_filt))
+                    for i, j in pairs_filt:
+                        result.append(
+                            evaluate_match(
+                                self.bd_mat[2],
+                                self.bd_mat[3],
+                                max_frechet_dist,
+                                ridge_coef_a,
+                                ridge_coef_b,
+                                n_search,
+                                source_loop_eidx_pool[i],
+                                reps_eidx_boot[j],
+                                source_loop_coords_pool[i],
+                                reps_coord_boot[j],
+                                self.bd_mat[0],
+                                self.bd_mat[1],
+                                True,
+                                do_approximation,
+                                n_neighbors,
+                                self.bd_column_birth_t,
+                                source_loop_birth_t[i],
+                            )
+                        )
+                        progress.update(task_homology, advance=1)
+
+                        df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
+                        df["hamming_dist"] = result
+                        self.matching_df.append(df.copy())
+                        df = df[
+                            np.logical_and(
+                                df["hamming_dist"] < max_hamming_dist,
+                                ~np.isnan(df["hamming_dist"]),
+                            )
+                        ]
+                        if df.empty:
+                            continue
+                        self.loops_eidx_boot.append(reps_eidx_boot)
+                        self.loops_coords_boot.append(reps_coord_boot)
+                        self.persistence_diagram_boot.append(
+                            np.vstack([birth_t, death_t]).T
+                        )
+                        df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
+                        cost_matrix_sub = df.pivot(
+                            index="source", columns="target", values="hamming_dist"
+                        ).fillna(np.inf)
+                        cost_matrix = np.full(
+                            [
+                                cost_matrix_sub.shape[0],
+                                cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
+                            ],
+                            max_hamming_dist,
+                        )
+                        cost_matrix[
+                            : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]
+                        ] = cost_matrix_sub
+                        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+                        mask = col_ind >= cost_matrix_sub.shape[1]
+                        row_ind = cost_matrix_sub.index[row_ind[~mask]]
+                        col_ind = cost_matrix_sub.columns[col_ind[~mask]]
+                        for j in range(len(row_ind)):
+                            skey = source_loop_key[row_ind[j]]
+                            self.tracks[skey]["loops"].append(
+                                (self.n_booted + 1, col_ind[j])
+                            )
+                        n_success += 1
+                        self.n_booted += 1
+                progress.update(
+                    task_boot, advance=1, description=f"DONE={n_success}/{n}"
+                )
+
     def clean_boot(self):
         self.tracks = {}
         self.n_booted = 0
@@ -185,310 +404,3 @@ class HomologyData:
         df["pval_presence_adjust"] = false_discovery_control(df["pval_presence"])
         df["pval_persistence_adjust"] = false_discovery_control(df["pval_persistence"])
         self.loop_rank = df
-
-    def boot(
-        self,
-        n,
-        thresh,
-        max_frechet_dist,
-        max_hamming_dist,
-        n_nearest_loops=20,
-        n_search=4,
-        ridge_coef_a=0.1,
-        ridge_coef_b=0.1,
-        do_approximation=True,
-        n_neighbors=1,
-        fresh_start=False,
-        verbose=False,
-        n_process_frechet=4,
-        chunk_size_frechet=50,
-        n_process_hamming=1,
-        chunk_size_hamming=1,
-    ):
-        if not self.bd_mat:
-            raise ValueError("compute boundary matrix first")
-        if not self.loops_eidx_original:
-            raise ValueError("compute original loops first")
-        if fresh_start:
-            self.clean_boot()
-        source_loop_eidx_pool = self.loops_eidx_original.copy()
-        source_loop_coords_pool = self.loops_coords_original.copy()
-        source_loop_key = []
-        source_loop_birth_t = []
-        for i in range(len(self.loops_eidx_original)):
-            sloop_birth_t = self.persistence_diagram_original[i, 0]
-            if f"(0,{i})" not in self.tracks:
-                self.tracks[f"(0,{i})"] = {"birth_t": sloop_birth_t, "loops": [(0, i)]}
-            source_loop_key.append(f"(0,{i})")
-            source_loop_birth_t.append(sloop_birth_t)
-        # if there are tracks/heads in tracks, send them to source loop
-        if self.tracks:
-            for sid in self.tracks.keys():
-                # boot idx start from 1, 0 is the original batch
-                batch_id, loop_id = ast.literal_eval(sid)
-                if batch_id > 0:
-                    source_loop_eidx_pool.append(
-                        self.loops_eidx_boot[batch_id - 1][loop_id]
-                    )
-                    source_loop_coords_pool.append(
-                        self.loops_coords_boot[batch_id - 1][loop_id]
-                    )
-                    source_loop_key.append(sid)
-
-        for i in range(n):
-            boot_idx = np.random.choice(
-                self.data.shape[0],
-                size=self.data.shape[0],
-                replace=True,
-            )
-            x_boot = self.data[boot_idx]
-            x_boot = x_boot + np.random.normal(scale=0.0001, size=self.data.shape)
-            dist_mat = pairwise_distances(x_boot)
-            dist_mat = (dist_mat + dist_mat.T) / 2
-            filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-            result_cycle = julia.ripserer(filt, reps=1)
-            birth_t = np.array([i[1] for i in result_cycle[1]])
-            death_t = np.array([i[2] for i in result_cycle[1]])
-            loop_eidx_boot = []
-            rep_all = []
-            success = False
-            try:
-                for nc in range(len(result_cycle[1])):
-                    rep = result_cycle[1][nc]
-                    rep = julia.Ripserer.reconstruct_cycle(filt, rep, rep.birth)
-                    rep_ridx = [
-                        np.where(
-                            edge_idx_encode(boot_idx[i - 1], boot_idx[j - 1])
-                            == self.bd_row_id
-                        )[0][0]
-                        for (i, j) in rep
-                        if edge_idx_encode(boot_idx[i - 1], boot_idx[j - 1])
-                        in self.bd_row_id
-                    ]
-                    loop_eidx_boot.append(rep_ridx)
-                    rep_raw = np.vstack(
-                        [
-                            np.vstack(
-                                [
-                                    x_boot[[i - 1, j - 1], :],
-                                    np.repeat(np.nan, x_boot.shape[1]),
-                                ]
-                            )
-                            for (i, j) in rep
-                        ]
-                    )
-                    rep_raw = []
-                    for i, (v1, v2) in enumerate(rep):
-                        if i == 0:
-                            rep_raw.extend(x_boot[[v1 - 1, v2 - 1], :])
-                        elif i == 1:
-                            e0 = x_boot[:2]
-                            dist_e0_e1 = cdist(e0, x_boot[[v1 - 1, v2 - 1], :])
-                            i0, j0 = np.where(dist_e0_e1 == 0)
-                            if i0 == 0:
-                                rep_raw = rep_raw[::-1]
-                            if j0 == 1:
-                                rep_raw.append(x_boot[v1 - 1, :])
-                            else:
-                                rep_raw.append(x_boot[v2 - 1, :])
-                        else:
-                            e0 = np.expand_dims(rep_raw[-1], 0)
-                            dist_e0_e1 = cdist(e0, x_boot[[v1 - 1, v2 - 1], :])
-                            i0, j0 = np.where(dist_e0_e1 == 0)
-                            if j0 == 1:
-                                rep_raw.append(x_boot[v1 - 1, :])
-                            else:
-                                rep_raw.append(x_boot[v2 - 1, :])
-                    rep_all.append(np.array(rep_raw))
-                success = True
-            except ValueError:
-                continue
-            if success:
-                # def evaluate_match_tmp(p, do_regression, source_loop_birth_t=None):
-                #     return evaluate_match(
-                #         max_frechet_dist=max_frechet_dist,
-                # n_search=n_search,
-                # ncol_A=self.bd_mat[3],
-                # nrow_A=self.bd_mat[2],
-                # one_cidx_A=self.bd_mat[1],
-                # one_ridx_A=self.bd_mat[0],
-                # ridge_coef_a=ridge_coef_a,
-                # ridge_coef_b=ridge_coef_b,
-                # source_loop_coords=source_loop_coords_pool[p[0]],
-                # target_loop_coords=rep_all[p[1]],
-                # source_loop_edges=source_loop_eidx_pool[p[0]],
-                # target_loop_edges=loop_eidx_boot[p[1]],
-                # do_regression=do_regression,
-                # do_approximation=do_approximation,
-                # n_neighbors=n_neighbors,
-                # bd_column_birth_t=self.bd_column_birth_t,
-                # source_loop_birth_t=source_loop_birth_t,
-                #     )
-                pairs = [
-                    ((i, j), source_loop_birth_t[i])
-                    for i, j in product(
-                        range(len(source_loop_eidx_pool)), range(len(loop_eidx_boot))
-                    )
-                ]
-                args_list = [
-                    (
-                        self.bd_mat[2],
-                        self.bd_mat[3],
-                        max_frechet_dist,
-                        ridge_coef_a,
-                        ridge_coef_b,
-                        n_search,
-                        source_loop_eidx_pool[p[0]],
-                        loop_eidx_boot[p[1]],
-                        source_loop_coords_pool[p[0]],
-                        rep_all[p[1]],
-                        self.bd_mat[0],
-                        self.bd_mat[1],
-                        False,
-                        do_approximation,
-                        n_neighbors,
-                        self.bd_column_birth_t,
-                        source_loop_birth_t[p[0]],
-                    )
-                    for p, _ in pairs
-                ]
-                with Pool(n_process_frechet) as p:
-                    if verbose:
-                        result = list(
-                            tqdm(
-                                p.imap(
-                                    evaluate_match_worker,
-                                    args_list,
-                                    chunksize=chunk_size_frechet,
-                                ),
-                                total=len(pairs),
-                                file=sys.stdout,
-                            )
-                        )
-                    else:
-                        result = list(
-                            p.map(
-                                evaluate_match_worker,
-                                args_list,
-                                chunksize=chunk_size_frechet,
-                            ),
-                        )
-                pairs_filt = []
-                for si in range(len(source_loop_eidx_pool)):
-                    n_best_matches = []
-                    for j in range(len(loop_eidx_boot)):
-                        k = si * len(loop_eidx_boot) + j
-                        if len(n_best_matches) < n_nearest_loops:
-                            if result[k] is not None:
-                                n_best_matches.append([k, result[k]])
-                                n_best_matches.sort(key=lambda x: x[1])
-                        else:
-                            if result[k] is not None:
-                                if result[k] < n_best_matches[-1][1]:
-                                    n_best_matches[-1] = [k, result[k]]
-                                    n_best_matches.sort(key=lambda x: x[1])
-                    pairs_filt.extend(
-                        [(pairs[k], haus_dist) for k, haus_dist in n_best_matches]
-                    )
-
-                self.loops_eidx_boot.append(loop_eidx_boot)
-                self.loops_coords_boot.append(rep_all)
-                self.persistence_diagram_boot.append(np.vstack([birth_t, death_t]).T)
-                if pairs_filt:
-                    args_list = [
-                        (
-                            self.bd_mat[2],
-                            self.bd_mat[3],
-                            max_frechet_dist,
-                            ridge_coef_a,
-                            ridge_coef_b,
-                            n_search,
-                            source_loop_eidx_pool[p[0][0]],
-                            loop_eidx_boot[p[0][1]],
-                            source_loop_coords_pool[p[0][0]],
-                            rep_all[p[0][1]],
-                            self.bd_mat[0],
-                            self.bd_mat[1],
-                            True,
-                            do_approximation,
-                            n_neighbors,
-                            self.bd_column_birth_t,
-                            source_loop_birth_t[p[0][0]],
-                        )
-                        for p, _ in pairs_filt
-                    ]
-                    with Pool(n_process_hamming) as p:
-                        if verbose:
-                            result = list(
-                                tqdm(
-                                    p.imap(
-                                        evaluate_match_worker,
-                                        args_list,
-                                        chunksize=chunk_size_hamming,
-                                    ),
-                                    total=len(pairs_filt),
-                                    file=sys.stdout,
-                                )
-                            )
-                        else:
-                            result = list(
-                                p.map(
-                                    evaluate_match_worker,
-                                    args_list,
-                                    chunksize=chunk_size_hamming,
-                                ),
-                            )
-                    df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
-                    df["hamming_dist"] = result
-                    self.matching_df.append(df.copy())
-                    df = df[
-                        np.logical_and(
-                            df["hamming_dist"] < max_hamming_dist,
-                            ~np.isnan(df["hamming_dist"]),
-                        )
-                    ]
-                    if df.empty:
-                        self.n_booted = self.n_booted + 1
-                        continue
-                    df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
-                    cost_matrix_sub = df.pivot(
-                        index="source", columns="target", values="frechet_dist"
-                    ).fillna(np.inf)
-                    cost_matrix = np.full(
-                        [
-                            cost_matrix_sub.shape[0],
-                            cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
-                        ],
-                        max_frechet_dist,
-                    )
-                    cost_matrix[
-                        : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]
-                    ] = cost_matrix_sub
-                    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-                    mask = col_ind >= cost_matrix_sub.shape[1]
-                    row_ind = cost_matrix_sub.index[row_ind[~mask]]
-                    col_ind = cost_matrix_sub.columns[col_ind[~mask]]
-                    for j in range(len(row_ind)):
-                        skey = source_loop_key[row_ind[j]]
-                        self.tracks[skey]["loops"].append(
-                            (self.n_booted + 1, col_ind[j])
-                        )
-                    # unmatched_targets = np.setdiff1d(
-                    #     list(range(len(loop_eidx_boot))), df["target"]
-                    # )
-                    # for j in range(df.shape[0]):
-                    #     skey = source_loop_key[df["source"][j]]
-                    #     self.tracks[skey]["loops"].append(
-                    #         (self.n_booted + 1, df["target"][j])
-                    #     )
-                    # for unmatched target, we make them new heads
-                    # for j in unmatched_targets:
-                    #     self.tracks[f"({self.n_booted + 1},{j})"] = {
-                    #         "birth_t": birth_t[j],
-                    #         "loops": [(self.n_booted + 1, j)],
-                    #     }
-                    #     source_loop_eidx_pool.append(loop_eidx_boot[j])
-                    #     source_loop_coords_pool.append(rep_all[j])
-                    #     source_loop_key.append(f"({self.n_booted + 1},{j})")
-                    #     source_loop_birth_t.append(birth_t[j])
-                self.n_booted = self.n_booted + 1
