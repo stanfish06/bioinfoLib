@@ -2,6 +2,8 @@
 bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 """
 
+from . import utils
+
 __version__ = "0.1.1"
 
 # Import main modules

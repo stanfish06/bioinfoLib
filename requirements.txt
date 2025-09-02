@@ -11,7 +11,7 @@ async-lru==2.0.5
 attrs==25.3.0
 babel==2.17.0
 beautifulsoup4==4.13.4
--e git+https://github.com/stanfish06/bioinfoLib.git@dfbf53b19ca7d91e055d8609f045ac05ac5de2ff#egg=bioinfoLib
+-e git+https://github.com/stanfish06/bioinfoLib.git@12d18a857d1c80a83486c2d3b1930f2f8eaa3ebd#egg=bioinfoLib
 bleach==6.2.0
 boto3==1.40.21
 botocore==1.40.21
@@ -83,9 +83,11 @@ Levenshtein==0.27.1
 llvmlite==0.44.0
 loompy==3.0.8
 magic-impute==3.0.0
+markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 matplotlib==3.8.4
 matplotlib-inline==0.1.7
+mdurl==0.1.2
 mellon==1.6.1
 mistune==3.1.3
 ml_dtypes==0.5.1
@@ -114,6 +116,7 @@ patsy==1.0.1
 pexpect==4.9.0
 phate==1.0.11
 pillow==11.2.1
+pipdeptree==2.28.0
 platformdirs==4.3.8
 pluggy==1.6.0
 pooch==1.8.2
@@ -150,6 +153,7 @@ referencing==0.36.2
 requests==2.32.4
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
+rich==14.0.0
 rpds-py==0.25.1
 rpy2==3.6.1
 rpy2-rinterface==3.6.1
@@ -178,6 +182,7 @@ soupsieve==2.7
 stack-data==0.6.3
 statsmodels==0.14.4
 sympy==1.13.1
+tabulate==0.9.0
 tasklogger==1.2.0
 terminado==0.18.1
 texttable==1.7.0

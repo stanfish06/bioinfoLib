@@ -1,7 +1,8 @@
-import juliapkg
 import io
 import re
 from contextlib import redirect_stdout
+
+import juliapkg
 
 packages = {
     "Ripserer": ("aa79e827-bd0b-42a8-9f10-2b302677a641", None),

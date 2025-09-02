@@ -375,12 +375,14 @@ dependencies = [
     { name = "pandas" },
     { name = "phate" },
     { name = "pip" },
+    { name = "pipdeptree" },
     { name = "pydantic" },
     { name = "pytest" },
     { name = "python-bioformats" },
     { name = "python-dotenv" },
     { name = "python-levenshtein" },
     { name = "pyvista" },
+    { name = "rich" },
     { name = "rpy2", extra = ["all"] },
     { name = "scanpy", extra = ["leiden"] },
     { name = "scikit-image" },
@@ -391,6 +393,7 @@ dependencies = [
     { name = "seaborn" },
     { name = "shapely" },
     { name = "statsmodels" },
+    { name = "tabulate" },
     { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux'" },
     { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32'" },
@@ -452,6 +455,7 @@ requires-dist = [
     { name = "pandas", specifier = "<2.0.0" },
     { name = "phate", specifier = ">=1.0.11" },
     { name = "pip", specifier = ">=25.2" },
+    { name = "pipdeptree", specifier = ">=2.28.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "pygenometracks", marker = "sys_platform == 'linux' and extra == 'epigenomics'", specifier = ">=3.9" },
     { name = "pytest", specifier = ">=8.4.0" },
@@ -460,6 +464,7 @@ requires-dist = [
     { name = "python-levenshtein", specifier = ">=0.27.1" },
     { name = "pytometry", marker = "extra == 'flow'" },
     { name = "pyvista", specifier = ">=0.44.2" },
+    { name = "rich", specifier = ">=14.0.0" },
     { name = "rpy2", extras = ["all"], specifier = ">=3.6.1" },
     { name = "scanpy", extras = ["leiden"], specifier = "==1.11.2" },
     { name = "scarches", marker = "extra == 'integration'", specifier = ">=0.5.0" },
@@ -472,6 +477,7 @@ requires-dist = [
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "shapely", specifier = ">=2.1.0" },
     { name = "statsmodels", specifier = "==0.14.4" },
+    { name = "tabulate", specifier = ">=0.9.0" },
     { name = "tensorflow", extras = ["and-cuda"], marker = "sys_platform == 'linux' and extra == 'integration'" },
     { name = "tensorflow-intel", marker = "sys_platform == 'win32' and extra == 'integration'" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
@@ -3552,6 +3558,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/20/16/650289cd3f43d5a2fadfd98c68bd1e1e7f2550a1a5326768cddfbcedb2c5/pip-25.2.tar.gz", hash = "sha256:578283f006390f85bb6282dffb876454593d637f5d1be494b5202ce4877e71f2", size = 1840021, upload-time = "2025-07-30T21:50:15.401Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/3f/945ef7ab14dc4f9d7f40288d2df998d1837ee0888ec3659c813487572faa/pip-25.2-py3-none-any.whl", hash = "sha256:6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717", size = 1752557, upload-time = "2025-07-30T21:50:13.323Z" },
+]
+
+[[package]]
+name = "pipdeptree"
+version = "2.28.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pip" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/61/0e855474eee22f06d8508aad787c1bb3f9fff28759e758c0da44f8549998/pipdeptree-2.28.0.tar.gz", hash = "sha256:bae533e30249b1aa6d9cb315ef6f1c039e9adaa55d5b25438395cace5716eaa6", size = 42583, upload-time = "2025-07-20T19:47:26.737Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/84/d5e9403c11f6440dcb127afbb15b34dda7408dcbcefcaf6e0aa9e9a4730f/pipdeptree-2.28.0-py3-none-any.whl", hash = "sha256:a4ce80e7fdf93dfc6d99809d9bbe0115a13902b1f0498775abeafe56c77bdd3d", size = 33840, upload-time = "2025-07-20T19:47:25.282Z" },
 ]
 
 [[package]]
