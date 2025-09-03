@@ -93,8 +93,8 @@ class HomologyData:
                 reps = [list(lp) for lp in reps[0]]
                 reps_eidx = []
                 reps_coords = []
-                for i in range(len(reps)):
-                    rep_i_idx = [j - 1 for j in reps[i]]
+                for k in range(len(reps)):
+                    rep_i_idx = [j - 1 for j in reps[k]]
                     rep_i_idx.append(rep_i_idx[0])
                     rep_i_coords = []
                     rep_i_eidx = []
@@ -107,8 +107,8 @@ class HomologyData:
                             rep_i_eidx.append(
                                 np.where(edge_idx == self.bd_row_id)[0][0]
                             )
-                        rep_i_coords.append(self.data_visualization[v1, :])
-                    rep_i_coords.append(self.data_visualization[v2, :])
+                        rep_i_coords.append(self.data[v1, :])
+                    rep_i_coords.append(self.data[v2, :])
 
                     reps_eidx.append(np.array(rep_i_eidx))
                     reps_coords.append(np.array(rep_i_coords))

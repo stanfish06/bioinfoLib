@@ -69,6 +69,7 @@ def start_r_session():
     import rpy2.robjects as robjects
     from rpy2.robjects import default_converter, numpy2ri, pandas2ri
 
+    global _np_cv_rules, _pd_cv_rules
     _np_cv_rules = default_converter + numpy2ri.converter
     _pd_cv_rules = default_converter + pandas2ri.converter
 

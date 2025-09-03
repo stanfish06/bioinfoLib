@@ -102,7 +102,7 @@ function reconstruct_n_loop_representatives(
     life_pct=0.1,
     n_permute=1,
     n_force_deviate=4,
-    n_cycles_per_permute=4,
+    n_cycles_per_permute=8,
     loop_lower_pct=5,
     loop_upper_pct=95,
     n_max_cocycles=10
