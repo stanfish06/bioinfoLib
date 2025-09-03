@@ -1,7 +1,10 @@
 # bioinfoLib
 Personal code repo for bioinformatics analysis
 
-### External Dependencies
+## Examples
+<img src="examples/loop.png" alt="persistent homology" width="300"/>
+
+## External Dependencies
 On Linux systems, install additional CUDA dependencies:
 ```bash
 # Install cusparselt (for Linux)
