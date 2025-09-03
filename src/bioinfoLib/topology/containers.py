@@ -13,6 +13,8 @@ from scipy.optimize import linear_sum_assignment
 from scipy.stats import binom, false_discovery_control, gamma
 from sklearn.metrics import pairwise_distances
 
+from bioinfoLib.R.utils import SimilarityMeasures_helper
+
 from .utils import edge_idx_encode, evaluate_match
 
 
@@ -137,6 +139,9 @@ class HomologyData:
         n_neighbors=1,
         fresh_start=False,
     ):
+        import rpy2.robjects as ro
+
+        similarity_func = SimilarityMeasures_helper(ro)
         if not self.bd_mat:
             raise ValueError("compute boundary matrix first")
         if not self.loops_eidx:
@@ -231,7 +236,7 @@ class HomologyData:
                 ]
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
-                for i, j in pairs:
+                for (i, j), sloop_birth_t in pairs:
                     result.append(
                         evaluate_match(
                             self.bd_mat[2],
@@ -250,7 +255,9 @@ class HomologyData:
                             do_approximation,
                             n_neighbors,
                             self.bd_column_birth_t,
-                            source_loop_birth_t[i],
+                            sloop_birth_t,
+                            similarity_func,
+                            "Frechet",
                         )
                     )
                     progress.update(task_frechet, advance=1)
@@ -274,7 +281,7 @@ class HomologyData:
                 if pairs_filt:
                     result = []
                     progress.reset(task_homology, total=len(pairs_filt))
-                    for i, j in pairs_filt:
+                    for ((i, j), sloop_birth_t), frech_dist in pairs_filt:
                         result.append(
                             evaluate_match(
                                 self.bd_mat[2],
@@ -293,7 +300,9 @@ class HomologyData:
                                 do_approximation,
                                 n_neighbors,
                                 self.bd_column_birth_t,
-                                source_loop_birth_t[i],
+                                sloop_birth_t,
+                                similarity_func,
+                                "Frechet",
                             )
                         )
                         progress.update(task_homology, advance=1)
@@ -340,7 +349,9 @@ class HomologyData:
                         n_success += 1
                         self.n_booted += 1
                 progress.update(
-                    task_boot, advance=1, description=f"DONE={n_success}/{n}"
+                    task_boot,
+                    advance=1,
+                    description=f"[bold #FFA500]Booting (DONE={n_success}/{n})",
                 )
 
     def clean_boot(self):

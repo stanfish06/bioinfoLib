@@ -4,8 +4,9 @@ from itertools import product
 import numpy as np
 from scipy.sparse import csr_matrix, diags
 from scipy.spatial.distance import hamming
-from shapely import LineString, frechet_distance
 from sksparse.cholmod import cholesky
+
+from bioinfoLib.R.utils import trajectory_distance
 
 
 # TODO: grid search, adjust radius based on gaussian prior
@@ -159,6 +160,8 @@ def evaluate_match(
     n_neighbors,
     bd_column_birth_t,
     source_loop_birth_t,
+    similarity_func,
+    type,
 ):
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
@@ -167,38 +170,39 @@ def evaluate_match(
         for i, j in product(range(n_sources), range(n_targets)):
             sloop_coords = source_loops_coords[i]
             tloop_coords = target_loops_coords[j]
-            dist = min(
-                np.min(
-                    [
-                        frechet_distance(
-                            LineString(
+            try:
+                dist = min(
+                    np.min(
+                        [
+                            trajectory_distance(
                                 np.concatenate(
                                     [sloop_coords[i:, :], sloop_coords[0:i, :]]
-                                )
-                            ),
-                            LineString(tloop_coords),
-                            densify=0.5,
-                        )
-                        for i in range(sloop_coords.shape[0])
-                    ]
-                ),
-                np.min(
-                    [
-                        frechet_distance(
-                            LineString(
+                                ),
+                                tloop_coords,
+                                type,
+                                similarity_func,
+                            )
+                            for i in range(sloop_coords.shape[0])
+                        ]
+                    ),
+                    np.min(
+                        [
+                            trajectory_distance(
                                 np.concatenate(
                                     [sloop_coords[i:, :], sloop_coords[0:i, :]]
-                                )[::-1, :]
-                            ),
-                            LineString(tloop_coords),
-                            densify=0.5,
-                        )
-                        for i in range(sloop_coords.shape[0])
-                    ]
-                ),
-            )
-            dists.append(dist)
-        dist = np.mean(dists)
+                                )[::-1, :],
+                                tloop_coords,
+                                type,
+                                similarity_func,
+                            )
+                            for i in range(sloop_coords.shape[0])
+                        ]
+                    ),
+                )
+                dists.append(dist)
+            except ValueError:
+                dists.append(np.nan)
+        dist = np.nanmean(dists)
         if dist > max_frechet_dist:
             return None
         else:
@@ -208,6 +212,9 @@ def evaluate_match(
         for i, j in product(range(n_sources), range(n_targets)):
             sloop_eidx = source_loops_edges[i]
             tloop_eidx = target_loops_edges[j]
+            if len(sloop_eidx) == 0 or tloop_eidx == 0:
+                dists.append(np.nan)
+                continue
             b1 = np.zeros(nrow_A)
             b1[sloop_eidx] = 1
             b2 = np.zeros(nrow_A)
@@ -230,6 +237,7 @@ def evaluate_match(
                 ridge_coef_a,
                 ridge_coef_b,
                 do_approximation=do_approximation,
+                n_neighbors=n_neighbors,
             )
             pred = np.round(A.dot(s)) % 2
             if np.sum(np.logical_or(pred, b)) == 0:

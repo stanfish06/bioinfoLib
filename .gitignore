@@ -17,3 +17,6 @@ wheels/
 
 # others
 examples/.ob-jupyter/*
+*.vsi
+*.ets
+*.ipynb

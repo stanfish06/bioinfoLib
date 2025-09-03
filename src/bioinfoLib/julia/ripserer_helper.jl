@@ -114,7 +114,6 @@ function reconstruct_n_loop_representatives(
         filt = Rips(dist_mat[perm, perm], sparse=true, threshold=threshold)
         res = ripserer(filt, reps=1)
         rep = res[2][length(res[2]) - rep_idx]
-        print(life_pct)
         filt_t = birth(rep) + (death(rep) - birth(rep)) * life_pct
         # get all cocycle representatives
         cocycles_filt = filter!(simplex.(representative(rep))) do sx

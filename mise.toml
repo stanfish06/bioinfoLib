@@ -5,7 +5,7 @@ uv = "latest"
 python.uv_venv_auto = true
 
 [tasks.sync]
-run = "uv sync && Rscript -e 'renv::snapshot(prompt = FALSE)'"
+run = "uv sync"
 
 [tasks.build]
 run = "uv sync && uv build"
