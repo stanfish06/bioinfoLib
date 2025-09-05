@@ -3,7 +3,8 @@ from itertools import product
 
 import numpy as np
 from scipy.sparse import csr_matrix, diags
-from scipy.spatial.distance import hamming
+from scipy.spatial.distance import cdist, hamming
+from scipy.stats import rankdata
 from sksparse.cholmod import cholesky
 
 from bioinfoLib.R.utils import trajectory_distance
@@ -44,6 +45,11 @@ def sp_ridge_regression_mod2(
         mask = np.isin(one_cidx_A, columns_kept)
         one_ridx_A = one_ridx_A[mask]
         one_cidx_A = one_cidx_A[mask]
+        if len(one_cidx_A) == 0:
+            return None
+        # reduce number of columns
+        one_cidx_A = rankdata(one_cidx_A, method="min") - 1
+        ncol_A = np.max(one_cidx_A) + 1
 
     # figure out number of ones in each row
     one_ridx_A_uniq, n_ones_per_row = np.unique(one_ridx_A, return_counts=True)
@@ -170,36 +176,32 @@ def evaluate_match(
         for i, j in product(range(n_sources), range(n_targets)):
             sloop_coords = source_loops_coords[i]
             tloop_coords = target_loops_coords[j]
+            # find closest pair as the starting point of frechet distance
+            dist_mat = cdist(sloop_coords, tloop_coords)
+            p, q = np.unravel_index(np.argmin(dist_mat), dist_mat.shape)
             try:
-                dist = min(
-                    np.min(
-                        [
-                            trajectory_distance(
-                                np.concatenate(
-                                    [sloop_coords[i:, :], sloop_coords[0:i, :]]
-                                ),
-                                tloop_coords,
-                                type,
-                                similarity_func,
-                            )
-                            for i in range(sloop_coords.shape[0])
-                        ]
-                    ),
-                    np.min(
-                        [
-                            trajectory_distance(
-                                np.concatenate(
-                                    [sloop_coords[i:, :], sloop_coords[0:i, :]]
-                                )[::-1, :],
-                                tloop_coords,
-                                type,
-                                similarity_func,
-                            )
-                            for i in range(sloop_coords.shape[0])
-                        ]
-                    ),
-                )
-                dists.append(dist)
+                d1 = trajectory_distance(
+                    np.roll(sloop_coords, -p, axis=0),
+                    np.roll(tloop_coords, -q, axis=0),
+                    type,
+                    similarity_func,
+                )[0]
+                d2 = trajectory_distance(
+                    np.roll(sloop_coords, -p, axis=0),
+                    np.roll(tloop_coords[::-1], q + 1, axis=0),
+                    type,
+                    similarity_func,
+                )[0]
+                # not sure what negative value means
+                if d1 < 0:
+                    d1 = np.inf
+                if d2 < 0:
+                    d2 = np.inf
+                dist = min(d1, d2)
+                if dist < np.inf:
+                    dists.append(dist)
+                else:
+                    dists.append(np.nan)
             except ValueError:
                 dists.append(np.nan)
         dist = np.nanmean(dists)
@@ -212,7 +214,7 @@ def evaluate_match(
         for i, j in product(range(n_sources), range(n_targets)):
             sloop_eidx = source_loops_edges[i]
             tloop_eidx = target_loops_edges[j]
-            if len(sloop_eidx) == 0 or tloop_eidx == 0:
+            if len(sloop_eidx) == 0 or len(tloop_eidx) == 0:
                 dists.append(np.nan)
                 continue
             b1 = np.zeros(nrow_A)
@@ -228,7 +230,7 @@ def evaluate_match(
             one_ridx_A = one_ridx_A[~mask]
             one_cidx_A = one_cidx_A[~mask]
             ncol_A = np.max(one_cidx_A) + 1
-            A, s = sp_ridge_regression_mod2(
+            res = sp_ridge_regression_mod2(
                 one_ridx_A,
                 one_cidx_A,
                 nrow_A,
@@ -238,15 +240,20 @@ def evaluate_match(
                 ridge_coef_b,
                 do_approximation=do_approximation,
                 n_neighbors=n_neighbors,
+                n_post_process=1,
             )
-            pred = np.round(A.dot(s)) % 2
-            if np.sum(np.logical_or(pred, b)) == 0:
-                dist = np.nan
+            if res is None:
+                dists.append(np.nan)
             else:
-                dist = 1 - np.sum(np.logical_and(pred, b)) / np.sum(
-                    np.logical_or(pred, b)
-                )
-            dists.append(dist)
+                A, s = res
+                pred = np.round(A.dot(s)) % 2
+                if np.sum(np.logical_or(pred, b)) == 0:
+                    dist = np.nan
+                else:
+                    dist = 1 - np.sum(np.logical_and(pred, b)) / np.sum(
+                        np.logical_or(pred, b)
+                    )
+                dists.append(dist)
         dist = np.nanmean(dists)
         return dist
 

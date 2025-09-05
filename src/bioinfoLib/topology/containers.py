@@ -73,7 +73,18 @@ class HomologyData:
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
         self.parameters["filtration_threshold_bd_matrix"] = thresh
 
-    def compute_loop_representatives(self, n_top, n_each, life_pct=0.1):
+    def compute_loop_representatives(
+        self,
+        n_top,
+        n_each,
+        life_pct=0.1,
+        n_permute=1,
+        n_force_deviate=4,
+        n_cycles_per_permute=8,
+        loop_lower_pct=5,
+        loop_upper_pct=95,
+        n_max_cocycles=10,
+    ):
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         n_total_loops = len(self.persistence_diagram)
@@ -108,7 +119,6 @@ class HomologyData:
                                 np.where(edge_idx == self.bd_row_id)[0][0]
                             )
                         rep_i_coords.append(self.data[v1, :])
-                    rep_i_coords.append(self.data[v2, :])
 
                     reps_eidx.append(np.array(rep_i_eidx))
                     reps_coords.append(np.array(rep_i_coords))
@@ -137,7 +147,13 @@ class HomologyData:
         ridge_coef_b=0.1,
         do_approximation=True,
         n_neighbors=1,
-        fresh_start=False,
+        fresh_start=True,
+        n_permute=1,
+        n_force_deviate=4,
+        n_cycles_per_permute=8,
+        loop_lower_pct=5,
+        loop_upper_pct=95,
+        n_max_cocycles=10,
     ):
         import rpy2.robjects as ro
 
@@ -173,6 +189,7 @@ class HomologyData:
                     source_loop_key.append(sid)
         with Progress() as progress:
             task_boot = progress.add_task("[bold #FFA500]Booting", total=n)
+            task_find_loop = progress.add_task("[bold green]Find loops")
             task_frechet = progress.add_task("[bold green]Calculate Frechet distance")
             task_homology = progress.add_task(
                 "[bold green]Assess Homological equivalence"
@@ -194,6 +211,7 @@ class HomologyData:
                 death_t = np.array([i[2] for i in result_cycle[1]])
                 reps_eidx_boot = []
                 reps_coord_boot = []
+                progress.reset(task_find_loop, totol=len(result_cycle[1]))
                 for nc in range(len(result_cycle[1])):
                     try:
                         reps = julia.reconstruct_n_loop_representatives(
@@ -202,6 +220,12 @@ class HomologyData:
                             n_reps_per_loop,
                             thresh,
                             rep_life_pct,
+                            n_permute,
+                            n_force_deviate,
+                            n_cycles_per_permute,
+                            loop_lower_pct,
+                            loop_upper_pct,
+                            n_max_cocycles,
                         )
                         reps = [list(lp) for lp in reps[0]]
                         reps_eidx = []
@@ -228,6 +252,7 @@ class HomologyData:
                         reps_coord_boot.append(reps_coords)
                     except ValueError:
                         continue
+                    progress.update(task_find_loop, advance=1)
                 pairs = [
                     ((i, j), source_loop_birth_t[i])
                     for i, j in product(
@@ -307,52 +332,55 @@ class HomologyData:
                         )
                         progress.update(task_homology, advance=1)
 
-                        df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
-                        df["hamming_dist"] = result
-                        self.matching_df.append(df.copy())
-                        df = df[
-                            np.logical_and(
-                                df["hamming_dist"] < max_hamming_dist,
-                                ~np.isnan(df["hamming_dist"]),
-                            )
-                        ]
-                        if df.empty:
-                            continue
-                        self.loops_eidx_boot.append(reps_eidx_boot)
-                        self.loops_coords_boot.append(reps_coord_boot)
-                        self.persistence_diagram_boot.append(
-                            np.vstack([birth_t, death_t]).T
+                    df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
+                    df["hamming_dist"] = result
+                    self.matching_df.append(df.copy())
+                    df = df[
+                        np.logical_and(
+                            df["hamming_dist"] < max_hamming_dist,
+                            ~np.isnan(df["hamming_dist"]),
                         )
-                        df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
-                        cost_matrix_sub = df.pivot(
-                            index="source", columns="target", values="hamming_dist"
-                        ).fillna(np.inf)
-                        cost_matrix = np.full(
-                            [
-                                cost_matrix_sub.shape[0],
-                                cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
-                            ],
-                            max_hamming_dist,
+                    ]
+                    if df.empty:
+                        continue
+                    self.loops_eidx_boot.append(reps_eidx_boot)
+                    self.loops_coords_boot.append(reps_coord_boot)
+                    self.persistence_diagram_boot.append(
+                        np.vstack([birth_t, death_t]).T
+                    )
+                    df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
+                    cost_matrix_sub = df.pivot(
+                        index="source", columns="target", values="hamming_dist"
+                    ).fillna(np.inf)
+                    cost_matrix = np.full(
+                        [
+                            cost_matrix_sub.shape[0],
+                            cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
+                        ],
+                        max_hamming_dist,
+                    )
+                    cost_matrix[
+                        : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]
+                    ] = cost_matrix_sub
+                    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+                    mask = col_ind >= cost_matrix_sub.shape[1]
+                    row_ind = cost_matrix_sub.index[row_ind[~mask]]
+                    col_ind = cost_matrix_sub.columns[col_ind[~mask]]
+                    for j in range(len(row_ind)):
+                        skey = source_loop_key[row_ind[j]]
+                        self.tracks[skey]["loops"].append(
+                            (self.n_booted + 1, col_ind[j])
                         )
-                        cost_matrix[
-                            : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]
-                        ] = cost_matrix_sub
-                        row_ind, col_ind = linear_sum_assignment(cost_matrix)
-                        mask = col_ind >= cost_matrix_sub.shape[1]
-                        row_ind = cost_matrix_sub.index[row_ind[~mask]]
-                        col_ind = cost_matrix_sub.columns[col_ind[~mask]]
-                        for j in range(len(row_ind)):
-                            skey = source_loop_key[row_ind[j]]
-                            self.tracks[skey]["loops"].append(
-                                (self.n_booted + 1, col_ind[j])
-                            )
-                        n_success += 1
-                        self.n_booted += 1
+                    n_success += 1
+                    self.n_booted += 1
                 progress.update(
                     task_boot,
                     advance=1,
                     description=f"[bold #FFA500]Booting (DONE={n_success}/{n})",
                 )
+                progress.reset(task_find_loop, completed=0)
+                progress.reset(task_frechet, completed=0)
+                progress.reset(task_homology, completed=0)
 
     def clean_boot(self):
         self.tracks = {}

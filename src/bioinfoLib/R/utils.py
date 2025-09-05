@@ -57,15 +57,6 @@ _pd_cv_rules = None
 
 
 def start_r_session():
-    cmd = (
-        os.path.join(r_home, "bin", "Rscript"),
-        "-e",
-        ";".join(
-            (f'setwd("{base_dir}")', "library(renv)", f'renv::activate("{base_dir}")')
-        ),
-    )
-    subprocess.check_call(cmd)
-
     import rpy2.robjects as robjects
     from rpy2.robjects import default_converter, numpy2ri, pandas2ri
 
