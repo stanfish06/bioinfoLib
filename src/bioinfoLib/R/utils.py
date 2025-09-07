@@ -52,6 +52,15 @@ def install_cran_packages():
     robjects.r("renv::snapshot(prompt = FALSE)")
 
 
+def install_bioc_packages():
+    os.environ["RENV_PROJECT"] = base_dir
+    cmd = (
+        os.path.join(r_home, "bin", "Rscript"),
+        os.path.join(base_dir, "install_bioc_packages.R"),
+    )
+    subprocess.check_call(cmd)
+
+
 _np_cv_rules = None
 _pd_cv_rules = None
 

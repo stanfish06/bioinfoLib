@@ -78,27 +78,38 @@ class HomologyData:
         n_top,
         n_each,
         life_pct=0.1,
-        n_permute=1,
         n_force_deviate=4,
-        n_cycles_per_permute=8,
+        n_reps_per_loop=8,
         loop_lower_pct=5,
         loop_upper_pct=95,
         n_max_cocycles=10,
     ):
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
-        n_total_loops = len(self.persistence_diagram)
+
+        filt = julia.Rips(
+            dist_mat,
+            sparse=True,
+            threshold=self.parameters["filtration_threshold_homology"],
+        )
+        cocycles = julia.ripserer(filt, reps=1)
+        n_total_loops = len(cocycles[1])
         n_compute = min(n_total_loops, n_top)
         self.loops_coords = []
         self.loops_eidx = []
         if n_compute > 0:
             for i in range(n_compute):
                 reps = julia.reconstruct_n_loop_representatives(
-                    dist_mat,
+                    cocycles,
+                    filt,
                     i,
                     n_each,
-                    self.parameters["filtration_threshold_homology"],
                     life_pct,
+                    n_force_deviate,
+                    n_reps_per_loop,
+                    loop_lower_pct,
+                    loop_upper_pct,
+                    n_max_cocycles,
                 )
                 # julia to python
                 reps = [list(lp) for lp in reps[0]]
@@ -144,13 +155,12 @@ class HomologyData:
         n_nearest_loops=20,
         n_search=4,
         ridge_coef_a=0.1,
-        ridge_coef_b=0.1,
+        ridge_coef_b=1,
         do_approximation=True,
         n_neighbors=1,
         fresh_start=True,
-        n_permute=1,
         n_force_deviate=4,
-        n_cycles_per_permute=8,
+        _n_reps_per_loop=8,
         loop_lower_pct=5,
         loop_upper_pct=95,
         n_max_cocycles=10,
@@ -168,12 +178,15 @@ class HomologyData:
         source_loop_coords_pool = self.loops_coords.copy()
         source_loop_key = []
         source_loop_birth_t = []
+        source_loop_death_t = []
         for i in range(len(self.loops_eidx)):
             sloop_birth_t = self.persistence_diagram[i, 0]
+            sloop_death_t = self.persistence_diagram[i, 1]
             if f"(0,{i})" not in self.tracks:
                 self.tracks[f"(0,{i})"] = {"birth_t": sloop_birth_t, "loops": [(0, i)]}
             source_loop_key.append(f"(0,{i})")
             source_loop_birth_t.append(sloop_birth_t)
+            source_loop_death_t.append(sloop_death_t)
         # if there are tracks/heads in tracks, send them to source loop
         if self.tracks:
             for sid in self.tracks.keys():
@@ -206,23 +219,22 @@ class HomologyData:
                 dist_mat = pairwise_distances(x_boot)
                 dist_mat = (dist_mat + dist_mat.T) / 2
                 filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-                result_cycle = julia.ripserer(filt, reps=1)
-                birth_t = np.array([i[1] for i in result_cycle[1]])
-                death_t = np.array([i[2] for i in result_cycle[1]])
+                cocycles = julia.ripserer(filt, reps=1)
+                birth_t = np.array([i[1] for i in cocycles[1]])
+                death_t = np.array([i[2] for i in cocycles[1]])
                 reps_eidx_boot = []
                 reps_coord_boot = []
-                progress.reset(task_find_loop, totol=len(result_cycle[1]))
-                for nc in range(len(result_cycle[1])):
+                progress.reset(task_find_loop, totol=len(cocycles[1]))
+                for nc in range(len(cocycles[1])):
                     try:
                         reps = julia.reconstruct_n_loop_representatives(
-                            dist_mat,
+                            cocycles,
+                            filt,
                             nc,
                             n_reps_per_loop,
-                            thresh,
                             rep_life_pct,
-                            n_permute,
                             n_force_deviate,
-                            n_cycles_per_permute,
+                            _n_reps_per_loop,
                             loop_lower_pct,
                             loop_upper_pct,
                             n_max_cocycles,
@@ -244,8 +256,7 @@ class HomologyData:
                                     rep_i_eidx.append(
                                         np.where(edge_idx == self.bd_row_id)[0][0]
                                     )
-                                rep_i_coords.append(x_boot[v1, :])
-                            rep_i_coords.append(x_boot[v2, :])
+                                rep_i_coords.append(self.data[v1, :])
                             reps_eidx.append(np.array(rep_i_eidx))
                             reps_coords.append(np.array(rep_i_coords))
                         reps_eidx_boot.append(reps_eidx)
@@ -254,14 +265,14 @@ class HomologyData:
                         continue
                     progress.update(task_find_loop, advance=1)
                 pairs = [
-                    ((i, j), source_loop_birth_t[i])
+                    ((i, j), source_loop_death_t[i])
                     for i, j in product(
                         range(len(source_loop_eidx_pool)), range(len(reps_eidx_boot))
                     )
                 ]
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
-                for (i, j), sloop_birth_t in pairs:
+                for (i, j), sloop_death_t in pairs:
                     result.append(
                         evaluate_match(
                             self.bd_mat[2],
@@ -280,7 +291,7 @@ class HomologyData:
                             do_approximation,
                             n_neighbors,
                             self.bd_column_birth_t,
-                            sloop_birth_t,
+                            sloop_death_t,
                             similarity_func,
                             "Frechet",
                         )
@@ -306,7 +317,7 @@ class HomologyData:
                 if pairs_filt:
                     result = []
                     progress.reset(task_homology, total=len(pairs_filt))
-                    for ((i, j), sloop_birth_t), frech_dist in pairs_filt:
+                    for ((i, j), sloop_death_t), frech_dist in pairs_filt:
                         result.append(
                             evaluate_match(
                                 self.bd_mat[2],
@@ -325,7 +336,7 @@ class HomologyData:
                                 do_approximation,
                                 n_neighbors,
                                 self.bd_column_birth_t,
-                                sloop_birth_t,
+                                sloop_death_t,
                                 similarity_func,
                                 "Frechet",
                             )
@@ -349,15 +360,16 @@ class HomologyData:
                         np.vstack([birth_t, death_t]).T
                     )
                     df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
+                    df["cost"] = df["hamming_dist"] * df["frechet_dist"]
                     cost_matrix_sub = df.pivot(
-                        index="source", columns="target", values="hamming_dist"
+                        index="source", columns="target", values="cost"
                     ).fillna(np.inf)
                     cost_matrix = np.full(
                         [
                             cost_matrix_sub.shape[0],
                             cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
                         ],
-                        max_hamming_dist,
+                        max_hamming_dist * max_frechet_dist,
                     )
                     cost_matrix[
                         : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]

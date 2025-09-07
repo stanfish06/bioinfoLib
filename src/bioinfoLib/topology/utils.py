@@ -20,14 +20,14 @@ def sp_ridge_regression_mod2(
     nrow_A,
     ncol_A,
     b,
-    ridge_coef_a,
-    ridge_coef_b,
+    ridge_coef_a=0.1,
+    ridge_coef_b=1,
     n_neighbors=1,
     do_approximation=False,
-    n_search_cutoff=10,
+    n_search_cutoff=100,
     max_bits_flip=10,
     max_bits_comb=10,
-    n_post_process=10,
+    n_post_process=2,
 ):
     # simplify A by only considering the neighborhood of the loop
     if do_approximation:
@@ -165,7 +165,7 @@ def evaluate_match(
     do_approximation,
     n_neighbors,
     bd_column_birth_t,
-    source_loop_birth_t,
+    source_loop_death_t,
     similarity_func,
     type,
 ):
@@ -222,8 +222,8 @@ def evaluate_match(
             b2 = np.zeros(nrow_A)
             b2[tloop_eidx] = 1
             b = np.logical_xor(b1, b2).astype(int)
-            # remove columns with birth t larger than the birth t of the loop
-            columns_kept = np.where(bd_column_birth_t <= source_loop_birth_t)[0]
+            # remove columns with birth t larger than the death t of the loop
+            columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
             if columns_kept.size == 0:
                 return np.nan
             mask = ~np.isin(one_cidx_A, columns_kept)
@@ -240,7 +240,6 @@ def evaluate_match(
                 ridge_coef_b,
                 do_approximation=do_approximation,
                 n_neighbors=n_neighbors,
-                n_post_process=1,
             )
             if res is None:
                 dists.append(np.nan)
@@ -250,9 +249,14 @@ def evaluate_match(
                 if np.sum(np.logical_or(pred, b)) == 0:
                     dist = np.nan
                 else:
-                    dist = 1 - np.sum(np.logical_and(pred, b)) / np.sum(
-                        np.logical_or(pred, b)
-                    )
+                    tp = np.sum(np.logical_and(pred == 1, b == 1))
+                    fp = np.sum(np.logical_and(pred == 1, b == 0))
+                    fn = np.sum(np.logical_and(pred == 0, b == 1))
+                    if tp + fp + fn == 0:
+                        dist = 0.0
+                    else:
+                        f1 = 2 * tp / (2 * tp + fp + fn)
+                        dist = 1 - f1
                 dists.append(dist)
         dist = np.nanmean(dists)
         return dist

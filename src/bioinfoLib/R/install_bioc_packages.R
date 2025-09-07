@@ -4,12 +4,13 @@ options(BiocManager.check_repositories = FALSE)
 Sys.setenv(RENV_CONFIG_PROMPT = "FALSE")
 
 bioc_packages <- c("edgeR", "DESeq2", "splatter", "SingleCellExperiment")
-setwd("../src/bioinfoLib/R")
+r_project <- Sys.getenv("RENV_PROJECT", unset = getwd())
+setwd(r_project)
 print(getwd())
 library(renv)
-renv::activate("../src/bioinfoLib/R")
+renv::activate(r_project)
 BiocManager::install(version = "3.18", ask = FALSE, update = TRUE, force = TRUE)
-BiocManager::install("BiocVersion", version="3.18", ask=FALSE, force=TRUE)
+BiocManager::install("BiocVersion", version = "3.18", ask = FALSE, force = TRUE)
 
 for (pkg in bioc_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {

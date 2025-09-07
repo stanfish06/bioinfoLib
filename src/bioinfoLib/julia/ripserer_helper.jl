@@ -95,87 +95,67 @@ end
 
 # Use Yen's k shortest path to get n best cycles
 function reconstruct_n_loop_representatives(
-    dist_mat,
+    cocycles,
+    filt,
     rep_idx,
     n,
-    threshold,
     life_pct=0.1,
-    n_permute=1,
     n_force_deviate=4,
-    n_cycles_per_permute=8,
+    n_reps_per_loop=8,
     loop_lower_pct=5,
     loop_upper_pct=95,
     n_max_cocycles=10
 )
-    cycles_pool_final = Vector{Vector{Int64}}()
-    cycles_dist_final = Vector{Float64}()
-    for _ in 1:n_permute
-        perm = shuffle(1:size(dist_mat, 1))
-        filt = Rips(dist_mat[perm, perm], sparse=true, threshold=threshold)
-        res = ripserer(filt, reps=1)
-        rep = res[2][length(res[2]) - rep_idx]
-        filt_t = birth(rep) + (death(rep) - birth(rep)) * life_pct
-        # get all cocycle representatives
-        cocycles_filt = filter!(simplex.(representative(rep))) do sx
-            birth(sx) <= filt_t
-        end
-        # get all existing edges
-        edges_filt = filter!(edges(filt)) do sx
-            birth(sx) <= filt_t
-        end
-        # create weighted graph and disconnect the cocycles by setting them to infinite weights
-        sources = vcat(
-            getindex.(vertices.(edges_filt), 1),
-            getindex.(vertices.(cocycles_filt), 1)
-        )
-        destinations = vcat(
-            getindex.(vertices.(edges_filt), 2),
-            getindex.(vertices.(cocycles_filt), 2)
-        )
-        weights = vcat(
-            birth.(edges_filt),
-            birth.(cocycles_filt) * Inf
-        )
-        cycles_pool = Vector{Vector{Int64}}()
-        cycles_dist = Vector{Float64}()
-        for _ in 1:n_force_deviate
-            cycles_pool_tmp = Vector{Vector{Int64}}()
-            g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
-            n_cocycles_used = 0
-            for (i, j) in Iterators.map(vertices, cocycles_filt)
-                if n_cocycles_used == n_max_cocycles
-                    break
-                end
-                res = yen_k_shortest_paths(g, i, j, g.weights, n_cycles_per_permute)
-                for path in res.paths
-                    push!(cycles_pool, perm[path])
-                    push!(cycles_pool_tmp, path)
-                end
-                append!(cycles_dist, res.dists)
-                n_cocycles_used = n_cocycles_used + 1
-            end
-            # force deviation from the previous cycles by increasing the edge weights to infinity
-            for path in cycles_pool_tmp
-                append!(sources, path[1:end-1])
-                append!(destinations, path[2:end])
-                append!(weights, fill(Inf, length(path)-1))
-            end
-        end
-        cycles_pool = sort(collect(zip(cycles_dist, cycles_pool)), by = first)
-        n_cycles_total = length(cycles_pool)
-        step = (loop_upper_pct - loop_lower_pct) / (n_cycles_total - 1)
-        cycles_idx_pick = Vector{Int64}()
-        for i in 1:n_cycles_total
-            dist_pct = (loop_lower_pct + step * (i - 1)) / 100
-            push!(cycles_idx_pick, min(floor(n_cycles_total * dist_pct) + 1, n_cycles_total))
-        end
-        top_cycles = last.(cycles_pool[cycles_idx_pick])
-        top_cycles_dist = first.(cycles_pool[cycles_idx_pick])
-        append!(cycles_pool_final, top_cycles)
-        append!(cycles_dist_final, top_cycles_dist)
+    rep = cocycles[2][length(cocycles[2]) - rep_idx]
+    filt_t = birth(rep) + (death(rep) - birth(rep)) * life_pct
+    # get all cocycle representatives
+    cocycles_filt = filter!(simplex.(representative(rep))) do sx
+        birth(sx) <= filt_t
     end
-    cycles_pool_final = sort(collect(zip(cycles_dist_final, cycles_pool_final)), by = first)
-    n_cycles_total = length(cycles_pool_final)
+    # get all existing edges
+    edges_filt = filter!(edges(filt)) do sx
+        birth(sx) <= filt_t
+    end
+    # create weighted graph and disconnect the cocycles by setting them to infinite weights
+    sources = vcat(
+        getindex.(vertices.(edges_filt), 1),
+        getindex.(vertices.(cocycles_filt), 1)
+    )
+    destinations = vcat(
+        getindex.(vertices.(edges_filt), 2),
+        getindex.(vertices.(cocycles_filt), 2)
+    )
+    weights = vcat(
+        birth.(edges_filt),
+        birth.(cocycles_filt) * Inf
+    )
+    cycles_pool = Vector{Vector{Int64}}()
+    cycles_dist = Vector{Float64}()
+    for _ in 1:n_force_deviate
+        cycles_pool_tmp = Vector{Vector{Int64}}()
+        g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
+        n_cocycles_used = 0
+        for (i, j) in Iterators.map(vertices, cocycles_filt)
+            if n_cocycles_used == n_max_cocycles
+                break
+            end
+            res = yen_k_shortest_paths(g, i, j, g.weights, n_reps_per_loop)
+            for path in res.paths
+                push!(cycles_pool, path)
+                push!(cycles_pool_tmp, path)
+            end
+            append!(cycles_dist, res.dists)
+            n_cocycles_used = n_cocycles_used + 1
+        end
+        # force deviation from the previous cycles by increasing the edge weights to infinity
+        for path in cycles_pool_tmp
+            append!(sources, path[1:end-1])
+            append!(destinations, path[2:end])
+            append!(weights, fill(Inf, length(path)-1))
+        end
+    end
+    cycles_pool = sort(collect(zip(cycles_dist, cycles_pool)), by = first)
+    n_cycles_total = length(cycles_pool)
     n_cycles_return = min(n_cycles_total, n)
     step = (loop_upper_pct - loop_lower_pct) / (n_cycles_return - 1)
     cycles_idx_pick = Vector{Int64}()
@@ -183,8 +163,8 @@ function reconstruct_n_loop_representatives(
         dist_pct = (loop_lower_pct + step * (i - 1)) / 100
         push!(cycles_idx_pick, min(floor(n_cycles_total * dist_pct) + 1, n_cycles_total))
     end
-    top_cycles = last.(cycles_pool_final[cycles_idx_pick])
-    top_cycles_dist = first.(cycles_pool_final[cycles_idx_pick])
+    top_cycles = last.(cycles_pool[cycles_idx_pick])
+    top_cycles_dist = first.(cycles_pool[cycles_idx_pick])
     mask = top_cycles_dist .< Inf
     return (top_cycles[mask], top_cycles_dist[mask])
 end

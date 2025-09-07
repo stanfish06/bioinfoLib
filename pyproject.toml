@@ -104,7 +104,7 @@ dev = ["ruff>=0.11.4"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-package-data = { "bioinfoLib.julia" = ["*.jl"] }
+package-data = { "bioinfoLib.julia" = ["*.jl"], "bioinfoLib.R" = ["*.R"] }
 ext-modules = [
   { name = "bioinfoLib.GP.simulator", sources = [
     "./src/bioinfoLib/GP/simulator.pyx",
