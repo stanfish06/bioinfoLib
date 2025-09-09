@@ -9,6 +9,11 @@ from matplotlib.lines import Line2D
 from pydantic import Field, validate_call
 
 
+# TODO: add an universal single cell plotter
+def scatter():
+    pass
+
+
 def volcano_plot_differential_expression(
     adata: AnnData,
     key: str,
