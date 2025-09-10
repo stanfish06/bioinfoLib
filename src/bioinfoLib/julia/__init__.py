@@ -63,7 +63,7 @@ for package, (uuid, version) in packages.items():
             print(f"Error installing {package}: {e}")
             raise e
     else:
-        print(f"{package} exists")
+        print(f"{package}")
 
 juliapkg.resolve()
 from . import utils
