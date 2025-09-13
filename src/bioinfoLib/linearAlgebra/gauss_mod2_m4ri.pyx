@@ -26,11 +26,11 @@ def mod2Solve_m4ri_py(A, b):
     cdef mzd_t *b2 = mzd_init(nr, 1);
     
     try:
-        for j in range(nc):
-            for i in range(nr):
+        for i in range(nr):
+            for j in range(nc):
                 mzd_write_bit(A2, i, j, A[i][j])
-                if j == 0:
-                    mzd_write_bit(b2, i, 0, b[i])
+        for i in range(nr):
+            mzd_write_bit(b2, i, 0, b[i])
         result = mzd_solve_left(A2, b2, 0, 1)
         return result == 0
     finally:

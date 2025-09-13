@@ -12,13 +12,13 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
     end
     num_vertices = Ripserer.nv(filtration)
     Threads.@threads for i = 1:num_vertices
-        Threads.@threads for j = (i + 1):num_vertices
-            Threads.@threads for k = (j +1):num_vertices
+        Threads.@threads for j = (i+1):num_vertices
+            Threads.@threads for k = (j+1):num_vertices
                 # make vertices absolute just in case the simplex is oriented
                 sim = abs(Ripserer.simplex(filtration, Val(2), (i, j, k)))
                 if (sim != nothing && sim.birth <= thresh)
                     vs = Ripserer.vertices(sim)
-                    push!(thread_buffer[Threads.threadid()],Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
+                    push!(thread_buffer[Threads.threadid()], Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
                 end
             end
         end
@@ -40,6 +40,26 @@ function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
         push!(faces, vs[[2, 3]])
     end
     return (faces, birth_t)
+end
+
+# If you can get the column reduced matrix, then you can use fewer number of columns
+# Get H1 and extracts its representatives
+# birth time of each loop representative is the birth time of the birth edge
+# so all other edges of the representative should be present
+function reduced_boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
+    verts = Vector{Tuple}()
+    birth_t = Vector()
+    ripser = Ripserer.ripserer(filtration_thresh, reps=1, alg=:involuted)
+    loops = ripser[2]
+    for loop in loops
+        es = Ripserer.representative(loop)
+        for e in es
+            vs = vertices(e)
+            push!(verts, vs)
+            push!(birth_t, birth(loop))
+        end
+    end
+    return (verts, birth_t)
 end
 
 function get_trigs(filtration_thresh::Ripserer.AbstractFiltration)
@@ -75,19 +95,19 @@ function boundary_mat_fill_hole(filtration::Ripserer.AbstractFiltration, rep_cyc
     end
     num_vertices = Ripserer.nv(filtration)
     Threads.@threads for i = 1:num_vertices
-        Threads.@threads for j = (i + 1):num_vertices
-            Threads.@threads for k = (j + 1):num_vertices
+        Threads.@threads for j = (i+1):num_vertices
+            Threads.@threads for k = (j+1):num_vertices
                 sim = abs(Ripserer.simplex(filtration, Val(2), (i, j, k)))
                 if (sim != nothing && sim.birth <= thresh_trig)
                     vs = Ripserer.vertices(sim)
-                    push!(thread_buffer[Threads.threadid()],Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
+                    push!(thread_buffer[Threads.threadid()], Tuple([vs[[1, 2]], vs[[1, 3]], vs[[2, 3]]]))
                 end
             end
         end
     end
     Threads.@threads for rep in rep_cycle
         if (rep.birth < thresh_hole_birth && (rep.death - rep.birth) < thresh_hole_life)
-            push!(thread_buffer[Threads.threadid()],Tuple([Ripserer.vertices(v) for v in rep.representative]))
+            push!(thread_buffer[Threads.threadid()], Tuple([Ripserer.vertices(v) for v in rep.representative]))
         end
     end
     return vcat(thread_buffer...)
@@ -106,7 +126,7 @@ function reconstruct_n_loop_representatives(
     loop_upper_pct=95,
     n_max_cocycles=10
 )
-    rep = cocycles[2][length(cocycles[2]) - rep_idx]
+    rep = cocycles[2][length(cocycles[2])-rep_idx]
     filt_t = birth(rep) + (death(rep) - birth(rep)) * life_pct
     # get all cocycle representatives
     cocycles_filt = filter!(simplex.(representative(rep))) do sx
@@ -133,7 +153,7 @@ function reconstruct_n_loop_representatives(
     cycles_dist = Vector{Float64}()
     for _ in 1:n_force_deviate
         cycles_pool_tmp = Vector{Vector{Int64}}()
-        g = SimpleWeightedGraph(sources, destinations, weights; combine = max)
+        g = SimpleWeightedGraph(sources, destinations, weights; combine=max)
         n_cocycles_used = 0
         for (i, j) in Iterators.map(vertices, cocycles_filt)
             if n_cocycles_used == n_max_cocycles
@@ -151,10 +171,10 @@ function reconstruct_n_loop_representatives(
         for path in cycles_pool_tmp
             append!(sources, path[1:end-1])
             append!(destinations, path[2:end])
-            append!(weights, fill(Inf, length(path)-1))
+            append!(weights, fill(Inf, length(path) - 1))
         end
     end
-    cycles_pool = sort(collect(zip(cycles_dist, cycles_pool)), by = first)
+    cycles_pool = sort(collect(zip(cycles_dist, cycles_pool)), by=first)
     n_cycles_total = length(cycles_pool)
     n_cycles_return = min(n_cycles_total, n)
     step = (loop_upper_pct - loop_lower_pct) / (n_cycles_return - 1)

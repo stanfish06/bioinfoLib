@@ -18,6 +18,7 @@ from bioinfoLib.R.utils import SimilarityMeasures_helper
 from .utils import edge_idx_encode, evaluate_match
 
 
+# TODO: modify this data sturcture to enable cross species matching
 @dataclass
 class HomologyData:
     data: np.ndarray
@@ -56,11 +57,16 @@ class HomologyData:
         self.persistence_diagram = np.vstack([birth_t, death_t]).T
         self.parameters["filtration_threshold_homology"] = thresh
 
-    def compute_bd_matrix(self, thresh):
+    def compute_bd_matrix(self, thresh, reduced=True):
+        if self.parameters["filtration_threshold_homology"]:
+            thresh = self.parameters["filtration_threshold_homology"]
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-        bd, birth_t = julia.boundary_mat_d2(filt)
+        if reduced:
+            bd, birth_t = julia.reduced_boundary_mat_d2(filt)
+        else:
+            bd, birth_t = julia.boundary_mat_d2(filt)
         bd = np.array(np.array(bd).tolist()) - 1
         self.bd_column_birth_t = np.array(birth_t)
 
@@ -144,6 +150,7 @@ class HomologyData:
                         "loops": [(0, i)],
                     }
 
+    # Thoughts: using permutation test to have better match, but this will be computationally intense for sure
     def boot(
         self,
         n,
@@ -400,6 +407,7 @@ class HomologyData:
         self.loops_coords_boot = []
         self.loops_eidx_boot = []
         self.persistence_diagram_boot = []
+        self.matching_df = []
 
     def write_pkl(self, fname=None):
         if fname is not None:

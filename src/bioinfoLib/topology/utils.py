@@ -1,5 +1,6 @@
 import itertools
 from itertools import product
+from typing import Literal
 
 import numpy as np
 from scipy.sparse import csr_matrix, diags
@@ -7,6 +8,7 @@ from scipy.spatial.distance import cdist, hamming
 from scipy.stats import rankdata
 from sksparse.cholmod import cholesky
 
+from bioinfoLib.linearAlgebra.gauss_mod2_m4ri import mod2Solve_m4ri_py
 from bioinfoLib.R.utils import trajectory_distance
 
 
@@ -154,7 +156,6 @@ def evaluate_match(
     max_frechet_dist,
     ridge_coef_a,
     ridge_coef_b,
-    n_search,
     source_loops_edges,
     target_loops_edges,
     source_loops_coords,
@@ -168,6 +169,7 @@ def evaluate_match(
     source_loop_death_t,
     similarity_func,
     type,
+    regression_mode: Literal["exact", "approx"],
 ):
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
@@ -230,34 +232,39 @@ def evaluate_match(
             one_ridx_A = one_ridx_A[~mask]
             one_cidx_A = one_cidx_A[~mask]
             ncol_A = np.max(one_cidx_A) + 1
-            res = sp_ridge_regression_mod2(
-                one_ridx_A,
-                one_cidx_A,
-                nrow_A,
-                ncol_A,
-                b,
-                ridge_coef_a,
-                ridge_coef_b,
-                do_approximation=do_approximation,
-                n_neighbors=n_neighbors,
-            )
-            if res is None:
-                dists.append(np.nan)
-            else:
-                A, s = res
-                pred = np.round(A.dot(s)) % 2
-                if np.sum(np.logical_or(pred, b)) == 0:
-                    dist = np.nan
+            if regression_mode == "exact":
+                A = np.zeros([nrow_A, ncol_A])
+                A[one_ridx_A, one_cidx_A] = 1
+                res = mod2Solve_m4ri_py(A, b)
+            elif regression_mode == "approx":
+                res = sp_ridge_regression_mod2(
+                    one_ridx_A,
+                    one_cidx_A,
+                    nrow_A,
+                    ncol_A,
+                    b,
+                    ridge_coef_a,
+                    ridge_coef_b,
+                    do_approximation=do_approximation,
+                    n_neighbors=n_neighbors,
+                )
+                if res is None:
+                    dists.append(np.nan)
                 else:
-                    tp = np.sum(np.logical_and(pred == 1, b == 1))
-                    fp = np.sum(np.logical_and(pred == 1, b == 0))
-                    fn = np.sum(np.logical_and(pred == 0, b == 1))
-                    if tp + fp + fn == 0:
-                        dist = 0.0
+                    A, s = res
+                    pred = np.round(A.dot(s)) % 2
+                    if np.sum(np.logical_or(pred, b)) == 0:
+                        dist = np.nan
                     else:
-                        f1 = 2 * tp / (2 * tp + fp + fn)
-                        dist = 1 - f1
-                dists.append(dist)
+                        tp = np.sum(np.logical_and(pred == 1, b == 1))
+                        fp = np.sum(np.logical_and(pred == 1, b == 0))
+                        fn = np.sum(np.logical_and(pred == 0, b == 1))
+                        if tp + fp + fn == 0:
+                            dist = 0.0
+                        else:
+                            f1 = 2 * tp / (2 * tp + fp + fn)
+                            dist = 1 - f1
+                    dists.append(dist)
         dist = np.nanmean(dists)
         return dist
 

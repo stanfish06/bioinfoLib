@@ -2,43 +2,58 @@
 bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 """
 
+import logging
 from . import utils
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
+
+logger = logging.getLogger(__name__)
 
 # Import main modules
 try:
     from . import GP
-except Exception as e:
-    print(f"Could not import GP modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import GP modules: {e}")
+    GP = None
 try:
     from . import julia as jl
-except Exception as e:
-    print(f"Could not import julia modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import julia modules: {e}")
+    jl = None
 try:
     from . import linearAlgebra as la
-except Exception as e:
-    print(f"Could not import linearAlgebra modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import linearAlgebra modules: {e}")
+    la = None
 try:
     from . import RNAseq as rn
-except Exception as e:
-    print(f"Could not import RNAseq modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import RNAseq modules: {e}")
+    rn = None
 try:
     from . import scRNAseq as scr
-except Exception as e:
-    print(f"Could not import scRNAseq modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import scRNAseq modules: {e}")
+    scr = None
 try:
     from . import topology as tp
-except Exception as e:
-    print(f"Could not import topology modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import topology modules: {e}")
+    tp = None
 try:
     from . import image as im
-except Exception as e:
-    print(f"Could not import image modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import image modules: {e}")
+    im = None
 try:
     from . import R as r
-except Exception as e:
-    print(f"Could not import R modules {e}")
+except ImportError as e:
+    logger.warning(f"Could not import R modules: {e}")
+    r = None
 
-# Export commonly used components
-__all__ = ["rn", "scr", "GP", "jl", "la", "tp", "im", "r"]
+# Export commonly used components (only those that were successfully imported)
+__all__ = [
+    name
+    for name in ["rn", "scr", "GP", "jl", "la", "tp", "im", "r"]
+    if globals().get(name) is not None
+]
