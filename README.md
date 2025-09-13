@@ -26,3 +26,5 @@ For juila, use 1.12.0-beta1+0.x64.linux.gnu if 1.11 failed due to curl issue.
 For rpy2, it needs libtirpc-dev
 
 Bioconductor packages must be installed separately. See [script](./scripts/install_bioc_packages.R).
+
+![CI](https://github.com/stanfish06/bioinfoLib/actions/workflows/ci.yml/badge.svg)
