@@ -2262,7 +2262,7 @@ static const char __pyx_k_AssertionError[] = "AssertionError";
 static const char __pyx_k_mod2Solve_m4ri_py[] = "mod2Solve_m4ri_py";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_AQ_AQaq_3c_Q_XQd_XQd_E_aq_U_1_Q[] = "\200\001\330\004\t\210\023\210A\210Q\330\004\t\210\023\210A\210Q\210a\210q\340\004\013\2103\210c\220\024\220Q\340\004\025\220X\230Q\230d\240!\330\004\025\220X\230Q\230d\240!\340\004\005\330\010\014\210E\220\025\220a\220q\330\014\020\220\005\220U\230!\2301\330\020\035\230Q\230d\240#\240S\250\001\250\021\250\"\250A\250Q\330\020\023\2202\220S\230\001\330\024!\240\021\240$\240c\250\023\250A\250Q\250a\330\010\021\220\036\230q\240\004\240D\250\003\2501\330\010\017\210w\220c\230\021\340\010\020\220\001\220\021\330\010\020\220\001\220\021";
+static const char __pyx_k_AQ_AQaq_3c_Q_XQd_XQd_E_aq_U_1_Q[] = "\200\001\330\004\t\210\023\210A\210Q\330\004\t\210\023\210A\210Q\210a\210q\340\004\013\2103\210c\220\024\220Q\340\004\025\220X\230Q\230d\240!\330\004\025\220X\230Q\230d\240!\340\004\005\330\010\014\210E\220\025\220a\220q\330\014\020\220\005\220U\230!\2301\330\020\035\230Q\230d\240#\240S\250\001\250\021\250\"\250A\250Q\330\010\014\210E\220\025\220a\220q\330\014\031\230\021\230$\230c\240\023\240A\240Q\240a\330\010\021\220\036\230q\240\004\240D\250\003\2501\330\010\017\210w\220c\230\021\340\010\020\220\001\220\021\330\010\020\220\001\220\021";
 static const char __pyx_k_bioinfoLib_linearAlgebra_gauss_m[] = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri";
 static const char __pyx_k_number_of_rows_must_be_greater_t[] = "number of rows must be greater than or equal to the number of columns";
 static const char __pyx_k_src_bioinfoLib_linearAlgebra_gau[] = "src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx";
@@ -2528,8 +2528,8 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_mod2Sol
   Py_ssize_t __pyx_v_nc;
   mzd_t *__pyx_v_A2;
   mzd_t *__pyx_v_b2;
-  Py_ssize_t __pyx_v_j;
   Py_ssize_t __pyx_v_i;
+  Py_ssize_t __pyx_v_j;
   int __pyx_v_result;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -2621,41 +2621,41 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_mod2Sol
  *     cdef mzd_t *b2 = mzd_init(nr, 1);
  * 
  *     try:             # <<<<<<<<<<<<<<
- *         for j in range(nc):
- *             for i in range(nr):
+ *         for i in range(nr):
+ *             for j in range(nc):
 */
   /*try:*/ {
 
     /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":29
  * 
  *     try:
- *         for j in range(nc):             # <<<<<<<<<<<<<<
- *             for i in range(nr):
+ *         for i in range(nr):             # <<<<<<<<<<<<<<
+ *             for j in range(nc):
  *                 mzd_write_bit(A2, i, j, A[i][j])
 */
-    __pyx_t_1 = __pyx_v_nc;
+    __pyx_t_1 = __pyx_v_nr;
     __pyx_t_4 = __pyx_t_1;
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
-      __pyx_v_j = __pyx_t_5;
+      __pyx_v_i = __pyx_t_5;
 
       /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":30
  *     try:
- *         for j in range(nc):
- *             for i in range(nr):             # <<<<<<<<<<<<<<
+ *         for i in range(nr):
+ *             for j in range(nc):             # <<<<<<<<<<<<<<
  *                 mzd_write_bit(A2, i, j, A[i][j])
- *                 if j == 0:
+ *         for i in range(nr):
 */
-      __pyx_t_6 = __pyx_v_nr;
+      __pyx_t_6 = __pyx_v_nc;
       __pyx_t_7 = __pyx_t_6;
       for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
-        __pyx_v_i = __pyx_t_8;
+        __pyx_v_j = __pyx_t_8;
 
         /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":31
- *         for j in range(nc):
- *             for i in range(nr):
+ *         for i in range(nr):
+ *             for j in range(nc):
  *                 mzd_write_bit(A2, i, j, A[i][j])             # <<<<<<<<<<<<<<
- *                 if j == 0:
- *                     mzd_write_bit(b2, i, 0, b[i])
+ *         for i in range(nr):
+ *             mzd_write_bit(b2, i, 0, b[i])
 */
         __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_A, __pyx_v_i, Py_ssize_t, 1, PyLong_FromSsize_t, 0, 1, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L4_error)
         __Pyx_GOTREF(__pyx_t_2);
@@ -2665,44 +2665,38 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_mod2Sol
         __pyx_t_10 = __Pyx_PyLong_As_BIT(__pyx_t_9); if (unlikely((__pyx_t_10 == ((BIT)-1)) && PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L4_error)
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         mzd_write_bit(__pyx_v_A2, __pyx_v_i, __pyx_v_j, __pyx_t_10);
-
-        /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":32
- *             for i in range(nr):
- *                 mzd_write_bit(A2, i, j, A[i][j])
- *                 if j == 0:             # <<<<<<<<<<<<<<
- *                     mzd_write_bit(b2, i, 0, b[i])
- *         result = mzd_solve_left(A2, b2, 0, 1)
-*/
-        __pyx_t_3 = (__pyx_v_j == 0);
-        if (__pyx_t_3) {
-
-          /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":33
- *                 mzd_write_bit(A2, i, j, A[i][j])
- *                 if j == 0:
- *                     mzd_write_bit(b2, i, 0, b[i])             # <<<<<<<<<<<<<<
- *         result = mzd_solve_left(A2, b2, 0, 1)
- *         return result == 0
-*/
-          __pyx_t_9 = __Pyx_GetItemInt(__pyx_v_b, __pyx_v_i, Py_ssize_t, 1, PyLong_FromSsize_t, 0, 1, 1, 1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 33, __pyx_L4_error)
-          __Pyx_GOTREF(__pyx_t_9);
-          __pyx_t_10 = __Pyx_PyLong_As_BIT(__pyx_t_9); if (unlikely((__pyx_t_10 == ((BIT)-1)) && PyErr_Occurred())) __PYX_ERR(0, 33, __pyx_L4_error)
-          __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-          mzd_write_bit(__pyx_v_b2, __pyx_v_i, 0, __pyx_t_10);
-
-          /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":32
- *             for i in range(nr):
- *                 mzd_write_bit(A2, i, j, A[i][j])
- *                 if j == 0:             # <<<<<<<<<<<<<<
- *                     mzd_write_bit(b2, i, 0, b[i])
- *         result = mzd_solve_left(A2, b2, 0, 1)
-*/
-        }
       }
     }
 
+    /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":32
+ *             for j in range(nc):
+ *                 mzd_write_bit(A2, i, j, A[i][j])
+ *         for i in range(nr):             # <<<<<<<<<<<<<<
+ *             mzd_write_bit(b2, i, 0, b[i])
+ *         result = mzd_solve_left(A2, b2, 0, 1)
+*/
+    __pyx_t_1 = __pyx_v_nr;
+    __pyx_t_4 = __pyx_t_1;
+    for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
+      __pyx_v_i = __pyx_t_5;
+
+      /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":33
+ *                 mzd_write_bit(A2, i, j, A[i][j])
+ *         for i in range(nr):
+ *             mzd_write_bit(b2, i, 0, b[i])             # <<<<<<<<<<<<<<
+ *         result = mzd_solve_left(A2, b2, 0, 1)
+ *         return result == 0
+*/
+      __pyx_t_9 = __Pyx_GetItemInt(__pyx_v_b, __pyx_v_i, Py_ssize_t, 1, PyLong_FromSsize_t, 0, 1, 1, 1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 33, __pyx_L4_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_t_10 = __Pyx_PyLong_As_BIT(__pyx_t_9); if (unlikely((__pyx_t_10 == ((BIT)-1)) && PyErr_Occurred())) __PYX_ERR(0, 33, __pyx_L4_error)
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      mzd_write_bit(__pyx_v_b2, __pyx_v_i, 0, __pyx_t_10);
+    }
+
     /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":34
- *                 if j == 0:
- *                     mzd_write_bit(b2, i, 0, b[i])
+ *         for i in range(nr):
+ *             mzd_write_bit(b2, i, 0, b[i])
  *         result = mzd_solve_left(A2, b2, 0, 1)             # <<<<<<<<<<<<<<
  *         return result == 0
  *     finally:
@@ -2710,7 +2704,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_mod2Sol
     __pyx_v_result = mzd_solve_left(__pyx_v_A2, __pyx_v_b2, 0, 1);
 
     /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":35
- *                     mzd_write_bit(b2, i, 0, b[i])
+ *             mzd_write_bit(b2, i, 0, b[i])
  *         result = mzd_solve_left(A2, b2, 0, 1)
  *         return result == 0             # <<<<<<<<<<<<<<
  *     finally:
@@ -3349,8 +3343,8 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
   PyObject* tuple_dedup_map = PyDict_New();
   if (unlikely(!tuple_dedup_map)) return -1;
   {
-    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 9, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 19, 167};
-    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_b, __pyx_mstate->__pyx_n_u_nr, __pyx_mstate->__pyx_n_u_nc, __pyx_mstate->__pyx_n_u_A2, __pyx_mstate->__pyx_n_u_b2, __pyx_mstate->__pyx_n_u_j, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_result};
+    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 9, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 19, 169};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_b, __pyx_mstate->__pyx_n_u_nr, __pyx_mstate->__pyx_n_u_nc, __pyx_mstate->__pyx_n_u_A2, __pyx_mstate->__pyx_n_u_b2, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_j, __pyx_mstate->__pyx_n_u_result};
     __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_src_bioinfoLib_linearAlgebra_gau, __pyx_mstate->__pyx_n_u_mod2Solve_m4ri_py, __pyx_k_AQ_AQaq_3c_Q_XQd_XQd_E_aq_U_1_Q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
   }
   Py_DECREF(tuple_dedup_map);
