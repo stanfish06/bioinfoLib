@@ -27,19 +27,21 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
 end
 
 function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
-    faces = Vector{Tuple}()
+    edges_pool = Vector{Tuple}()
+    trigs_pool = Vector{Tuple}()
     birth_t = Vector()
-    edges = Ripserer.edges(filtration_thresh)
-    triangles = Ripserer.columns_to_reduce(filtration_thresh, edges)
+    edges_full = Ripserer.edges(filtration_thresh)
+    triangles = Ripserer.columns_to_reduce(filtration_thresh, edges_full)
     for trig in triangles
         sim = abs(trig)
-        push!(birth_t, sim.birth)
         vs = Ripserer.vertices(sim)
-        push!(faces, vs[[1, 2]])
-        push!(faces, vs[[1, 3]])
-        push!(faces, vs[[2, 3]])
+        push!(edges_pool, vs[[1, 2]]) 
+        push!(edges_pool, vs[[1, 3]])
+        push!(edges_pool, vs[[2, 3]])
+        push!(trigs_pool, vs)
+        push!(birth_t, sim.birth)
     end
-    return (faces, birth_t)
+    return (edges_pool, trigs_pool, birth_t)
 end
 
 # If you can get the column reduced matrix, then you can use fewer number of columns
@@ -48,18 +50,22 @@ end
 # so all other edges of the representative should be present
 function reduced_boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
     verts = Vector{Tuple}()
+    e_rep_idx = Vector()
     birth_t = Vector()
     ripser = Ripserer.ripserer(filtration_thresh, reps=1, alg=:involuted)
     loops = ripser[2]
+    i = 0
     for loop in loops
         es = Ripserer.representative(loop)
         for e in es
             vs = vertices(e)
             push!(verts, vs)
             push!(birth_t, birth(loop))
+            push!(e_rep_idx, i)
         end
+        i += 1
     end
-    return (verts, birth_t)
+    return (verts, birth_t, e_rep_idx)
 end
 
 function get_trigs(filtration_thresh::Ripserer.AbstractFiltration)

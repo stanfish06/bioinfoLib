@@ -3,7 +3,6 @@ import pickle
 import uuid
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,18 +14,24 @@ from sklearn.metrics import pairwise_distances
 
 from bioinfoLib.R.utils import SimilarityMeasures_helper
 
-from .utils import edge_idx_encode, evaluate_match
+from .utils import (
+    compute_geometric_similarity,
+    compute_homological_equivalence,
+    edge_idx_encode,
+    trig_idx_encode,
+)
 
 
 # TODO: modify this data sturcture to enable cross species matching
 @dataclass
 class HomologyData:
     data: np.ndarray
+    n_vertices: int = 0
     data_visualization: np.ndarray = field(default_factory=lambda: np.array([]))
     persistence_diagram: np.ndarray = field(default_factory=lambda: np.array([]))
     loops_eidx: list[list[np.ndarray]] = field(default_factory=list)
     loops_coords: list[list[np.ndarray]] = field(default_factory=list)
-    bd_mat: Tuple = ()
+    bd_mat: tuple = ()
     bd_column_birth_t: np.ndarray = field(
         default_factory=lambda: np.array([], dtype=float)
     )
@@ -45,6 +50,7 @@ class HomologyData:
     def __post_init__(self):
         if len(self.data_visualization) != len(self.data):
             self.data_visualization = self.data
+        self.n_vertices = self.data.shape[0]
 
     def compute_homology(self, thresh):
         dist_mat = pairwise_distances(self.data)
@@ -57,25 +63,31 @@ class HomologyData:
         self.persistence_diagram = np.vstack([birth_t, death_t]).T
         self.parameters["filtration_threshold_homology"] = thresh
 
-    def compute_bd_matrix(self, thresh, reduced=True):
+    def compute_boundary_matrix(self, thresh, reduced=True):
         if self.parameters["filtration_threshold_homology"]:
             thresh = self.parameters["filtration_threshold_homology"]
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-        if reduced:
-            bd, birth_t = julia.reduced_boundary_mat_d2(filt)
-        else:
-            bd, birth_t = julia.boundary_mat_d2(filt)
-        bd = np.array(np.array(bd).tolist()) - 1
-        self.bd_column_birth_t = np.array(birth_t)
+        edges, trigs, birth_t = julia.boundary_mat_d2(filt)
+        bd = np.array(np.array(edges).tolist()) - 1
+        trigs = np.array(np.array(trigs).tolist()) - 1
+        trig_idx = [trig_idx_encode(i, j, k, self.n_vertices) for (i, j, k) in trigs]
+        _, trigs_keep = np.unique(trig_idx, return_index=True)
+        edges_keep = np.array(
+            [[3 * i, 3 * i + 1, 3 * i + 2] for i in trigs_keep]
+        ).flatten()
+        bd = bd[edges_keep, :]
+        birth_t = np.array(birth_t)[trigs_keep]
 
-        edge_idx = [edge_idx_encode(i, j) for (i, j) in bd]
+        edge_idx = [edge_idx_encode(i, j, self.n_vertices) for (i, j) in bd]
         self.bd_row_id = np.unique(edge_idx)
         one_ridx_A = np.searchsorted(self.bd_row_id, edge_idx).astype(int)
         nrow_A = len(self.bd_row_id)
         ncol_A = int(len(one_ridx_A) / 3)
         one_cidx_A = np.repeat(np.arange(ncol_A), 3).astype(int)
+
+        self.bd_column_birth_t = birth_t
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
         self.parameters["filtration_threshold_bd_matrix"] = thresh
 
@@ -130,7 +142,7 @@ class HomologyData:
                     for j in range(1, len(rep_i_idx)):
                         v1 = rep_i_idx[j - 1]
                         v2 = rep_i_idx[j]
-                        edge_idx = edge_idx_encode(v1, v2)
+                        edge_idx = edge_idx_encode(v1, v2, self.n_vertices)
                         if edge_idx in self.bd_row_id:
                             rep_i_eidx.append(
                                 np.where(edge_idx == self.bd_row_id)[0][0]
@@ -150,7 +162,7 @@ class HomologyData:
                         "loops": [(0, i)],
                     }
 
-    # Thoughts: using permutation test to have better match, but this will be computationally intense for sure
+    # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
     def boot(
         self,
         n,
@@ -160,7 +172,7 @@ class HomologyData:
         n_reps_per_loop=4,
         rep_life_pct=0.1,
         n_nearest_loops=20,
-        n_search=4,
+        regression_mode="exact",
         ridge_coef_a=0.1,
         ridge_coef_b=1,
         do_approximation=True,
@@ -258,7 +270,7 @@ class HomologyData:
                             for j in range(1, len(rep_i_idx)):
                                 v1 = boot_idx[rep_i_idx[j - 1]]
                                 v2 = boot_idx[rep_i_idx[j]]
-                                edge_idx = edge_idx_encode(v1, v2)
+                                edge_idx = edge_idx_encode(v1, v2, self.n_vertices)
                                 if edge_idx in self.bd_row_id:
                                     rep_i_eidx.append(
                                         np.where(edge_idx == self.bd_row_id)[0][0]
@@ -281,26 +293,12 @@ class HomologyData:
                 result = []
                 for (i, j), sloop_death_t in pairs:
                     result.append(
-                        evaluate_match(
-                            self.bd_mat[2],
-                            self.bd_mat[3],
-                            max_frechet_dist,
-                            ridge_coef_a,
-                            ridge_coef_b,
-                            n_search,
-                            source_loop_eidx_pool[i],
-                            reps_eidx_boot[j],
-                            source_loop_coords_pool[i],
-                            reps_coord_boot[j],
-                            self.bd_mat[0],
-                            self.bd_mat[1],
-                            False,
-                            do_approximation,
-                            n_neighbors,
-                            self.bd_column_birth_t,
-                            sloop_death_t,
-                            similarity_func,
-                            "Frechet",
+                        compute_geometric_similarity(
+                            source_loops_coords=source_loop_coords_pool[i],
+                            target_loops_coords=reps_coord_boot[j],
+                            max_frechet_dist=max_frechet_dist,
+                            similarity_func=similarity_func,
+                            similarity_type="Frechet",
                         )
                     )
                     progress.update(task_frechet, advance=1)
@@ -326,26 +324,20 @@ class HomologyData:
                     progress.reset(task_homology, total=len(pairs_filt))
                     for ((i, j), sloop_death_t), frech_dist in pairs_filt:
                         result.append(
-                            evaluate_match(
-                                self.bd_mat[2],
-                                self.bd_mat[3],
-                                max_frechet_dist,
-                                ridge_coef_a,
-                                ridge_coef_b,
-                                n_search,
-                                source_loop_eidx_pool[i],
-                                reps_eidx_boot[j],
-                                source_loop_coords_pool[i],
-                                reps_coord_boot[j],
-                                self.bd_mat[0],
-                                self.bd_mat[1],
-                                True,
-                                do_approximation,
-                                n_neighbors,
-                                self.bd_column_birth_t,
-                                sloop_death_t,
-                                similarity_func,
-                                "Frechet",
+                            compute_homological_equivalence(
+                                source_loops_edges=source_loop_eidx_pool[i],
+                                target_loops_edges=reps_eidx_boot[j],
+                                one_ridx_A=self.bd_mat[0],
+                                one_cidx_A=self.bd_mat[1],
+                                nrow_A=self.bd_mat[2],
+                                ncol_A=self.bd_mat[3],
+                                ridge_coef_a=ridge_coef_a,
+                                ridge_coef_b=ridge_coef_b,
+                                do_approximation=do_approximation,
+                                n_neighbors=n_neighbors,
+                                bd_column_birth_t=self.bd_column_birth_t,
+                                source_loop_death_t=sloop_death_t,
+                                regression_mode=regression_mode,
                             )
                         )
                         progress.update(task_homology, advance=1)

@@ -39,7 +39,7 @@ def get_installed_packages():
 
 
 current_packages = get_installed_packages()
-print("Julia package information:")
+print("Julia:")
 for package, (uuid, version) in packages.items():
     add_pkg = False
     if package not in current_packages[0]:
@@ -60,10 +60,10 @@ for package, (uuid, version) in packages.items():
                 juliapkg.add(package, uuid=uuid)
             print(f"{package} was just added")
         except Exception as e:
-            print(f"Error installing {package}: {e}")
+            print(f"✘ Error installing {package}: {e}")
             raise e
     else:
-        print(f"{package}")
+        print(f"{package} ✔")
 
 juliapkg.resolve()
 from . import utils

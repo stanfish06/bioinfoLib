@@ -142,12 +142,166 @@ def sp_ridge_regression_mod2(
     return (A[:, :ncol_A], best_s[:ncol_A])
 
 
-def edge_idx_encode(i, j):
+def edge_idx_encode(i, j, n_vertices, self_edge=True):
     if i > j:
-        i_tmp = i
-        i = j
-        j = i_tmp
-    return ((i + j) * (i + j + 1)) // 2 + j
+        i, j = j, i
+    # // make sure it returns integer
+    if self_edge:
+        return i * n_vertices + j
+    else:
+        return i * n_vertices - i * (i + 1) // 2 + (j - i - 1)
+
+
+def trig_idx_encode(i, j, k, n_vertices, self_edge=True):
+    i, j, k = sorted([i, j, k])
+    # // make sure it returns integer
+    if self_edge:
+        return i * np.power(n_vertices, 2) + j * n_vertices + k
+    else:
+        return None
+
+
+def compute_geometric_similarity(
+    source_loops_coords,
+    target_loops_coords,
+    max_frechet_dist,
+    similarity_func,
+    similarity_type,
+):
+    n_sources = len(source_loops_coords)
+    n_targets = len(target_loops_coords)
+    dists = []
+    for i, j in product(range(n_sources), range(n_targets)):
+        sloop_coords = source_loops_coords[i]
+        tloop_coords = target_loops_coords[j]
+        # find closest pair as the starting point of frechet distance
+        dist_mat = cdist(sloop_coords, tloop_coords)
+        p, q = np.unravel_index(np.argmin(dist_mat), dist_mat.shape)
+        try:
+            d1 = trajectory_distance(
+                np.roll(sloop_coords, -p, axis=0),
+                np.roll(tloop_coords, -q, axis=0),
+                similarity_type,
+                similarity_func,
+            )[0]
+            d2 = trajectory_distance(
+                np.roll(sloop_coords, -p, axis=0),
+                np.roll(tloop_coords[::-1], q + 1, axis=0),
+                similarity_type,
+                similarity_func,
+            )[0]
+            # not sure what negative value means
+            if d1 < 0:
+                d1 = np.inf
+            if d2 < 0:
+                d2 = np.inf
+            dist = min(d1, d2)
+            if dist < np.inf:
+                dists.append(dist)
+            else:
+                dists.append(np.nan)
+        except ValueError:
+            dists.append(np.nan)
+    dist = np.nanmean(dists)
+    if dist > max_frechet_dist:
+        return None
+    else:
+        return dist
+
+
+def compute_homological_equivalence(
+    source_loops_edges,
+    target_loops_edges,
+    one_ridx_A,
+    one_cidx_A,
+    nrow_A,
+    ncol_A,
+    ridge_coef_a,
+    ridge_coef_b,
+    bd_column_birth_t,
+    source_loop_death_t,
+    regression_mode,
+    do_approximation=True,
+    n_neighbors=1,
+):
+    n_sources = len(source_loops_edges)
+    n_targets = len(target_loops_edges)
+    dists = []
+    for i, j in product(range(n_sources), range(n_targets)):
+        sloop_eidx = source_loops_edges[i]
+        tloop_eidx = target_loops_edges[j]
+        if len(sloop_eidx) == 0 or len(tloop_eidx) == 0:
+            dists.append(np.nan)
+            continue
+        b1 = np.zeros(nrow_A)
+        b1[sloop_eidx] = 1
+        b2 = np.zeros(nrow_A)
+        b2[tloop_eidx] = 1
+        b = np.logical_xor(b1, b2).astype(int)
+        # remove columns with birth t larger than the death t of the loop
+        columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
+        if columns_kept.size == 0:
+            return np.nan
+        mask = ~np.isin(one_cidx_A, columns_kept)
+        one_ridx_A_local = one_ridx_A[~mask]
+        one_cidx_A_local = one_cidx_A[~mask]
+        ncol_A_local = np.max(one_cidx_A_local) + 1
+        if regression_mode == "exact":
+            if do_approximation:
+                columns_kept = []
+                one_idx_buff = np.where(b == 1)[0]
+                for _ in range(n_neighbors):
+                    incident_triangles = np.unique(
+                        one_cidx_A_local[np.isin(one_ridx_A_local, one_idx_buff)]
+                    )
+                    columns_kept.extend(incident_triangles)
+                    one_idx_buff = np.unique(
+                        one_ridx_A_local[np.isin(one_cidx_A_local, incident_triangles)]
+                    )
+                columns_kept = np.unique(columns_kept)
+                mask = np.isin(one_cidx_A_local, columns_kept)
+                one_ridx_A_local = one_ridx_A_local[mask]
+                one_cidx_A_local = one_cidx_A_local[mask]
+                if len(one_cidx_A_local) == 0:
+                    return np.nan
+                # reduce number of columns
+                one_cidx_A_local = rankdata(one_cidx_A_local, method="min") - 1
+                ncol_A_local = np.max(one_cidx_A_local) + 1
+            A = np.zeros([nrow_A, ncol_A_local])
+            A[one_ridx_A_local, one_cidx_A_local] = 1
+            res = mod2Solve_m4ri_py(A, b)
+            dists.append(1 - int(res))
+        elif regression_mode == "approx":
+            res = sp_ridge_regression_mod2(
+                one_ridx_A_local,
+                one_cidx_A_local,
+                nrow_A,
+                ncol_A_local,
+                b,
+                ridge_coef_a,
+                ridge_coef_b,
+                do_approximation=do_approximation,
+                n_neighbors=n_neighbors,
+            )
+            if res is None:
+                dists.append(np.nan)
+            else:
+                A, s = res
+                pred = np.round(A.dot(s)) % 2
+                if np.sum(np.logical_or(pred, b)) == 0:
+                    dist = np.nan
+                else:
+                    tp = np.sum(np.logical_and(pred == 1, b == 1))
+                    fp = np.sum(np.logical_and(pred == 1, b == 0))
+                    fn = np.sum(np.logical_and(pred == 0, b == 1))
+                    if tp + fp + fn == 0:
+                        dist = 0.0
+                    else:
+                        f1 = 2 * tp / (2 * tp + fp + fn)
+                        dist = 1 - f1
+                dists.append(dist)
+    dist = np.nanmean(dists)
+    return dist
 
 
 def evaluate_match(
@@ -163,110 +317,40 @@ def evaluate_match(
     one_ridx_A,
     one_cidx_A,
     do_regression,
+    regression_mode: Literal["exact", "approx"],
     do_approximation,
     n_neighbors,
     bd_column_birth_t,
     source_loop_death_t,
     similarity_func,
-    type,
-    regression_mode: Literal["exact", "approx"],
+    similarity_type,
 ):
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
     if not do_regression:
-        dists = []
-        for i, j in product(range(n_sources), range(n_targets)):
-            sloop_coords = source_loops_coords[i]
-            tloop_coords = target_loops_coords[j]
-            # find closest pair as the starting point of frechet distance
-            dist_mat = cdist(sloop_coords, tloop_coords)
-            p, q = np.unravel_index(np.argmin(dist_mat), dist_mat.shape)
-            try:
-                d1 = trajectory_distance(
-                    np.roll(sloop_coords, -p, axis=0),
-                    np.roll(tloop_coords, -q, axis=0),
-                    type,
-                    similarity_func,
-                )[0]
-                d2 = trajectory_distance(
-                    np.roll(sloop_coords, -p, axis=0),
-                    np.roll(tloop_coords[::-1], q + 1, axis=0),
-                    type,
-                    similarity_func,
-                )[0]
-                # not sure what negative value means
-                if d1 < 0:
-                    d1 = np.inf
-                if d2 < 0:
-                    d2 = np.inf
-                dist = min(d1, d2)
-                if dist < np.inf:
-                    dists.append(dist)
-                else:
-                    dists.append(np.nan)
-            except ValueError:
-                dists.append(np.nan)
-        dist = np.nanmean(dists)
-        if dist > max_frechet_dist:
-            return None
-        else:
-            return dist
+        return compute_geometric_similarity(
+            source_loops_coords,
+            target_loops_coords,
+            max_frechet_dist,
+            similarity_func,
+            similarity_type,
+        )
     else:
-        dists = []
-        for i, j in product(range(n_sources), range(n_targets)):
-            sloop_eidx = source_loops_edges[i]
-            tloop_eidx = target_loops_edges[j]
-            if len(sloop_eidx) == 0 or len(tloop_eidx) == 0:
-                dists.append(np.nan)
-                continue
-            b1 = np.zeros(nrow_A)
-            b1[sloop_eidx] = 1
-            b2 = np.zeros(nrow_A)
-            b2[tloop_eidx] = 1
-            b = np.logical_xor(b1, b2).astype(int)
-            # remove columns with birth t larger than the death t of the loop
-            columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
-            if columns_kept.size == 0:
-                return np.nan
-            mask = ~np.isin(one_cidx_A, columns_kept)
-            one_ridx_A = one_ridx_A[~mask]
-            one_cidx_A = one_cidx_A[~mask]
-            ncol_A = np.max(one_cidx_A) + 1
-            if regression_mode == "exact":
-                A = np.zeros([nrow_A, ncol_A])
-                A[one_ridx_A, one_cidx_A] = 1
-                res = mod2Solve_m4ri_py(A, b)
-            elif regression_mode == "approx":
-                res = sp_ridge_regression_mod2(
-                    one_ridx_A,
-                    one_cidx_A,
-                    nrow_A,
-                    ncol_A,
-                    b,
-                    ridge_coef_a,
-                    ridge_coef_b,
-                    do_approximation=do_approximation,
-                    n_neighbors=n_neighbors,
-                )
-                if res is None:
-                    dists.append(np.nan)
-                else:
-                    A, s = res
-                    pred = np.round(A.dot(s)) % 2
-                    if np.sum(np.logical_or(pred, b)) == 0:
-                        dist = np.nan
-                    else:
-                        tp = np.sum(np.logical_and(pred == 1, b == 1))
-                        fp = np.sum(np.logical_and(pred == 1, b == 0))
-                        fn = np.sum(np.logical_and(pred == 0, b == 1))
-                        if tp + fp + fn == 0:
-                            dist = 0.0
-                        else:
-                            f1 = 2 * tp / (2 * tp + fp + fn)
-                            dist = 1 - f1
-                    dists.append(dist)
-        dist = np.nanmean(dists)
-        return dist
+        return compute_homological_equivalence(
+            source_loops_edges,
+            target_loops_edges,
+            one_ridx_A,
+            one_cidx_A,
+            nrow_A,
+            ncol_A,
+            ridge_coef_a,
+            ridge_coef_b,
+            do_approximation,
+            n_neighbors,
+            bd_column_birth_t,
+            source_loop_death_t,
+            regression_mode,
+        )
 
 
 def evaluate_match_worker(args):
