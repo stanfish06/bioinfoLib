@@ -10,6 +10,7 @@ packages = {
     "Combinatorics": ("861a8166-3701-5b0c-9a16-15d98fcdc6aa", None),
     "Graphs": ("86223c79-3864-5bf0-83f7-82e725a168b6", None),
     "SimpleWeightedGraphs": ("47aef6b3-ad0c-573a-a1e2-d07658019622", None),
+    "DataStructures": ("864edb3b-99cc-5e75-8d2d-829cb0a9cfe8", None),
 }
 
 

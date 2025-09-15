@@ -56,11 +56,13 @@ class HomologyData:
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+        filt = julia.EdgeCollapsedRips(filt)
         # don't compute representatives if only persistence diagram is needed
         result_cycle = julia.ripserer(filt, reps=False)
         birth_t = np.array([i[1] for i in result_cycle[1]])
         death_t = np.array([i[2] for i in result_cycle[1]])
-        self.persistence_diagram = np.vstack([birth_t, death_t]).T
+        # order from most persistent to least persistent
+        self.persistence_diagram = np.vstack([birth_t, death_t]).T[::-1, :]
         self.parameters["filtration_threshold_homology"] = thresh
 
     def compute_boundary_matrix(self, thresh, reduced=True):
@@ -69,6 +71,7 @@ class HomologyData:
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+        filt = julia.EdgeCollapsedRips(filt)
         edges, trigs, birth_t = julia.boundary_mat_d2(filt)
         bd = np.array(np.array(edges).tolist()) - 1
         trigs = np.array(np.array(trigs).tolist()) - 1
@@ -110,6 +113,7 @@ class HomologyData:
             sparse=True,
             threshold=self.parameters["filtration_threshold_homology"],
         )
+        filt = julia.EdgeCollapsedRips(filt)
         cocycles = julia.ripserer(filt, reps=1)
         n_total_loops = len(cocycles[1])
         n_compute = min(n_total_loops, n_top)
@@ -163,6 +167,7 @@ class HomologyData:
                     }
 
     # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
+    # TODO: comme up with a reasonable way for loop matching when doing approximation
     def boot(
         self,
         n,
@@ -238,6 +243,7 @@ class HomologyData:
                 dist_mat = pairwise_distances(x_boot)
                 dist_mat = (dist_mat + dist_mat.T) / 2
                 filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+                filt = julia.EdgeCollapsedRips(filt)
                 cocycles = julia.ripserer(filt, reps=1)
                 birth_t = np.array([i[1] for i in cocycles[1]])
                 death_t = np.array([i[2] for i in cocycles[1]])
@@ -289,6 +295,7 @@ class HomologyData:
                         range(len(source_loop_eidx_pool)), range(len(reps_eidx_boot))
                     )
                 ]
+                return (reps_eidx_boot, reps_coord_boot)
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
                 for (i, j), sloop_death_t in pairs:

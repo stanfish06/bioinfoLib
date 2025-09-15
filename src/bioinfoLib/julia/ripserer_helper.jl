@@ -35,7 +35,7 @@ function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
     for trig in triangles
         sim = abs(trig)
         vs = Ripserer.vertices(sim)
-        push!(edges_pool, vs[[1, 2]]) 
+        push!(edges_pool, vs[[1, 2]])
         push!(edges_pool, vs[[1, 3]])
         push!(edges_pool, vs[[2, 3]])
         push!(trigs_pool, vs)

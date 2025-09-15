@@ -1,15 +1,16 @@
 import itertools
+import warnings
 from itertools import product
-from typing import Literal
 
 import numpy as np
 from scipy.sparse import csr_matrix, diags
 from scipy.spatial.distance import cdist, hamming
-from scipy.stats import rankdata
 from sksparse.cholmod import cholesky
 
 from bioinfoLib.linearAlgebra.gauss_mod2_m4ri import mod2Solve_m4ri_py
 from bioinfoLib.R.utils import trajectory_distance
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 # TODO: grid search, adjust radius based on gaussian prior
@@ -24,35 +25,11 @@ def sp_ridge_regression_mod2(
     b,
     ridge_coef_a=0.1,
     ridge_coef_b=1,
-    n_neighbors=1,
-    do_approximation=False,
     n_search_cutoff=100,
     max_bits_flip=10,
     max_bits_comb=10,
     n_post_process=2,
 ):
-    # simplify A by only considering the neighborhood of the loop
-    if do_approximation:
-        columns_kept = []
-        one_idx_buff = np.where(b == 1)[0]
-        for _ in range(n_neighbors):
-            incident_triangles = np.unique(
-                one_cidx_A[np.isin(one_ridx_A, one_idx_buff)]
-            )
-            columns_kept.extend(incident_triangles)
-            one_idx_buff = np.unique(
-                one_ridx_A[np.isin(one_cidx_A, incident_triangles)]
-            )
-        columns_kept = np.unique(columns_kept)
-        mask = np.isin(one_cidx_A, columns_kept)
-        one_ridx_A = one_ridx_A[mask]
-        one_cidx_A = one_cidx_A[mask]
-        if len(one_cidx_A) == 0:
-            return None
-        # reduce number of columns
-        one_cidx_A = rankdata(one_cidx_A, method="min") - 1
-        ncol_A = np.max(one_cidx_A) + 1
-
     # figure out number of ones in each row
     one_ridx_A_uniq, n_ones_per_row = np.unique(one_ridx_A, return_counts=True)
     one_ridx_A_uniq = one_ridx_A_uniq[n_ones_per_row > 1]
@@ -245,27 +222,39 @@ def compute_homological_equivalence(
         mask = ~np.isin(one_cidx_A, columns_kept)
         one_ridx_A_local = one_ridx_A[~mask]
         one_cidx_A_local = one_cidx_A[~mask]
+        _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+        bd_column_birth_t = bd_column_birth_t[columns_kept]
         ncol_A_local = np.max(one_cidx_A_local) + 1
-        if regression_mode == "exact":
-            if do_approximation:
-                columns_kept = []
-                one_idx_buff = np.where(b == 1)[0]
-                for _ in range(n_neighbors):
-                    incident_triangles = np.unique(
-                        one_cidx_A_local[np.isin(one_ridx_A_local, one_idx_buff)]
-                    )
-                    columns_kept.extend(incident_triangles)
-                    one_idx_buff = np.unique(
-                        one_ridx_A_local[np.isin(one_cidx_A_local, incident_triangles)]
-                    )
-                columns_kept = np.unique(columns_kept)
+        if do_approximation:
+            columns_kept = []
+            one_idx_buff = np.where(b == 1)[0]
+            for _ in range(n_neighbors):
+                incident_triangles = np.unique(
+                    one_cidx_A_local[np.isin(one_ridx_A_local, one_idx_buff)]
+                )
+                columns_kept.extend(incident_triangles)
+                one_idx_buff = np.unique(
+                    one_ridx_A_local[np.isin(one_cidx_A_local, incident_triangles)]
+                )
+            columns_kept = np.unique(columns_kept)
+            if len(columns_kept) > 0:
+                bd_column_birth_t = bd_column_birth_t[columns_kept]
                 mask = np.isin(one_cidx_A_local, columns_kept)
                 one_ridx_A_local = one_ridx_A_local[mask]
                 one_cidx_A_local = one_cidx_A_local[mask]
-                if len(one_cidx_A_local) == 0:
-                    return np.nan
-                # reduce number of columns
-                one_cidx_A_local = rankdata(one_cidx_A_local, method="min") - 1
+            else:
+                dists.append(np.nan)
+            # reduce number of columns
+            _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+            ncol_A_local = np.max(one_cidx_A_local) + 1
+        if regression_mode == "exact":
+            # if number of columns is greater than number of rows, remove triangles with large birth t
+            # large triangles are less likely be an important component between two equivalent loops
+            if ncol_A_local > nrow_A:
+                mask = np.argsort(bd_column_birth_t)[:nrow_A]
+                one_ridx_A_local = one_ridx_A_local[mask]
+                one_cidx_A_local = one_cidx_A_local[mask]
+                _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
                 ncol_A_local = np.max(one_cidx_A_local) + 1
             A = np.zeros([nrow_A, ncol_A_local])
             A[one_ridx_A_local, one_cidx_A_local] = 1
@@ -280,8 +269,6 @@ def compute_homological_equivalence(
                 b,
                 ridge_coef_a,
                 ridge_coef_b,
-                do_approximation=do_approximation,
-                n_neighbors=n_neighbors,
             )
             if res is None:
                 dists.append(np.nan)
@@ -302,96 +289,6 @@ def compute_homological_equivalence(
                 dists.append(dist)
     dist = np.nanmean(dists)
     return dist
-
-
-def evaluate_match(
-    nrow_A,
-    ncol_A,
-    max_frechet_dist,
-    ridge_coef_a,
-    ridge_coef_b,
-    source_loops_edges,
-    target_loops_edges,
-    source_loops_coords,
-    target_loops_coords,
-    one_ridx_A,
-    one_cidx_A,
-    do_regression,
-    regression_mode: Literal["exact", "approx"],
-    do_approximation,
-    n_neighbors,
-    bd_column_birth_t,
-    source_loop_death_t,
-    similarity_func,
-    similarity_type,
-):
-    n_sources = len(source_loops_edges)
-    n_targets = len(target_loops_edges)
-    if not do_regression:
-        return compute_geometric_similarity(
-            source_loops_coords,
-            target_loops_coords,
-            max_frechet_dist,
-            similarity_func,
-            similarity_type,
-        )
-    else:
-        return compute_homological_equivalence(
-            source_loops_edges,
-            target_loops_edges,
-            one_ridx_A,
-            one_cidx_A,
-            nrow_A,
-            ncol_A,
-            ridge_coef_a,
-            ridge_coef_b,
-            do_approximation,
-            n_neighbors,
-            bd_column_birth_t,
-            source_loop_death_t,
-            regression_mode,
-        )
-
-
-def evaluate_match_worker(args):
-    (
-        nrow_A,
-        ncol_A,
-        max_frechet_dist,
-        ridge_coef_a,
-        ridge_coef_b,
-        n_search,
-        source_loop_edges,
-        target_loop_edges,
-        source_loop_coords,
-        target_loop_coords,
-        one_ridx_A,
-        one_cidx_A,
-        do_regression,
-        do_approximation,
-        n_neighbors,
-        bd_column_birth_t,
-        source_loop_birth_t,
-    ) = args
-    return evaluate_match(
-        nrow_A,
-        ncol_A,
-        max_frechet_dist,
-        ridge_coef_a,
-        ridge_coef_b,
-        n_search,
-        source_loop_edges,
-        target_loop_edges,
-        source_loop_coords,
-        target_loop_coords,
-        one_ridx_A,
-        one_cidx_A,
-        do_regression,
-        do_approximation,
-        n_neighbors,
-        bd_column_birth_t,
-        source_loop_birth_t,
-    )
 
 
 def donut_2d_iso(r1, r2, n_points, noise, seed):
