@@ -45,7 +45,6 @@ dependencies = [
   "python-dotenv>=1.1.1",
   "rpy2[all]>=3.6.1",
   "pytest>=8.4.0",
-  "python-bioformats>=4.1.0",
   "pip>=25.2",
   "tabulate>=0.9.0",
   "pipdeptree>=2.28.0",
@@ -54,10 +53,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-epigenomics = [
-  "deeptools>=3.5.5 ; sys_platform == 'linux'",
-  "pygenometracks>=3.9 ; sys_platform == 'linux'",
-]
 flow = ["pytometry"]
 integration = [
   "tensorflow-intel ; sys_platform == 'win32'",
@@ -68,6 +63,12 @@ integration = [
   "bbknn>=1.6.0",
 ]
 
+[tool.uv.extras]
+dev = [
+  "python-bioformats>=4.1.0 ; sys_platform == 'linux'",
+  "deeptools>=3.5.5 ; sys_platform == 'linux'",
+  "pygenometracks>=3.9 ; sys_platform == 'linux'",
+]
 
 [tool.uv.sources]
 torch = [
@@ -109,18 +110,18 @@ extend-exclude = ["src/bioinfoLib/linearAlgebra/old"]
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # isort
+  "B",  # flake8-bugbear
+  "C4", # flake8-comprehensions
+  "UP", # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
+  "E501", # line too long, handled by black
+  "B008", # do not perform function calls in argument defaults
+  "C901", # too complex
 ]
 
 [tool.ruff.format]
