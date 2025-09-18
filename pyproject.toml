@@ -5,33 +5,25 @@ description = "a general library for bioinformatics"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "cellrank ; sys_platform == 'linux'",
   "ipython<9.0.0",
   "jupyterlab>=4.3.5",
-  "magic-impute>=3.0.0",
   "matplotlib<3.9",
   "numpy<2.0.0",
   "palantir>=1.3.6",
   "pandas",
-  "pyvista>=0.44.2",
-  "scanpy[leiden]==1.11.2",
+  "scanpy[leiden]>=1.11.2",
   "scikit-image>=0.25.1",
   "scikit-misc>=0.5.1",
-  "scvelo>=0.3.3",
   "seaborn>=0.13.2",
   "torch",
   "torchvision",
   "cython>=3.0.12",
-  "fa2-modified>=0.3.10",
-  "phate>=1.0.11",
   "adjusttext>=1.3.0",
   "shapely>=2.1.0",
   "juliacall>=0.9.20",
   "juliapkg>=0.1.16",
-  "networkx>=3.4.2",
   "mudata>=0.3.1",
   "pydantic>=2.11.4",
-  "anndata>=0.12.0",
   "statsmodels==0.14.4",
   "scikit-sparse>=0.4.16 ; sys_platform == 'linux'",
   "umap-learn>=0.5.7",
@@ -49,27 +41,40 @@ dependencies = [
   "pipdeptree>=2.28.0",
   "rich>=14.0.0",
   "ipywidgets>=8.1.7",
-  "huggingface-hub[hf-xet]>=0.35.0",
 ]
 
 [project.optional-dependencies]
-flow = ["pytometry"]
-integration = [
+common = [
+  "anndata>=0.12.0",
+  "networkx>=3.4.2",
+  "huggingface-hub[hf-xet]>=0.35.0",
+  "pyvista>=0.44.2",
+]
+optional = [
   "tensorflow-intel ; sys_platform == 'win32'",
   "tensorflow[and-cuda] ; sys_platform == 'linux'",
   "scarches>=0.5.0",
   "scvi-tools>=1.2.0",
   "harmonypy>=0.0.10",
   "bbknn>=1.6.0",
-]
-
-[tool.uv.extras]
-dev = [
-  "python-bioformats>=4.1.0 ; sys_platform == 'linux'",
+  "cellrank ; sys_platform == 'linux'",
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
-  "scprep==1.2.3",
+  "pytometry",
+  "fa2-modified>=0.3.10",
 ]
+deprecating = [
+  # bioformats resolution needs java environment, hand this to mise
+  # "python-bioformats>=4.1.0 ; sys_platform == 'linux'",
+  "scprep>=1.2.3",
+  "magic-impute>=3.0.0",
+  "phate>=1.0.11",
+  "scvelo>=0.3.3",
+]
+
+[tool.uv]
+package = true                                                  # force install package
+conflicts = [[{ extra = "common" }, { extra = "deprecating" }]]
 
 [tool.uv.sources]
 torch = [
@@ -165,10 +170,6 @@ requires-python = ">=3.7"
 [project.urls]
 Homepage = "https://github.com/stanfish06/bioinfoLib"
 Issues = "https://github.com/stanfish06/bioinfoLib/issues"
-
-# force install package
-[tool.uv]
-package = true
 
 [[tool.uv.index]]
 name = "testpypi"
