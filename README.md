@@ -24,7 +24,3 @@ For sksparse, it depends on openblas, so need to make sure both libblas.so.3 and
 For juila, use 1.12.0-beta1+0.x64.linux.gnu if 1.11 failed due to curl issue.
 
 For rpy2, it needs libtirpc-dev
-
-# Issues log
-- cannot build on windows due to javabridge
-  - workaround: uv sync --no-dev
