@@ -27,21 +27,10 @@ function boundary_mat(filtration::Ripserer.AbstractFiltration, thresh::Float64)
 end
 
 function boundary_mat_d2(filtration_thresh::Ripserer.AbstractFiltration)
-    edges_pool = Vector{Tuple}()
-    trigs_pool = Vector{Tuple}()
-    birth_t = Vector()
     edges_full = Ripserer.edges(filtration_thresh)
-    triangles = Ripserer.columns_to_reduce(filtration_thresh, edges_full)
-    for trig in triangles
-        sim = abs(trig)
-        vs = Ripserer.vertices(sim)
-        push!(edges_pool, vs[[1, 2]])
-        push!(edges_pool, vs[[1, 3]])
-        push!(edges_pool, vs[[2, 3]])
-        push!(trigs_pool, vs)
-        push!(birth_t, sim.birth)
-    end
-    return (edges_pool, trigs_pool, birth_t)
+    trigs = Ripserer.columns_to_reduce(filtration_thresh, edges_full)
+    trig_birth = map(x -> (vertices(abs(x)), x.birth), trigs)
+    return (first.(trig_birth), last.(trig_birth))
 end
 
 # If you can get the column reduced matrix, then you can use fewer number of columns

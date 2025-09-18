@@ -198,8 +198,10 @@ def compute_homological_equivalence(
     bd_column_birth_t,
     source_loop_death_t,
     regression_mode,
-    do_approximation=True,
+    do_approximation=False,  # this does not perform good
     n_neighbors=1,
+    do_downsample=True,  # this is better than nn approximation
+    fraction_downsample=0.0,
 ):
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
@@ -247,15 +249,19 @@ def compute_homological_equivalence(
             # reduce number of columns
             _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
             ncol_A_local = np.max(one_cidx_A_local) + 1
+        if ncol_A_local > nrow_A:
+            mask = np.argsort(bd_column_birth_t)[:nrow_A]
+            if do_downsample:
+                mask = mask[: int(np.ceil(nrow_A * (1 - fraction_downsample)))]
+            mask = np.isin(one_cidx_A_local, mask)
+            one_ridx_A_local = one_ridx_A_local[mask]
+            one_cidx_A_local = one_cidx_A_local[mask]
+            _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+            ncol_A_local = np.max(one_cidx_A_local) + 1
         if regression_mode == "exact":
             # if number of columns is greater than number of rows, remove triangles with large birth t
             # large triangles are less likely be an important component between two equivalent loops
-            if ncol_A_local > nrow_A:
-                mask = np.argsort(bd_column_birth_t)[:nrow_A]
-                one_ridx_A_local = one_ridx_A_local[mask]
-                one_cidx_A_local = one_cidx_A_local[mask]
-                _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
-                ncol_A_local = np.max(one_cidx_A_local) + 1
+            # print(f"A: {nrow_A} x {ncol_A_local}")
             A = np.zeros([nrow_A, ncol_A_local])
             A[one_ridx_A_local, one_cidx_A_local] = 1
             res = mod2Solve_m4ri_py(A, b)
@@ -276,7 +282,7 @@ def compute_homological_equivalence(
                 A, s = res
                 pred = np.round(A.dot(s)) % 2
                 if np.sum(np.logical_or(pred, b)) == 0:
-                    dist = np.nan
+                    dist = 0
                 else:
                     tp = np.sum(np.logical_and(pred == 1, b == 1))
                     fp = np.sum(np.logical_and(pred == 1, b == 0))

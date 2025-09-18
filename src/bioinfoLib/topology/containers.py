@@ -2,7 +2,7 @@ import ast
 import pickle
 import uuid
 from dataclasses import dataclass, field
-from itertools import product
+from itertools import combinations, product
 
 import numpy as np
 import pandas as pd
@@ -18,11 +18,12 @@ from .utils import (
     compute_geometric_similarity,
     compute_homological_equivalence,
     edge_idx_encode,
-    trig_idx_encode,
 )
 
 
 # TODO: modify this data sturcture to enable cross species matching
+# EdgeCollapose Rips does not work as it will heavilly reduce local connectivity
+# random downsample for large input?
 @dataclass
 class HomologyData:
     data: np.ndarray
@@ -52,11 +53,10 @@ class HomologyData:
             self.data_visualization = self.data
         self.n_vertices = self.data.shape[0]
 
-    def compute_homology(self, thresh):
+    def compute_homology(self, thresh=None):
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-        filt = julia.EdgeCollapsedRips(filt)
         # don't compute representatives if only persistence diagram is needed
         result_cycle = julia.ripserer(filt, reps=False)
         birth_t = np.array([i[1] for i in result_cycle[1]])
@@ -65,25 +65,24 @@ class HomologyData:
         self.persistence_diagram = np.vstack([birth_t, death_t]).T[::-1, :]
         self.parameters["filtration_threshold_homology"] = thresh
 
-    def compute_boundary_matrix(self, thresh, reduced=True):
-        if self.parameters["filtration_threshold_homology"]:
-            thresh = self.parameters["filtration_threshold_homology"]
+    def compute_boundary_matrix(self, thresh=None):
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
+        if thresh is None:
+            if (
+                "filtration_threshold_homology" in self.parameters
+                and self.parameters["filtration_threshold_homology"]
+            ):
+                thresh = self.parameters["filtration_threshold_homology"]
         filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-        filt = julia.EdgeCollapsedRips(filt)
-        edges, trigs, birth_t = julia.boundary_mat_d2(filt)
-        bd = np.array(np.array(edges).tolist()) - 1
+        trigs, birth_t = julia.boundary_mat_d2(filt)
         trigs = np.array(np.array(trigs).tolist()) - 1
-        trig_idx = [trig_idx_encode(i, j, k, self.n_vertices) for (i, j, k) in trigs]
-        _, trigs_keep = np.unique(trig_idx, return_index=True)
-        edges_keep = np.array(
-            [[3 * i, 3 * i + 1, 3 * i + 2] for i in trigs_keep]
-        ).flatten()
-        bd = bd[edges_keep, :]
-        birth_t = np.array(birth_t)[trigs_keep]
+        edges = [list(combinations(trig, 2)) for trig in trigs]
+        birth_t = np.array(birth_t)
 
-        edge_idx = [edge_idx_encode(i, j, self.n_vertices) for (i, j) in bd]
+        edge_idx = np.concatenate(
+            [[edge_idx_encode(i, j, self.n_vertices) for i, j in es] for es in edges]
+        )
         self.bd_row_id = np.unique(edge_idx)
         one_ridx_A = np.searchsorted(self.bd_row_id, edge_idx).astype(int)
         nrow_A = len(self.bd_row_id)
@@ -105,6 +104,9 @@ class HomologyData:
         loop_upper_pct=95,
         n_max_cocycles=10,
     ):
+        assert "filtration_threshold_homology" in self.parameters, (
+            "run compute_homology first"
+        )
         dist_mat = pairwise_distances(self.data)
         dist_mat = (dist_mat + dist_mat.T) / 2
 
@@ -113,7 +115,6 @@ class HomologyData:
             sparse=True,
             threshold=self.parameters["filtration_threshold_homology"],
         )
-        filt = julia.EdgeCollapsedRips(filt)
         cocycles = julia.ripserer(filt, reps=1)
         n_total_loops = len(cocycles[1])
         n_compute = min(n_total_loops, n_top)
@@ -152,6 +153,13 @@ class HomologyData:
                                 np.where(edge_idx == self.bd_row_id)[0][0]
                             )
                         rep_i_coords.append(self.data[v1, :])
+                    # circles back to origin
+                    edge_idx = edge_idx_encode(
+                        i=v2, j=rep_i_idx[0], n_vertices=self.n_vertices
+                    )
+                    if edge_idx in self.bd_row_id:
+                        rep_i_eidx.append(np.where(edge_idx == self.bd_row_id)[0][0])
+                    rep_i_coords.append(self.data[rep_i_idx[0], :])
 
                     reps_eidx.append(np.array(rep_i_eidx))
                     reps_coords.append(np.array(rep_i_coords))
@@ -243,7 +251,6 @@ class HomologyData:
                 dist_mat = pairwise_distances(x_boot)
                 dist_mat = (dist_mat + dist_mat.T) / 2
                 filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
-                filt = julia.EdgeCollapsedRips(filt)
                 cocycles = julia.ripserer(filt, reps=1)
                 birth_t = np.array([i[1] for i in cocycles[1]])
                 death_t = np.array([i[2] for i in cocycles[1]])
@@ -295,7 +302,6 @@ class HomologyData:
                         range(len(source_loop_eidx_pool)), range(len(reps_eidx_boot))
                     )
                 ]
-                return (reps_eidx_boot, reps_coord_boot)
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
                 for (i, j), sloop_death_t in pairs:
