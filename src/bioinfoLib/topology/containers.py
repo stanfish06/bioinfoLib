@@ -196,6 +196,8 @@ class HomologyData:
         loop_lower_pct=5,
         loop_upper_pct=95,
         n_max_cocycles=10,
+        do_downsample=True,
+        fraction_downsample=0.5,
     ):
         import rpy2.robjects as ro
 
@@ -252,8 +254,8 @@ class HomologyData:
                 dist_mat = (dist_mat + dist_mat.T) / 2
                 filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
                 cocycles = julia.ripserer(filt, reps=1)
-                birth_t = np.array([i[1] for i in cocycles[1]])
-                death_t = np.array([i[2] for i in cocycles[1]])
+                birth_t = np.array([i[1] for i in cocycles[1]])[::-1]
+                death_t = np.array([i[2] for i in cocycles[1]])[::-1]
                 reps_eidx_boot = []
                 reps_coord_boot = []
                 progress.reset(task_find_loop, totol=len(cocycles[1]))
@@ -305,15 +307,21 @@ class HomologyData:
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
                 for (i, j), sloop_death_t in pairs:
-                    result.append(
-                        compute_geometric_similarity(
-                            source_loops_coords=source_loop_coords_pool[i],
-                            target_loops_coords=reps_coord_boot[j],
-                            max_frechet_dist=max_frechet_dist,
-                            similarity_func=similarity_func,
-                            similarity_type="Frechet",
+                    target_loop_death_t = death_t[j]
+                    # bootstrapping reduces the number of points, so death time can only be greater
+                    # if a bootstrapping loop died ealier, then it is no the same loop
+                    if sloop_death_t >= target_loop_death_t:
+                        result.append(np.inf)
+                    else:
+                        result.append(
+                            compute_geometric_similarity(
+                                source_loops_coords=source_loop_coords_pool[i],
+                                target_loops_coords=reps_coord_boot[j],
+                                max_frechet_dist=max_frechet_dist,
+                                similarity_func=similarity_func,
+                                similarity_type="Frechet",
+                            )
                         )
-                    )
                     progress.update(task_frechet, advance=1)
                 pairs_filt = []
                 for si in range(len(source_loop_eidx_pool)):
@@ -351,6 +359,8 @@ class HomologyData:
                                 bd_column_birth_t=self.bd_column_birth_t,
                                 source_loop_death_t=sloop_death_t,
                                 regression_mode=regression_mode,
+                                do_downsample=do_downsample,
+                                fraction_downsample=fraction_downsample,
                             )
                         )
                         progress.update(task_homology, advance=1)

@@ -206,7 +206,17 @@ def compute_homological_equivalence(
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
     dists = []
+    # remove columns with birth t larger than the death t of the loop
+    columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
+    if columns_kept.size == 0:
+        return np.nan
+    mask = np.isin(one_cidx_A, columns_kept)
+    one_ridx_A_local = one_ridx_A[mask]
+    one_cidx_A_local = one_cidx_A[mask]
+    _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+    ncol_A_local = np.max(one_cidx_A_local) + 1
     for i, j in product(range(n_sources), range(n_targets)):
+        bd_column_birth_t_sub = bd_column_birth_t[columns_kept].copy()
         sloop_eidx = source_loops_edges[i]
         tloop_eidx = target_loops_edges[j]
         if len(sloop_eidx) == 0 or len(tloop_eidx) == 0:
@@ -217,16 +227,6 @@ def compute_homological_equivalence(
         b2 = np.zeros(nrow_A)
         b2[tloop_eidx] = 1
         b = np.logical_xor(b1, b2).astype(int)
-        # remove columns with birth t larger than the death t of the loop
-        columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
-        if columns_kept.size == 0:
-            return np.nan
-        mask = ~np.isin(one_cidx_A, columns_kept)
-        one_ridx_A_local = one_ridx_A[~mask]
-        one_cidx_A_local = one_cidx_A[~mask]
-        _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
-        bd_column_birth_t = bd_column_birth_t[columns_kept]
-        ncol_A_local = np.max(one_cidx_A_local) + 1
         if do_approximation:
             columns_kept = []
             one_idx_buff = np.where(b == 1)[0]
@@ -250,9 +250,8 @@ def compute_homological_equivalence(
             _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
             ncol_A_local = np.max(one_cidx_A_local) + 1
         if ncol_A_local > nrow_A:
-            mask = np.argsort(bd_column_birth_t)[:nrow_A]
-            if do_downsample:
-                mask = mask[: int(np.ceil(nrow_A * (1 - fraction_downsample)))]
+            mask = np.argsort(bd_column_birth_t_sub)[:nrow_A]
+            bd_column_birth_t_sub = bd_column_birth_t_sub[mask]
             mask = np.isin(one_cidx_A_local, mask)
             one_ridx_A_local = one_ridx_A_local[mask]
             one_cidx_A_local = one_cidx_A_local[mask]
@@ -264,7 +263,29 @@ def compute_homological_equivalence(
             # print(f"A: {nrow_A} x {ncol_A_local}")
             A = np.zeros([nrow_A, ncol_A_local])
             A[one_ridx_A_local, one_cidx_A_local] = 1
-            res = mod2Solve_m4ri_py(A, b)
+            # if whole row and b are zeros, then ignore that row
+            zero_rows = np.logical_and(np.all(A == 0, axis=1), b == 0)
+            nrow_A_new = nrow_A
+            nrow_A_new = nrow_A_new - np.sum(zero_rows)
+            # fail immediately if b is one but A is all zeros
+            unsolvable_rows = np.logical_and(np.all(A == 0, axis=1), b == 1)
+            if np.any(unsolvable_rows):
+                res = 0
+            else:
+                if ncol_A_local > nrow_A_new:
+                    mask = np.argsort(bd_column_birth_t_sub)[:nrow_A_new]
+                    if do_downsample:
+                        mask = mask[
+                            : int(np.ceil(nrow_A_new * (1 - fraction_downsample)))
+                        ]
+                    if nrow_A_new == 0:
+                        res = 1
+                    else:
+                        res = mod2Solve_m4ri_py(
+                            A[~zero_rows, :][:, mask], b[~zero_rows]
+                        )
+                else:
+                    res = mod2Solve_m4ri_py(A[~zero_rows, :], b[~zero_rows])
             dists.append(1 - int(res))
         elif regression_mode == "approx":
             res = sp_ridge_regression_mod2(
