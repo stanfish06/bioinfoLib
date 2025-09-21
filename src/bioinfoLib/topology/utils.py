@@ -207,16 +207,16 @@ def compute_homological_equivalence(
     n_targets = len(target_loops_edges)
     dists = []
     # remove columns with birth t larger than the death t of the loop
-    columns_kept = np.where(bd_column_birth_t <= source_loop_death_t)[0]
-    if columns_kept.size == 0:
+    columns_use = np.where(bd_column_birth_t <= source_loop_death_t)[0]
+    if columns_use.size == 0:
         return np.nan
-    mask = np.isin(one_cidx_A, columns_kept)
+    mask = np.isin(one_cidx_A, columns_use)
     one_ridx_A_local = one_ridx_A[mask]
     one_cidx_A_local = one_cidx_A[mask]
     _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
     ncol_A_local = np.max(one_cidx_A_local) + 1
     for i, j in product(range(n_sources), range(n_targets)):
-        bd_column_birth_t_sub = bd_column_birth_t[columns_kept].copy()
+        bd_column_birth_t_sub = bd_column_birth_t[columns_use].copy()
         sloop_eidx = source_loops_edges[i]
         tloop_eidx = target_loops_edges[j]
         if len(sloop_eidx) == 0 or len(tloop_eidx) == 0:
@@ -240,7 +240,7 @@ def compute_homological_equivalence(
                 )
             columns_kept = np.unique(columns_kept)
             if len(columns_kept) > 0:
-                bd_column_birth_t = bd_column_birth_t[columns_kept]
+                bd_column_birth_t_sub = bd_column_birth_t_sub[columns_kept]
                 mask = np.isin(one_cidx_A_local, columns_kept)
                 one_ridx_A_local = one_ridx_A_local[mask]
                 one_cidx_A_local = one_cidx_A_local[mask]

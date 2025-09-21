@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 import pickle
 import uuid
@@ -174,6 +176,10 @@ class HomologyData:
                         "loops": [(0, i)],
                     }
 
+    # after booting both datasets, match two groups of loops and use permutation test to match groups
+    def cross_match(self, reference: HomologyData):
+        pass
+
     # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
     # TODO: comme up with a reasonable way for loop matching when doing approximation
     def boot(
@@ -197,7 +203,7 @@ class HomologyData:
         loop_upper_pct=95,
         n_max_cocycles=10,
         do_downsample=True,
-        fraction_downsample=0.5,
+        fraction_downsample=0,
     ):
         import rpy2.robjects as ro
 
@@ -382,7 +388,13 @@ class HomologyData:
                         np.vstack([birth_t, death_t]).T
                     )
                     df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
-                    df["cost"] = df["hamming_dist"] * df["frechet_dist"]
+                    if regression_mode == "exact":
+                        # for exact mode, as long as one match found, keep that pair
+                        df = df[df["hamming_dist"] < 1, :]
+                        df["cost"] = df["frechet_dist"]
+                    else:
+                        df["cost"] = df["hamming_dist"] * df["frechet_dist"]
+
                     cost_matrix_sub = df.pivot(
                         index="source", columns="target", values="cost"
                     ).fillna(np.inf)

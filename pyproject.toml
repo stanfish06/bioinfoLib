@@ -64,6 +64,9 @@ optional = [
   "pytometry",
   "fa2-modified>=0.3.10",
 ]
+dev = [
+  "modular ; sys_platform == 'linux'"
+]
 deprecating = [
   # bioformats resolution needs java environment, hand this to mise
   # "python-bioformats>=4.1.0 ; sys_platform == 'linux'",
@@ -88,6 +91,10 @@ torchvision = [
   { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
 ]
 
+modular = [
+  { index = "modular", marker = "sys_platform == 'linux'" },
+]
+
 [[tool.uv.index]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu126"
@@ -101,6 +108,11 @@ explicit = true
 [[tool.uv.index]]
 name = "pytorch-cu124"
 url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[[tool.uv.index]]
+name = "modular"
+url = "https://dl.modular.com/public/nightly/python/simple"
 explicit = true
 
 [build-system]
