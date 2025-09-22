@@ -4,13 +4,14 @@ import ast
 import pickle
 import uuid
 from dataclasses import dataclass, field
-from itertools import combinations, product
+from itertools import chain, combinations, product
 
 import numpy as np
 import pandas as pd
 from juliacall import Main as julia
 from rich.progress import Progress
 from scipy.optimize import linear_sum_assignment
+from scipy.spatial.distance import cdist, directed_hausdorff
 from scipy.stats import binom, false_discovery_control, gamma
 from sklearn.metrics import pairwise_distances
 
@@ -20,6 +21,7 @@ from .utils import (
     compute_geometric_similarity,
     compute_homological_equivalence,
     edge_idx_encode,
+    trajectory_distance,
 )
 
 
@@ -104,7 +106,7 @@ class HomologyData:
         n_reps_per_loop=8,
         loop_lower_pct=5,
         loop_upper_pct=95,
-        n_max_cocycles=10,
+        n_max_cocycles=1,
     ):
         assert "filtration_threshold_homology" in self.parameters, (
             "run compute_homology first"
@@ -177,8 +179,133 @@ class HomologyData:
                     }
 
     # after booting both datasets, match two groups of loops and use permutation test to match groups
-    def cross_match(self, reference: HomologyData):
-        pass
+    def cross_match(self, reference: HomologyData, n_permute: int) -> pd.DataFrame:
+        assert self.tracks, "Query data contains no bootstrapped samples"
+        assert reference.tracks, "Reference data contains no bootstrapped samples"
+        import rpy2.robjects as ro
+
+        similarity_func = SimilarityMeasures_helper(ro)
+
+        # frechet distance is too slow to compute
+        def compute_loop_distance(
+            l1: np.ndarray, l2: np.ndarray, type: str = "hausdorff"
+        ):
+            if type == "frechet":
+                dist_mat = cdist(l1, l2)
+                p, q = np.unravel_index(np.argmin(dist_mat), dist_mat.shape)
+                try:
+                    d1 = trajectory_distance(
+                        np.roll(l1, -p, axis=0),
+                        np.roll(l2, -q, axis=0),
+                        "Frechet",
+                        similarity_func,
+                    )[0]
+                    d2 = trajectory_distance(
+                        np.roll(l1, -p, axis=0),
+                        np.roll(l2[::-1], q + 1, axis=0),
+                        "Frechet",
+                        similarity_func,
+                    )[0]
+                    # not sure what negative value means
+                    if d1 < 0:
+                        d1 = np.inf
+                    if d2 < 0:
+                        d2 = np.inf
+                    dist = min(d1, d2)
+                except ValueError:
+                    dist = np.nan
+            elif type == "hausdorff":
+                dist = max(directed_hausdorff(l1, l2)[0], directed_hausdorff(l2, l1)[0])
+            return dist
+
+        def group_distance(g1: list[np.ndarray], g2: list[np.ndarray]):
+            g1_pairs = combinations(range(len(g1)), 2)
+            g2_pairs = combinations(range(len(g2)), 2)
+            g1_g2_pairs = product(range(len(g1)), range(len(g2)))
+            g1_in_dist = np.nanmean(
+                np.array(
+                    [compute_loop_distance(l1=g1[i], l2=g1[j]) for i, j in g1_pairs]
+                )
+            )
+            g2_in_dist = np.nanmean(
+                np.array(
+                    [compute_loop_distance(l1=g2[i], l2=g2[j]) for i, j in g2_pairs]
+                )
+            )
+            g1_g2_dist = np.nanmean(
+                np.array(
+                    [compute_loop_distance(l1=g1[i], l2=g2[j]) for i, j in g1_g2_pairs]
+                )
+            )
+            return (g1_g2_dist) / ((g1_in_dist + g2_in_dist) / 2)
+
+        stats_permuate = []
+        with Progress() as progress:
+            task_cross_compare = progress.add_task(
+                "[bold #FFA500]Comparing",
+                total=len(self.tracks) * len(reference.tracks),
+            )
+            task_permute = progress.add_task("[bold green]Permuting", total=n_permute)
+            cross_pairs = list(product(self.tracks.keys(), reference.tracks.keys()))
+            result = []
+            for i, j in cross_pairs:
+                query_tracks = self.tracks[i]["loops"]
+                reference_tracks = reference.tracks[j]["loops"]
+                query_loops_coords = list(
+                    chain.from_iterable(
+                        [
+                            self.loops_coords[tid[1]]
+                            if tid[0] == 0
+                            else self.loops_coords_boot[tid[0] - 1][tid[1]]
+                            for tid in query_tracks
+                        ]
+                    )
+                )
+                reference_loops_coords = list(
+                    chain.from_iterable(
+                        [
+                            reference.loops_coords[tid[1]]
+                            if tid[0] == 0
+                            else reference.loops_coords_boot[tid[0] - 1][tid[1]]
+                            for tid in reference_tracks
+                        ]
+                    )
+                )
+                stats_test = group_distance(query_loops_coords, reference_loops_coords)
+                combined_loops_coords = query_loops_coords + reference_loops_coords
+                stats_permute = []
+                for _ in range(n_permute):
+                    reorder_idx = np.random.permutation(len(combined_loops_coords))
+                    combined_loops_coords_reorder = [
+                        combined_loops_coords[i] for i in reorder_idx
+                    ]
+                    stats_permute.append(
+                        group_distance(
+                            combined_loops_coords_reorder[: len(query_loops_coords)],
+                            combined_loops_coords_reorder[len(query_loops_coords) :],
+                        )
+                    )
+                    progress.update(
+                        task_permute,
+                        advance=1,
+                    )
+                stats_permute = np.array(stats_permute)
+                # do one sided test
+                pval = np.sum(stats_permute >= stats_test) / len(stats_permute)
+                # pair, test statistics, pval, permuted statistics
+                result.append(((i, j), stats_test, pval, stats_permute))
+                progress.update(
+                    task_cross_compare,
+                    advance=1,
+                )
+                progress.reset(task_permute, completed=0, total=n_permute)
+            df = pd.DataFrame(
+                result,
+                columns=pd.Index(
+                    ["pair", "frechet_test", "frechet_pval", "frechet_permute"]
+                ),
+            )
+            return df
 
     # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
     # TODO: comme up with a reasonable way for loop matching when doing approximation
@@ -201,7 +328,7 @@ class HomologyData:
         _n_reps_per_loop=8,
         loop_lower_pct=5,
         loop_upper_pct=95,
-        n_max_cocycles=10,
+        n_max_cocycles=1,
         do_downsample=True,
         fraction_downsample=0,
     ):
@@ -314,7 +441,7 @@ class HomologyData:
                 result = []
                 for (i, j), sloop_death_t in pairs:
                     target_loop_death_t = death_t[j]
-                    # bootstrapping reduces the number of points, so death time can only be greater
+                    # bootstrapping reduces the nomber of points, so death time can only be greater
                     # if a bootstrapping loop died ealier, then it is no the same loop
                     if sloop_death_t >= target_loop_death_t:
                         result.append(np.inf)
@@ -371,7 +498,9 @@ class HomologyData:
                         )
                         progress.update(task_homology, advance=1)
 
-                    df = pd.DataFrame(pairs_filt, columns=["pair", "frechet_dist"])
+                    df = pd.DataFrame(
+                        pairs_filt, columns=pd.Index(["pair", "frechet_dist"])
+                    )
                     df["hamming_dist"] = result
                     self.matching_df.append(df.copy())
                     df = df[
@@ -390,7 +519,7 @@ class HomologyData:
                     df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
                     if regression_mode == "exact":
                         # for exact mode, as long as one match found, keep that pair
-                        df = df[df["hamming_dist"] < 1, :]
+                        df = df.loc[df["hamming_dist"] < 1, :]
                         df["cost"] = df["frechet_dist"]
                     else:
                         df["cost"] = df["hamming_dist"] * df["frechet_dist"]
