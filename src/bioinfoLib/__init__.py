@@ -3,6 +3,7 @@ bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 """
 
 import logging
+
 from . import utils
 
 __version__ = "0.1.2"
@@ -50,10 +51,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import R modules: {e}")
     r = None
+try:
+    from . import neuralNet as nn
+except ImportError as e:
+    logger.warning(f"Could not import neuralNet modules: {e}")
 
 # Export commonly used components (only those that were successfully imported)
 __all__ = [
     name
-    for name in ["rn", "scr", "GP", "jl", "la", "tp", "im", "r"]
+    for name in ["rn", "scr", "GP", "jl", "la", "tp", "im", "r", "nn"]
     if globals().get(name) is not None
 ]
