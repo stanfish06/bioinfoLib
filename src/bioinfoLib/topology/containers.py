@@ -240,7 +240,7 @@ class HomologyData:
             return (g1_g2_dist) / ((g1_in_dist + g2_in_dist) / 2)
 
         stats_permuate = []
-        with Progress() as progress:
+        with Progress(refresh_per_second=25) as progress:
             task_cross_compare = progress.add_task(
                 "[bold #FFA500]Comparing",
                 total=len(self.tracks) * len(reference.tracks),
@@ -367,7 +367,7 @@ class HomologyData:
                         self.loops_coords_boot[batch_id - 1][loop_id]
                     )
                     source_loop_key.append(sid)
-        with Progress() as progress:
+        with Progress(refresh_per_second=25) as progress:
             task_boot = progress.add_task("[bold #FFA500]Booting", total=n)
             task_find_loop = progress.add_task("[bold green]Find loops")
             task_frechet = progress.add_task("[bold green]Calculate Frechet distance")
@@ -440,21 +440,30 @@ class HomologyData:
                 progress.reset(task_frechet, totol=len(pairs))
                 result = []
                 for (i, j), sloop_death_t in pairs:
-                    target_loop_death_t = death_t[j]
+                    # target_loop_death_t = death_t[j]
                     # bootstrapping reduces the nomber of points, so death time can only be greater
                     # if a bootstrapping loop died ealier, then it is no the same loop
-                    if sloop_death_t >= target_loop_death_t:
-                        result.append(np.inf)
-                    else:
-                        result.append(
-                            compute_geometric_similarity(
-                                source_loops_coords=source_loop_coords_pool[i],
-                                target_loops_coords=reps_coord_boot[j],
-                                max_frechet_dist=max_frechet_dist,
-                                similarity_func=similarity_func,
-                                similarity_type="Frechet",
-                            )
+                    # if sloop_death_t >= target_loop_death_t:
+                    #     result.append(np.inf)
+                    # else:
+                    #     result.append(
+                    #         compute_geometric_similarity(
+                    #             source_loops_coords=source_loop_coords_pool[i],
+                    #             target_loops_coords=reps_coord_boot[j],
+                    #             max_frechet_dist=max_frechet_dist,
+                    #             similarity_func=similarity_func,
+                    #             similarity_type="Frechet",
+                    #         )
+                    #     )
+                    result.append(
+                        compute_geometric_similarity(
+                            source_loops_coords=source_loop_coords_pool[i],
+                            target_loops_coords=reps_coord_boot[j],
+                            max_frechet_dist=max_frechet_dist,
+                            similarity_func=similarity_func,
+                            similarity_type="Frechet",
                         )
+                    )
                     progress.update(task_frechet, advance=1)
                 pairs_filt = []
                 for si in range(len(source_loop_eidx_pool)):
@@ -553,9 +562,9 @@ class HomologyData:
                     advance=1,
                     description=f"[bold #FFA500]Booting (DONE={n_success}/{n})",
                 )
-                progress.reset(task_find_loop, completed=0)
-                progress.reset(task_frechet, completed=0)
-                progress.reset(task_homology, completed=0)
+                progress.reset(task_find_loop, completed=0, total=1)
+                progress.reset(task_frechet, completed=0, total=1)
+                progress.reset(task_homology, completed=0, total=1)
 
     def clean_boot(self):
         self.tracks = {}

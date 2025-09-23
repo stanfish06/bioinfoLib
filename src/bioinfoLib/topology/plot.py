@@ -1,5 +1,3 @@
-from typing import Optional
-
 import glasbey
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +12,7 @@ from .containers import HomologyData
 def plot_distribution(
     data: HomologyData,
     mode: str,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     **kwargs,
 ) -> Axes:
     if ax is None:
@@ -24,7 +22,7 @@ def plot_distribution(
         created_fig = False
 
     if mode == "lifetime":
-        lifetime_full = data.persistence_diagram_original
+        lifetime_full = data.persistence_diagram
         if data.persistence_diagram_boot:
             lifetime_full = np.concatenate(
                 [
@@ -84,14 +82,17 @@ def plot_tracks(
     data: HomologyData,
     mode: str,
     track_ids: list = [],
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     components: list = [0, 1],
     s: float = 1,
     **kwargs,
 ) -> Axes:
     n_tracks = len(track_ids)
     if n_tracks > 0:
-        cmap = glasbey.create_palette(palette_size=n_tracks)
+        # cmap = glasbey.create_palette(palette_size=n_tracks)
+        block_size = 5
+        cmap = glasbey.create_block_palette(block_sizes=[block_size]*n_tracks)
+        cmap = [cmap[i:i+block_size] for i in range(0, len(cmap), block_size)]
     if ax is None:
         fig, ax = plt.subplots(figsize=kwargs.pop("figsize", (5, 5)))
         created_fig = True
@@ -100,8 +101,8 @@ def plot_tracks(
 
     if mode == "persistence_diagram":
         ax.scatter(
-            data.persistence_diagram_original[:, 0],
-            data.persistence_diagram_original[:, 1],
+            data.persistence_diagram[:, 0],
+            data.persistence_diagram[:, 1],
             color="lightgray",
             s=s,
             **kwargs,
@@ -119,9 +120,9 @@ def plot_tracks(
             for tid in tracks:
                 if tid[0] == 0:
                     ax.scatter(
-                        data.persistence_diagram_original[tid[1], 0],
-                        data.persistence_diagram_original[tid[1], 1],
-                        color=cmap[i],
+                        data.persistence_diagram[tid[1], 0],
+                        data.persistence_diagram[tid[1], 1],
+                        color=cmap[i][int(np.floor(block_size/2))],
                         s=s,
                         **kwargs,
                     )
@@ -129,7 +130,7 @@ def plot_tracks(
                     ax.scatter(
                         data.persistence_diagram_boot[tid[0] - 1][tid[1], 0],
                         data.persistence_diagram_boot[tid[0] - 1][tid[1], 1],
-                        color=cmap[i],
+                        color=cmap[i][int(np.floor(block_size/2))],
                         s=s,
                         **kwargs,
                     )
@@ -148,13 +149,13 @@ def plot_tracks(
         num_ticks = 6
         ticks = np.linspace(max(min_val, 0), max_val, num_ticks)
         tick_labs = [
-            np.format_float_positional(i, 3)
+            round(i, 3)
             for i in np.linspace(max(min_val, 0), max_val, num_ticks)
         ]
         ax.set_xticks(ticks, tick_labs)
         ax.set_yticks(ticks, tick_labs)
     elif mode == "lifetime_plot":
-        lifetime_full = data.persistence_diagram_original
+        lifetime_full = data.persistence_diagram
         if data.persistence_diagram_boot:
             lifetime_full = np.concatenate(
                 [
@@ -165,8 +166,8 @@ def plot_tracks(
         lifetime_full = lifetime_full[:, 1] - lifetime_full[:, 0]
         idx = np.vstack(
             [
-                np.repeat(0, data.persistence_diagram_original.shape[0]),
-                np.arange(data.persistence_diagram_original.shape[0]),
+                np.repeat(0, data.persistence_diagram.shape[0]),
+                np.arange(data.persistence_diagram.shape[0]),
             ]
         ).T
         if data.persistence_diagram_boot:
@@ -203,38 +204,39 @@ def plot_tracks(
             ax.barh(
                 sort_idx[loc_idx],
                 lifetime_full[loc_idx],
-                color=cmap[i],
+                color=cmap[i][int(np.floor(block_size/2))],
                 linewidth=0,
                 **kwargs,
             )
     elif mode == "loops_on_data":
         # TODO: allow custom color key
         ax.scatter(
-            data.data_original[:, components[0]],
-            data.data_original[:, components[1]],
+            data.data[:, components[0]],
+            data.data[:, components[1]],
             color="lightgray",
             s=s,
             **kwargs,
         )
         for i, src_tid in enumerate(track_ids):
             tracks = data.tracks[src_tid]["loops"]
+            loops_plot = []
             for tid in tracks:
                 if tid[0] == 0:
-                    ax.plot(
-                        data.loops_coords_original_plot[tid[1]][:, components[0]],
-                        data.loops_coords_original_plot[tid[1]][:, components[1]],
-                        color=cmap[i],
-                        **kwargs,
-                    )
+                    loops_plot.extend(data.loops_coords[tid[1]])
                 else:
-                    ax.plot(
-                        data.loops_coords_boot[tid[0] - 1][tid[1]][:, components[0]],
-                        data.loops_coords_boot[tid[0] - 1][tid[1]][:, components[1]],
-                        color=cmap[i],
-                        **kwargs,
-                    )
+                    loops_plot.extend(data.loops_coords_boot[tid[0]-1][tid[1]])
+            for j, loop in enumerate(loops_plot):
+                ax.plot(
+                    loop[:, components[0]],
+                    loop[:, components[1]],
+                    color=cmap[i][j % block_size],
+                    **kwargs,
+                )
 
     if created_fig:
         fig.tight_layout()
 
     return ax
+
+
+#TODO: a thought, draw confidence bands for each track
