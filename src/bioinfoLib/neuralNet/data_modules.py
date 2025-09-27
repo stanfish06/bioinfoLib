@@ -36,7 +36,6 @@ class MLPregressorDataModule(pl.LightningDataModule):
         self.test_fraction = test_fraction
         self.data_full = TensorDataset(from_numpy(self.x), from_numpy(self.y))
         self.data_pred = TensorDataset(from_numpy(self.x_pred))
-        self.save_hyperparameters()
         self.allow_zero_length_dataloader_with_multiple_devices = True
 
     def setup(self, stage: str):

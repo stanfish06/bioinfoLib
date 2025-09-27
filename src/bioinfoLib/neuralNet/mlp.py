@@ -29,7 +29,7 @@ class MLPregressor(pl.LightningModule):
         self.activation_fn = nn.LeakyReLU()
         self.dropout = nn.Dropout(dropout)
 
-        self.save_hyperparameters()
+        self.save_hyperparameters("n_hidden", "n_layers")
 
         layers_dims = (
             [self.input_dim] + self.n_layers * [self.n_hidden] + [self.output_dim]
