@@ -2,7 +2,7 @@
 Personal code repo for bioinformatics analysis
 
 ## Examples
-<img src="examples/loop.png" alt="persistent homology" width="300"/>
+<img src="examples/loop_v2.png" alt="persistent homology" width="300"/>
 
 ## External Dependencies
 On Linux systems, install additional CUDA dependencies:
