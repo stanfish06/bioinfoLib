@@ -5,20 +5,26 @@ import pickle
 import uuid
 from dataclasses import dataclass, field
 from itertools import chain, combinations, product
+from typing import Literal
 
 import numpy as np
 import pandas as pd
 from juliacall import Main as julia
-from rich.progress import Progress
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import cdist, directed_hausdorff
+from scipy.spatial.distance import cdist, directed_hausdorff, pdist, squareform
 from scipy.stats import binom, false_discovery_control, gamma
 from sklearn.metrics import pairwise_distances
 
 from bioinfoLib.R.utils import SimilarityMeasures_helper
 
 from .utils import (
-    compute_geometric_similarity,
     compute_homological_equivalence,
     edge_idx_encode,
     trajectory_distance,
@@ -56,11 +62,10 @@ class HomologyData:
         if len(self.data_visualization) != len(self.data):
             self.data_visualization = self.data
         self.n_vertices = self.data.shape[0]
+        self.dist_mat = pdist(self.data)
 
     def compute_homology(self, thresh=None):
-        dist_mat = pairwise_distances(self.data)
-        dist_mat = (dist_mat + dist_mat.T) / 2
-        filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+        filt = julia.Rips(squareform(self.dist_mat), sparse=True, threshold=thresh)
         # don't compute representatives if only persistence diagram is needed
         result_cycle = julia.ripserer(filt, reps=False)
         birth_t = np.array([i[1] for i in result_cycle[1]])
@@ -70,15 +75,13 @@ class HomologyData:
         self.parameters["filtration_threshold_homology"] = thresh
 
     def compute_boundary_matrix(self, thresh=None):
-        dist_mat = pairwise_distances(self.data)
-        dist_mat = (dist_mat + dist_mat.T) / 2
         if thresh is None:
             if (
                 "filtration_threshold_homology" in self.parameters
                 and self.parameters["filtration_threshold_homology"]
             ):
                 thresh = self.parameters["filtration_threshold_homology"]
-        filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
+        filt = julia.Rips(squareform(self.dist_mat), sparse=True, threshold=thresh)
         trigs, birth_t = julia.boundary_mat_d2(filt)
         trigs = np.array(np.array(trigs).tolist()) - 1
         edges = [list(combinations(trig, 2)) for trig in trigs]
@@ -243,13 +246,19 @@ class HomologyData:
         stats_permuate = []
         with Progress(refresh_per_second=25) as progress:
             task_cross_compare = progress.add_task(
-                "[bold #FFA500]Comparing",
+                "[bold blue]Cross-dataset comparison",
                 total=len(self.tracks) * len(reference.tracks),
             )
-            task_permute = progress.add_task("[bold green]Permuting", total=n_permute)
+            task_permute = progress.add_task(
+                "[green]  Permutation testing", total=n_permute, visible=False
+            )
             cross_pairs = list(product(self.tracks.keys(), reference.tracks.keys()))
             result = []
-            for i, j in cross_pairs:
+            for pair_idx, (i, j) in enumerate(cross_pairs):
+                progress.update(
+                    task_cross_compare,
+                    description=f"[bold blue]Cross-dataset comparison - Pair {pair_idx + 1}/{len(cross_pairs)} ({i} vs {j})",
+                )
                 query_tracks = self.tracks[i]["loops"]
                 reference_tracks = reference.tracks[j]["loops"]
                 query_loops_coords = list(
@@ -275,7 +284,14 @@ class HomologyData:
                 stats_test = group_distance(query_loops_coords, reference_loops_coords)
                 combined_loops_coords = query_loops_coords + reference_loops_coords
                 stats_permute = []
-                for _ in range(n_permute):
+                # Show permutation task
+                progress.update(task_permute, visible=True)
+                progress.reset(task_permute, total=n_permute)
+                progress.update(
+                    task_permute,
+                    description=f"[green]  Permutation testing - {n_permute} iterations",
+                )
+                for perm_idx in range(n_permute):
                     reorder_idx = np.random.permutation(len(combined_loops_coords))
                     combined_loops_coords_reorder = [
                         combined_loops_coords[i] for i in reorder_idx
@@ -286,10 +302,8 @@ class HomologyData:
                             combined_loops_coords_reorder[len(query_loops_coords) :],
                         )
                     )
-                    progress.update(
-                        task_permute,
-                        advance=1,
-                    )
+                    progress.update(task_permute, advance=1)
+                progress.update(task_permute, visible=False)
                 stats_permute = np.array(stats_permute)
                 # do one sided test
                 pval = np.sum(stats_permute >= stats_test) / len(stats_permute)
@@ -299,7 +313,6 @@ class HomologyData:
                     task_cross_compare,
                     advance=1,
                 )
-                progress.reset(task_permute, completed=0, total=n_permute)
             df = pd.DataFrame(
                 result,
                 columns=pd.Index(
@@ -308,18 +321,35 @@ class HomologyData:
             )
             return df
 
+    def clean_boot(self):
+        self.tracks = {}
+        self.n_booted = 0
+        self.loops_coords_boot = []
+        self.loops_eidx_boot = []
+        self.persistence_diagram_boot = []
+        self.matching_df = []
+
+    def write_pkl(self, fname=None):
+        if fname is not None:
+            with open(f"{fname}.pkl", "wb") as f:
+                pickle.dump(self, f)
+        else:
+            fname = str(uuid.uuid4().hex)
+            with open(f"{fname}.pkl", "wb") as f:
+                pickle.dump(self, f)
+
     # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
     # TODO: comme up with a reasonable way for loop matching when doing approximation
     def boot(
         self,
         n,
         thresh,
-        max_frechet_dist,
-        max_hamming_dist,
+        max_geometric_dist,
+        max_homological_dist=1.0,
         n_reps_per_loop=4,
         rep_life_pct=0.1,
         n_nearest_loops=20,
-        regression_mode="exact",
+        regression_mode: Literal["exact", "approx"] = "exact",
         ridge_coef_a=0.1,
         ridge_coef_b=1,
         do_approximation=True,
@@ -333,9 +363,6 @@ class HomologyData:
         do_downsample=True,
         fraction_downsample=0,
     ):
-        import rpy2.robjects as ro
-
-        similarity_func = SimilarityMeasures_helper(ro)
         if not self.bd_mat:
             raise ValueError("compute boundary matrix first")
         if not self.loops_eidx:
@@ -368,15 +395,44 @@ class HomologyData:
                         self.loops_coords_boot[batch_id - 1][loop_id]
                     )
                     source_loop_key.append(sid)
-        with Progress(refresh_per_second=25) as progress:
-            task_boot = progress.add_task("[bold #FFA500]Booting", total=n)
-            task_find_loop = progress.add_task("[bold green]Find loops")
-            task_frechet = progress.add_task("[bold green]Calculate Frechet distance")
+        # edge lookup
+        edge_lookup = {edge_id: idx for idx, edge_id in enumerate(self.bd_row_id)}
+        # Pre-convert to numpy array for faster access
+        source_loop_death_t = np.array(source_loop_death_t)
+        # Cache boundary matrix components
+        bd_nrow_A = int(self.bd_mat[2])
+        bd_ncol_A = int(self.bd_mat[3])
+        # Custom progress columns
+        progress_columns = [
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(bar_width=40),
+            MofNCompleteColumn(),
+            TextColumn("•"),
+            TimeElapsedColumn(),
+        ]
+        with Progress(*progress_columns, refresh_per_second=10) as progress:
+            # Main bootstrap progress
+            task_boot = progress.add_task("[bold cyan]Bootstrap Progress", total=n)
+            # Sub-tasks (initially hidden)
+            task_find_loop = progress.add_task(
+                "[green]  Finding loops", total=1, visible=False
+            )
+            task_geometric_dist = progress.add_task(
+                "[yellow]  Computing distances", total=1, visible=False
+            )
             task_homology = progress.add_task(
-                "[bold green]Assess Homological equivalence"
+                "[magenta]  Homological analysis", total=1, visible=False
             )
             n_success = 0
-            for i in range(n):
+            for boot_iter in range(n):
+                # Update main progress with stats
+                success_rate = (
+                    (n_success / (boot_iter + 1)) * 100 if boot_iter > 0 else 0
+                )
+                progress.update(
+                    task_boot,
+                    description=f"[bold cyan]Bootstrap Progress - Round {boot_iter + 1}/{n} - Success: {n_success} ({success_rate:.1f}%)",
+                )
                 boot_idx = np.random.choice(
                     self.data.shape[0],
                     size=self.data.shape[0],
@@ -392,7 +448,13 @@ class HomologyData:
                 death_t = np.array([i[2] for i in cocycles[1]])[::-1]
                 reps_eidx_boot = []
                 reps_coord_boot = []
-                progress.reset(task_find_loop, totol=len(cocycles[1]))
+                # Show and configure loop finding task
+                progress.update(task_find_loop, visible=True)
+                progress.reset(task_find_loop, total=len(cocycles[1]))
+                progress.update(
+                    task_find_loop,
+                    description=f"[green]  Finding loops - Processing {len(cocycles[1])} cocycles",
+                )
                 for nc in range(len(cocycles[1])):
                     try:
                         reps = julia.reconstruct_n_loop_representatives(
@@ -420,10 +482,8 @@ class HomologyData:
                                 v1 = boot_idx[rep_i_idx[j - 1]]
                                 v2 = boot_idx[rep_i_idx[j]]
                                 edge_idx = edge_idx_encode(v1, v2, self.n_vertices)
-                                if edge_idx in self.bd_row_id:
-                                    rep_i_eidx.append(
-                                        np.where(edge_idx == self.bd_row_id)[0][0]
-                                    )
+                                if edge_idx in edge_lookup:
+                                    rep_i_eidx.append(edge_lookup[edge_idx])
                                 rep_i_coords.append(self.data[v1, :])
                             reps_eidx.append(np.array(rep_i_eidx))
                             reps_coords.append(np.array(rep_i_coords))
@@ -432,69 +492,87 @@ class HomologyData:
                     except ValueError:
                         continue
                     progress.update(task_find_loop, advance=1)
-                pairs = [
-                    ((i, j), source_loop_death_t[i])
-                    for i, j in product(
-                        range(len(source_loop_eidx_pool)), range(len(reps_eidx_boot))
-                    )
-                ]
-                progress.reset(task_frechet, totol=len(pairs))
-                result = []
-                for (i, j), sloop_death_t in pairs:
-                    # target_loop_death_t = death_t[j]
-                    # bootstrapping reduces the nomber of points, so death time can only be greater
-                    # if a bootstrapping loop died ealier, then it is no the same loop
-                    # if sloop_death_t >= target_loop_death_t:
-                    #     result.append(np.inf)
-                    # else:
-                    #     result.append(
-                    #         compute_geometric_similarity(
-                    #             source_loops_coords=source_loop_coords_pool[i],
-                    #             target_loops_coords=reps_coord_boot[j],
-                    #             max_frechet_dist=max_frechet_dist,
-                    #             similarity_func=similarity_func,
-                    #             similarity_type="Frechet",
-                    #         )
-                    #     )
-                    result.append(
-                        compute_geometric_similarity(
-                            source_loops_coords=source_loop_coords_pool[i],
-                            target_loops_coords=reps_coord_boot[j],
-                            max_frechet_dist=max_frechet_dist,
-                            similarity_func=similarity_func,
-                            similarity_type="Frechet",
-                        )
-                    )
-                    progress.update(task_frechet, advance=1)
+                # Hide completed task
+                progress.update(task_find_loop, visible=False)
+                # Skip if no loops found
+                if len(reps_eidx_boot) == 0:
+                    continue
+                n_source_groups = len(source_loop_eidx_pool)
+                n_boot_groups = len(reps_eidx_boot)
+                total_comparisons = n_source_groups * n_boot_groups
+                # Show and configure distance task
+                progress.update(task_geometric_dist, visible=True)
+                progress.reset(task_geometric_dist, total=total_comparisons)
+                progress.update(
+                    task_geometric_dist,
+                    description=f"[yellow]  Computing distances - {n_source_groups} x {n_boot_groups} comparisons",
+                )
+                geometric_distances = np.full((n_source_groups, n_boot_groups), np.nan)
+                for i in range(n_source_groups):
+                    for j in range(n_boot_groups):
+                        n_source_loops = len(source_loop_coords_pool[i])
+                        n_target_loops = len(reps_coord_boot[j])
+                        dists = []
+                        found_valid = False
+                        for ii in range(n_source_loops):
+                            for jj in range(n_target_loops):
+                                l1 = source_loop_coords_pool[i][ii]
+                                l2 = reps_coord_boot[j][jj]
+                                dist = np.nan
+                                try:
+                                    dist = max(
+                                        directed_hausdorff(l1, l2)[0],
+                                        directed_hausdorff(l2, l1)[0],
+                                    )
+                                finally:
+                                    dists.append(dist)
+                        geometric_distances[i, j] = np.nanmean(dists)
+                        progress.update(task_geometric_dist, advance=1)
+                progress.update(task_geometric_dist, visible=False)
+                # Filter pairs
                 pairs_filt = []
-                for si in range(len(source_loop_eidx_pool)):
-                    n_best_matches = []
-                    for j in range(len(reps_eidx_boot)):
-                        k = si * len(reps_eidx_boot) + j
-                        if len(n_best_matches) < n_nearest_loops:
-                            if result[k] is not None:
-                                n_best_matches.append([k, result[k]])
-                                n_best_matches.sort(key=lambda x: x[1])
+                for si in range(n_source_groups):
+                    distances = geometric_distances[si, :]
+                    valid_mask = ~np.isnan(distances)
+
+                    if np.any(valid_mask):
+                        valid_indices = np.where(valid_mask)[0]
+                        valid_distances = distances[valid_mask]
+
+                        n_keep = min(len(valid_distances), n_nearest_loops)
+                        if n_keep == len(valid_distances):
+                            top_indices = np.arange(len(valid_distances))
                         else:
-                            if result[k] is not None:
-                                if result[k] < n_best_matches[-1][1]:
-                                    n_best_matches[-1] = [k, result[k]]
-                                    n_best_matches.sort(key=lambda x: x[1])
-                    pairs_filt.extend(
-                        [(pairs[k], frech_dist) for k, frech_dist in n_best_matches]
-                    )
+                            top_indices = np.argpartition(valid_distances, n_keep - 1)[
+                                :n_keep
+                            ]
+
+                        for idx in top_indices:
+                            j = valid_indices[idx]
+                            pairs_filt.append(
+                                (
+                                    ((si, j), source_loop_death_t[si]),
+                                    valid_distances[idx],
+                                )
+                            )
                 if pairs_filt:
-                    result = []
+                    # Show homology task
+                    progress.update(task_homology, visible=True)
                     progress.reset(task_homology, total=len(pairs_filt))
-                    for ((i, j), sloop_death_t), frech_dist in pairs_filt:
+                    progress.update(
+                        task_homology,
+                        description=f"[magenta]  Homological analysis - {len(pairs_filt)} pairs",
+                    )
+                    result = []
+                    for idx, (((i, j), sloop_death_t), _) in enumerate(pairs_filt):
                         result.append(
                             compute_homological_equivalence(
                                 source_loops_edges=source_loop_eidx_pool[i],
                                 target_loops_edges=reps_eidx_boot[j],
                                 one_ridx_A=self.bd_mat[0],
                                 one_cidx_A=self.bd_mat[1],
-                                nrow_A=self.bd_mat[2],
-                                ncol_A=self.bd_mat[3],
+                                nrow_A=bd_nrow_A,
+                                ncol_A=bd_ncol_A,
                                 ridge_coef_a=ridge_coef_a,
                                 ridge_coef_b=ridge_coef_b,
                                 do_approximation=do_approximation,
@@ -507,16 +585,17 @@ class HomologyData:
                             )
                         )
                         progress.update(task_homology, advance=1)
+                    progress.update(task_homology, visible=False)
 
                     df = pd.DataFrame(
-                        pairs_filt, columns=pd.Index(["pair", "frechet_dist"])
+                        pairs_filt, columns=pd.Index(["pair", "geometric_dist"])
                     )
-                    df["hamming_dist"] = result
+                    df["homological_dist"] = result
                     self.matching_df.append(df.copy())
                     df = df[
                         np.logical_and(
-                            df["hamming_dist"] < max_hamming_dist,
-                            ~np.isnan(df["hamming_dist"]),
+                            df["homological_dist"] < max_homological_dist,
+                            ~np.isnan(df["homological_dist"]),
                         )
                     ]
                     if df.empty:
@@ -528,11 +607,10 @@ class HomologyData:
                     )
                     df[["source", "target"]] = np.array([p for p, _ in df["pair"]])
                     if regression_mode == "exact":
-                        # for exact mode, as long as one match found, keep that pair
-                        df = df.loc[df["hamming_dist"] < 1, :]
-                        df["cost"] = df["frechet_dist"]
+                        df = df.loc[df["homological_dist"] < 1, :]
+                        df["cost"] = df["geometric_dist"]
                     else:
-                        df["cost"] = df["hamming_dist"] * df["frechet_dist"]
+                        df["cost"] = df["homological_dist"] * df["geometric_dist"]
 
                     cost_matrix_sub = df.pivot(
                         index="source", columns="target", values="cost"
@@ -542,7 +620,7 @@ class HomologyData:
                             cost_matrix_sub.shape[0],
                             cost_matrix_sub.shape[0] + cost_matrix_sub.shape[1],
                         ],
-                        max_hamming_dist * max_frechet_dist,
+                        max_homological_dist * max_geometric_dist,
                     )
                     cost_matrix[
                         : cost_matrix_sub.shape[0], : cost_matrix_sub.shape[1]
@@ -558,31 +636,7 @@ class HomologyData:
                         )
                     n_success += 1
                     self.n_booted += 1
-                progress.update(
-                    task_boot,
-                    advance=1,
-                    description=f"[bold #FFA500]Booting (DONE={n_success}/{n})",
-                )
-                progress.reset(task_find_loop, completed=0, total=1)
-                progress.reset(task_frechet, completed=0, total=1)
-                progress.reset(task_homology, completed=0, total=1)
-
-    def clean_boot(self):
-        self.tracks = {}
-        self.n_booted = 0
-        self.loops_coords_boot = []
-        self.loops_eidx_boot = []
-        self.persistence_diagram_boot = []
-        self.matching_df = []
-
-    def write_pkl(self, fname=None):
-        if fname is not None:
-            with open(f"{fname}.pkl", "wb") as f:
-                pickle.dump(self, f)
-        else:
-            fname = str(uuid.uuid4().hex)
-            with open(f"{fname}.pkl", "wb") as f:
-                pickle.dump(self, f)
+                progress.update(task_boot, advance=1)
 
     def rank_loops(self):
         if not self.n_booted:

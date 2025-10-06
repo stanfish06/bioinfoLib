@@ -16,6 +16,7 @@ def install_cran_packages():
         ";".join(
             (
                 f'setwd("{base_dir}")',
+                'install.packages("renv")',
                 "library(renv)",
                 'if (!file.exists("renv.lock")) renv::init(bare = TRUE, bioconductor = "3.18")',
                 f'renv::activate("{base_dir}")',

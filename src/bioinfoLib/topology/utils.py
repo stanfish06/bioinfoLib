@@ -304,7 +304,11 @@ def compute_homological_equivalence(
                     ncol_A_local,
                     one_idx_b,
                 )
-            dists.append(1 - int(res))
+                dist = np.nan
+                try:
+                    dist = 1 - int(res[0])
+                finally:
+                    dists.append(dist)
         elif regression_mode == "approx":
             res = sp_ridge_regression_mod2(
                 one_ridx_A_local,

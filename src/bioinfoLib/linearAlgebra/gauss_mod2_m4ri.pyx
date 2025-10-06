@@ -17,7 +17,7 @@ cdef extern from "m4ri/m4ri.h":
     cdef int mzd_solve_left(mzd_t *A, mzd_t *B, int cutoff, int inconsistency_check)
 
 
-def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):
+def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns" 
     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
     cdef mzd_t *b = mzd_init(nrow_A, 1);

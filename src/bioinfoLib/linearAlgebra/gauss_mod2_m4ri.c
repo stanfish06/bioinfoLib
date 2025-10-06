@@ -1816,12 +1816,6 @@ static CYTHON_INLINE PyObject *__Pyx_CallUnboundCMethod2(__Pyx_CachedCFunction *
 static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
-/* ArgTypeTest.proto */
-#define __Pyx_ArgTypeTest(obj, type, none_allowed, name, exact)\
-    ((likely(__Pyx_IS_TYPE(obj, type) | (none_allowed && (obj == Py_None)))) ? 1 :\
-        __Pyx__ArgTypeTest(obj, type, name, exact))
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
-
 /* AssertionsEnabled.proto */
 #if CYTHON_COMPILING_IN_LIMITED_API  ||  (CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030C0000)
   static int __pyx_assertions_enabled_flag;
@@ -1864,9 +1858,6 @@ static CYTHON_INLINE int __Pyx_IterFinish(void);
 
 /* UnpackItemEndCheck.proto */
 static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
-
-/* RaiseUnexpectedTypeError.proto */
-static int __Pyx_RaiseUnexpectedTypeError(const char *expected, PyObject *obj);
 
 /* ListCompAppend.proto */
 #if CYTHON_USE_PYLIST_INTERNALS && CYTHON_ASSUME_SAFE_MACROS
@@ -2267,7 +2258,6 @@ static const char __pyx_k_A[] = "A";
 static const char __pyx_k_b[] = "b";
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
-static const char __pyx_k_int[] = "int";
 static const char __pyx_k_pop[] = "pop";
 static const char __pyx_k_sol[] = "sol";
 static const char __pyx_k_zip[] = "zip";
@@ -2280,7 +2270,6 @@ static const char __pyx_k_module[] = "__module__";
 static const char __pyx_k_ncol_A[] = "ncol_A";
 static const char __pyx_k_nrow_A[] = "nrow_A";
 static const char __pyx_k_result[] = "result";
-static const char __pyx_k_add_note[] = "add_note";
 static const char __pyx_k_qualname[] = "__qualname__";
 static const char __pyx_k_set_name[] = "__set_name__";
 static const char __pyx_k_one_idx_b[] = "one_idx_b";
@@ -2291,8 +2280,7 @@ static const char __pyx_k_is_coroutine[] = "_is_coroutine";
 static const char __pyx_k_AssertionError[] = "AssertionError";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_A_7_XQ_HAXQ_HAXQ_F_Ql_Qc_Cq_Q_Q[] = "\320\000/\250}\270A\330\004\013\2107\220#\220X\230Q\330\004\024\220H\230A\230X\240Q\330\004\024\220H\230A\230X\240Q\330\004\t\210\023\210F\220#\220Q\220l\240!\330\010\025\220Q\220c\230\023\230C\230q\330\004\010\210\005\210Q\330\010\025\220Q\220c\230\023\230C\230q\330\004\005\330\010\021\220\036\230q\240\003\2403\240c\250\021\330\010\013\2107\220#\220Q\330\014\022\220!\220<\230q\240\003\2403\240c\250\024\250U\260%\260q\270\001\340\014\022\220!\330\010\020\220\007\220s\230#\230Q\340\010\020\220\001\220\021\330\010\020\220\001\220\021";
-static const char __pyx_k_Note_that_Cython_is_deliberately[] = "Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.";
+static const char __pyx_k_7_XQ_HAXQ_HAXQ_F_Ql_Qc_Cq_Q_Qc[] = "\200\001\330\004\013\2107\220#\220X\230Q\330\004\024\220H\230A\230X\240Q\330\004\024\220H\230A\230X\240Q\330\004\t\210\023\210F\220#\220Q\220l\240!\330\010\025\220Q\220c\230\023\230C\230q\330\004\010\210\005\210Q\330\010\025\220Q\220c\230\023\230C\230q\330\004\005\330\010\021\220\036\230q\240\003\2403\240c\250\021\330\010\013\2107\220#\220Q\330\014\022\220!\220<\230q\240\003\2403\240c\250\024\250U\260%\260q\270\001\340\014\022\220!\330\010\020\220\007\220s\230#\230Q\340\010\020\220\001\220\021\330\010\020\220\001\220\021";
 static const char __pyx_k_bioinfoLib_linearAlgebra_gauss_m[] = "bioinfoLib.linearAlgebra.gauss_mod2_m4ri";
 static const char __pyx_k_number_of_rows_must_be_greater_t[] = "number of rows must be greater than or equal to the number of columns";
 static const char __pyx_k_src_bioinfoLib_linearAlgebra_gau[] = "src/bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx";
@@ -2338,7 +2326,7 @@ typedef struct {
   #endif
   __Pyx_CachedCFunction __pyx_umethod_PyDict_Type_pop;
   PyObject *__pyx_codeobj_tab[1];
-  PyObject *__pyx_string_tab[33];
+  PyObject *__pyx_string_tab[30];
 /* #### Code section: module_state_contents ### */
 /* CommonTypesMetaclass.module_state_decls */
 PyTypeObject *__pyx_CommonTypesMetaclassType;
@@ -2379,36 +2367,33 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #define __pyx_kp_u_ __pyx_string_tab[0]
 #define __pyx_n_u_A __pyx_string_tab[1]
 #define __pyx_n_u_AssertionError __pyx_string_tab[2]
-#define __pyx_kp_u_Note_that_Cython_is_deliberately __pyx_string_tab[3]
-#define __pyx_kp_u_add_note __pyx_string_tab[4]
-#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[5]
-#define __pyx_n_u_b __pyx_string_tab[6]
-#define __pyx_n_u_bioinfoLib_linearAlgebra_gauss_m __pyx_string_tab[7]
-#define __pyx_n_u_cline_in_traceback __pyx_string_tab[8]
-#define __pyx_n_u_func __pyx_string_tab[9]
-#define __pyx_n_u_i __pyx_string_tab[10]
-#define __pyx_n_u_int __pyx_string_tab[11]
-#define __pyx_n_u_is_coroutine __pyx_string_tab[12]
-#define __pyx_n_u_j __pyx_string_tab[13]
-#define __pyx_n_u_main __pyx_string_tab[14]
-#define __pyx_n_u_module __pyx_string_tab[15]
-#define __pyx_n_u_name __pyx_string_tab[16]
-#define __pyx_n_u_ncol_A __pyx_string_tab[17]
-#define __pyx_n_u_nrow_A __pyx_string_tab[18]
-#define __pyx_kp_u_number_of_rows_must_be_greater_t __pyx_string_tab[19]
-#define __pyx_n_u_one_cidx_A __pyx_string_tab[20]
-#define __pyx_n_u_one_idx_b __pyx_string_tab[21]
-#define __pyx_n_u_one_ridx_A __pyx_string_tab[22]
-#define __pyx_n_u_pop __pyx_string_tab[23]
-#define __pyx_n_u_qualname __pyx_string_tab[24]
-#define __pyx_n_u_range __pyx_string_tab[25]
-#define __pyx_n_u_result __pyx_string_tab[26]
-#define __pyx_n_u_set_name __pyx_string_tab[27]
-#define __pyx_n_u_sol __pyx_string_tab[28]
-#define __pyx_n_u_solve_mod2 __pyx_string_tab[29]
-#define __pyx_kp_u_src_bioinfoLib_linearAlgebra_gau __pyx_string_tab[30]
-#define __pyx_n_u_test __pyx_string_tab[31]
-#define __pyx_n_u_zip __pyx_string_tab[32]
+#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[3]
+#define __pyx_n_u_b __pyx_string_tab[4]
+#define __pyx_n_u_bioinfoLib_linearAlgebra_gauss_m __pyx_string_tab[5]
+#define __pyx_n_u_cline_in_traceback __pyx_string_tab[6]
+#define __pyx_n_u_func __pyx_string_tab[7]
+#define __pyx_n_u_i __pyx_string_tab[8]
+#define __pyx_n_u_is_coroutine __pyx_string_tab[9]
+#define __pyx_n_u_j __pyx_string_tab[10]
+#define __pyx_n_u_main __pyx_string_tab[11]
+#define __pyx_n_u_module __pyx_string_tab[12]
+#define __pyx_n_u_name __pyx_string_tab[13]
+#define __pyx_n_u_ncol_A __pyx_string_tab[14]
+#define __pyx_n_u_nrow_A __pyx_string_tab[15]
+#define __pyx_kp_u_number_of_rows_must_be_greater_t __pyx_string_tab[16]
+#define __pyx_n_u_one_cidx_A __pyx_string_tab[17]
+#define __pyx_n_u_one_idx_b __pyx_string_tab[18]
+#define __pyx_n_u_one_ridx_A __pyx_string_tab[19]
+#define __pyx_n_u_pop __pyx_string_tab[20]
+#define __pyx_n_u_qualname __pyx_string_tab[21]
+#define __pyx_n_u_range __pyx_string_tab[22]
+#define __pyx_n_u_result __pyx_string_tab[23]
+#define __pyx_n_u_set_name __pyx_string_tab[24]
+#define __pyx_n_u_sol __pyx_string_tab[25]
+#define __pyx_n_u_solve_mod2 __pyx_string_tab[26]
+#define __pyx_kp_u_src_bioinfoLib_linearAlgebra_gau __pyx_string_tab[27]
+#define __pyx_n_u_test __pyx_string_tab[28]
+#define __pyx_n_u_zip __pyx_string_tab[29]
 /* #### Code section: module_state_clear ### */
 #if CYTHON_USE_MODULE_STATE
 static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
@@ -2430,7 +2415,7 @@ static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
   __Pyx_State_RemoveModule(NULL);
   #endif
   for (int i=0; i<1; ++i) { Py_CLEAR(clear_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<33; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<30; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
   return 0;
 }
 #endif
@@ -2452,7 +2437,7 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
   Py_VISIT(traverse_module_state->__pyx_FusedFunctionType);
   #endif
   for (int i=0; i<1; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<33; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
+  for (int i=0; i<30; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
   return 0;
 }
 #endif
@@ -2461,7 +2446,7 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
 /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":20
  * 
  * 
- * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns"
  *     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
 */
@@ -2556,8 +2541,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     }
     __pyx_v_one_ridx_A = values[0];
     __pyx_v_one_cidx_A = values[1];
-    __pyx_v_nrow_A = ((PyObject*)values[2]);
-    __pyx_v_ncol_A = ((PyObject*)values[3]);
+    __pyx_v_nrow_A = values[2];
+    __pyx_v_ncol_A = values[3];
     __pyx_v_one_idx_b = values[4];
   }
   goto __pyx_L6_skip;
@@ -2573,23 +2558,12 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_nrow_A), (&PyLong_Type), 0, "nrow_A", 2))) __PYX_ERR(0, 20, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_ncol_A), (&PyLong_Type), 0, "ncol_A", 2))) __PYX_ERR(0, 20, __pyx_L1_error)
   __pyx_r = __pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_solve_mod2(__pyx_self, __pyx_v_one_ridx_A, __pyx_v_one_cidx_A, __pyx_v_nrow_A, __pyx_v_ncol_A, __pyx_v_one_idx_b);
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  goto __pyx_L7_cleaned_up;
-  __pyx_L0:;
-  for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
-    Py_XDECREF(values[__pyx_temp]);
-  }
-  __pyx_L7_cleaned_up:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
@@ -2632,7 +2606,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_solve_m
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":21
  * 
- * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
  *     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns"             # <<<<<<<<<<<<<<
  *     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
  *     cdef mzd_t *b = mzd_init(nrow_A, 1);
@@ -2652,7 +2626,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_solve_m
   #endif
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":22
- * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
  *     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns"
  *     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);             # <<<<<<<<<<<<<<
  *     cdef mzd_t *b = mzd_init(nrow_A, 1);
@@ -2996,8 +2970,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_solve_m
             }
           }
           __Pyx_GOTREF(__pyx_t_1);
-          if (!(likely(PyLong_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None) || __Pyx_RaiseUnexpectedTypeError("int", __pyx_t_1))) __PYX_ERR(0, 31, __pyx_L17_error)
-          __Pyx_XDECREF_SET(__pyx_7genexpr__pyx_v_i, ((PyObject*)__pyx_t_1));
+          __Pyx_XDECREF_SET(__pyx_7genexpr__pyx_v_i, __pyx_t_1);
           __pyx_t_1 = 0;
           __pyx_t_3 = __Pyx_PyLong_As_rci_t(__pyx_7genexpr__pyx_v_i); if (unlikely((__pyx_t_3 == ((rci_t)-1)) && PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L17_error)
           __pyx_t_1 = __Pyx_PyLong_From_BIT(mzd_read_bit(__pyx_v_b, __pyx_t_3, 0)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L17_error)
@@ -3141,7 +3114,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_solve_m
   /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":20
  * 
  * 
- * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns"
  *     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
 */
@@ -3423,7 +3396,6 @@ static CYTHON_SMALL_CODE int __pyx_pymod_exec_gauss_mod2_m4ri(PyObject *__pyx_py
   __pyx_mstatetype *__pyx_mstate = NULL;
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -3533,37 +3505,30 @@ __Pyx_RefNannySetupContext("PyInit_gauss_mod2_m4ri", 0);
   /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":20
  * 
  * 
- * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns"
  *     cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
 */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 20, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_1solve_mod2, 0, __pyx_mstate_global->__pyx_n_u_solve_mod2, NULL, __pyx_mstate_global->__pyx_n_u_bioinfoLib_linearAlgebra_gauss_m, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_nrow_A, __pyx_mstate_global->__pyx_n_u_int) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_mstate_global->__pyx_n_u_ncol_A, __pyx_mstate_global->__pyx_n_u_int) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_10bioinfoLib_13linearAlgebra_15gauss_mod2_m4ri_1solve_mod2, 0, __pyx_mstate_global->__pyx_n_u_solve_mod2, NULL, __pyx_mstate_global->__pyx_n_u_bioinfoLib_linearAlgebra_gauss_m, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 20, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_3, __pyx_t_2);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_solve_mod2, __pyx_t_2) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_solve_mod2, __pyx_t_3) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_m4ri.pyx":1
  * cdef extern from "m4ri/m4ri.h":             # <<<<<<<<<<<<<<
  *     ctypedef int rci_t
  *     ctypedef int wi_t
 */
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_3) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /*--- Wrapped vars code ---*/
 
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
   if (__pyx_m) {
     if (__pyx_mstate->__pyx_d && stringtab_initialized) {
       __Pyx_AddTraceback("init bioinfoLib.linearAlgebra.gauss_mod2_m4ri", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -3594,11 +3559,11 @@ __Pyx_RefNannySetupContext("PyInit_gauss_mod2_m4ri", 0);
 
 typedef struct {
     const char *s;
-#if 179 <= 65535
+#if 69 <= 65535
     const unsigned short n;
-#elif 179 / 2 < INT_MAX
+#elif 69 / 2 < INT_MAX
     const unsigned int n;
-#elif 179 / 2 < LONG_MAX
+#elif 69 / 2 < LONG_MAX
     const unsigned long n;
 #else
     const Py_ssize_t n;
@@ -3620,15 +3585,12 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_, sizeof(__pyx_k_), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_ */
   {__pyx_k_A, sizeof(__pyx_k_A), 0, 1, 1}, /* PyObject cname: __pyx_n_u_A */
   {__pyx_k_AssertionError, sizeof(__pyx_k_AssertionError), 0, 1, 1}, /* PyObject cname: __pyx_n_u_AssertionError */
-  {__pyx_k_Note_that_Cython_is_deliberately, sizeof(__pyx_k_Note_that_Cython_is_deliberately), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_Note_that_Cython_is_deliberately */
-  {__pyx_k_add_note, sizeof(__pyx_k_add_note), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_add_note */
   {__pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 1, 1}, /* PyObject cname: __pyx_n_u_asyncio_coroutines */
   {__pyx_k_b, sizeof(__pyx_k_b), 0, 1, 1}, /* PyObject cname: __pyx_n_u_b */
   {__pyx_k_bioinfoLib_linearAlgebra_gauss_m, sizeof(__pyx_k_bioinfoLib_linearAlgebra_gauss_m), 0, 1, 1}, /* PyObject cname: __pyx_n_u_bioinfoLib_linearAlgebra_gauss_m */
   {__pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 1, 1}, /* PyObject cname: __pyx_n_u_cline_in_traceback */
   {__pyx_k_func, sizeof(__pyx_k_func), 0, 1, 1}, /* PyObject cname: __pyx_n_u_func */
   {__pyx_k_i, sizeof(__pyx_k_i), 0, 1, 1}, /* PyObject cname: __pyx_n_u_i */
-  {__pyx_k_int, sizeof(__pyx_k_int), 0, 1, 1}, /* PyObject cname: __pyx_n_u_int */
   {__pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 1, 1}, /* PyObject cname: __pyx_n_u_is_coroutine */
   {__pyx_k_j, sizeof(__pyx_k_j), 0, 1, 1}, /* PyObject cname: __pyx_n_u_j */
   {__pyx_k_main, sizeof(__pyx_k_main), 0, 1, 1}, /* PyObject cname: __pyx_n_u_main */
@@ -3712,9 +3674,9 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
   PyObject* tuple_dedup_map = PyDict_New();
   if (unlikely(!tuple_dedup_map)) return -1;
   {
-    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 12, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 20, 170};
+    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 12, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 20, 165};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_one_ridx_A, __pyx_mstate->__pyx_n_u_one_cidx_A, __pyx_mstate->__pyx_n_u_nrow_A, __pyx_mstate->__pyx_n_u_ncol_A, __pyx_mstate->__pyx_n_u_one_idx_b, __pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_b, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_j, __pyx_mstate->__pyx_n_u_result, __pyx_mstate->__pyx_n_u_sol, __pyx_mstate->__pyx_n_u_i};
-    __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_src_bioinfoLib_linearAlgebra_gau, __pyx_mstate->__pyx_n_u_solve_mod2, __pyx_k_A_7_XQ_HAXQ_HAXQ_F_Ql_Qc_Cq_Q_Q, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
+    __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_src_bioinfoLib_linearAlgebra_gau, __pyx_mstate->__pyx_n_u_solve_mod2, __pyx_k_7_XQ_HAXQ_HAXQ_F_Ql_Qc_Cq_Q_Qc, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
   }
   Py_DECREF(tuple_dedup_map);
   return 0;
@@ -4968,54 +4930,6 @@ static void __Pyx_RaiseArgtupleInvalid(
                  (num_expected == 1) ? "" : "s", num_found);
 }
 
-/* ArgTypeTest */
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact)
-{
-    __Pyx_TypeName type_name;
-    __Pyx_TypeName obj_type_name;
-    PyObject *extra_info = __pyx_mstate_global->__pyx_empty_unicode;
-    int from_annotation_subclass = 0;
-    if (unlikely(!type)) {
-        PyErr_SetString(PyExc_SystemError, "Missing type object");
-        return 0;
-    }
-    else if (!exact) {
-        if (likely(__Pyx_TypeCheck(obj, type))) return 1;
-    } else if (exact == 2) {
-        if (__Pyx_TypeCheck(obj, type)) {
-            from_annotation_subclass = 1;
-            extra_info = __pyx_mstate_global->__pyx_kp_u_Note_that_Cython_is_deliberately;
-        }
-    }
-    type_name = __Pyx_PyType_GetFullyQualifiedName(type);
-    obj_type_name = __Pyx_PyType_GetFullyQualifiedName(Py_TYPE(obj));
-    PyErr_Format(PyExc_TypeError,
-        "Argument '%.200s' has incorrect type (expected " __Pyx_FMT_TYPENAME
-        ", got " __Pyx_FMT_TYPENAME ")"
-#if __PYX_LIMITED_VERSION_HEX < 0x030C0000
-        "%s%U"
-#endif
-        , name, type_name, obj_type_name
-#if __PYX_LIMITED_VERSION_HEX < 0x030C0000
-        , (from_annotation_subclass ? ". " : ""), extra_info
-#endif
-        );
-#if __PYX_LIMITED_VERSION_HEX >= 0x030C0000
-    if (exact == 2 && from_annotation_subclass) {
-        PyObject *res;
-        PyObject *vargs[2];
-        vargs[0] = PyErr_GetRaisedException();
-        vargs[1] = extra_info;
-        res = PyObject_VectorcallMethod(__pyx_mstate_global->__pyx_kp_u_add_note, vargs, 2, NULL);
-        Py_XDECREF(res);
-        PyErr_SetRaisedException(vargs[0]);
-    }
-#endif
-    __Pyx_DECREF_TypeName(type_name);
-    __Pyx_DECREF_TypeName(obj_type_name);
-    return 0;
-}
-
 /* RaiseException */
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause) {
     PyObject* owned_instance = NULL;
@@ -5160,17 +5074,6 @@ static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
         return -1;
     }
     return __Pyx_IterFinish();
-}
-
-/* RaiseUnexpectedTypeError */
-static int
-__Pyx_RaiseUnexpectedTypeError(const char *expected, PyObject *obj)
-{
-    __Pyx_TypeName obj_type_name = __Pyx_PyType_GetFullyQualifiedName(Py_TYPE(obj));
-    PyErr_Format(PyExc_TypeError, "Expected %s, got " __Pyx_FMT_TYPENAME,
-                 expected, obj_type_name);
-    __Pyx_DECREF_TypeName(obj_type_name);
-    return 0;
 }
 
 /* GetException */

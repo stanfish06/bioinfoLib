@@ -1,3 +1,9 @@
 *.tif
 *.ims
+*.png
 renv.lock
+*.pkl
+*.h5ad
+*.ckpt
+
+!loop.png
