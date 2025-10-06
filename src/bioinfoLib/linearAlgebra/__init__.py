@@ -1,10 +1,5 @@
 import sys
 
-try:
-    from . import gauss_mod2 as gmod2
-except Exception as e:
-    print(f"Could not import gauss_mod2 {e}")
-
 if sys.platform == "linux":
     try:
         from . import gauss_mod2_linbox as gmod2_linbox

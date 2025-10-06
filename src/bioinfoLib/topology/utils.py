@@ -1,13 +1,14 @@
 import itertools
 import warnings
 from itertools import product
+from typing import Literal
 
 import numpy as np
 from scipy.sparse import csr_matrix, diags
 from scipy.spatial.distance import cdist, hamming
 from sksparse.cholmod import cholesky
 
-from bioinfoLib.linearAlgebra.gauss_mod2_m4ri import mod2Solve_m4ri_py
+from bioinfoLib.linearAlgebra.gauss_mod2_m4ri import solve_mod2
 from bioinfoLib.R.utils import trajectory_distance
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -34,12 +35,12 @@ def sp_ridge_regression_mod2(
     one_ridx_A_uniq, n_ones_per_row = np.unique(one_ridx_A, return_counts=True)
     one_ridx_A_uniq = one_ridx_A_uniq[n_ones_per_row > 1]
     n_ones_per_row = n_ones_per_row[n_ones_per_row > 1]
-    nrow_A_new = len(one_ridx_A_uniq)
+    nrow_A_valid = len(one_ridx_A_uniq)
     # the new columns are used to perform 1 + 1 - 2 = 0
     data = np.concatenate(
         [
             np.ones(len(one_ridx_A)),
-            np.ones(nrow_A_new) * (n_ones_per_row // 2) * -2,
+            np.ones(nrow_A_valid) * (n_ones_per_row // 2) * -2,
         ]
     )
     A = csr_matrix(
@@ -47,21 +48,21 @@ def sp_ridge_regression_mod2(
             data,
             (
                 np.concatenate([one_ridx_A, one_ridx_A_uniq]),
-                np.concatenate([one_cidx_A, np.arange(nrow_A_new) + ncol_A]),
+                np.concatenate([one_cidx_A, np.arange(nrow_A_valid) + ncol_A]),
             ),
         ),
-        shape=(nrow_A, ncol_A + nrow_A_new),
+        shape=(nrow_A, ncol_A + nrow_A_valid),
     )
     ridge_coef_emp = ridge_coef_a * ridge_coef_b / (ridge_coef_a + ridge_coef_b)
-    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_emp, ncol_A + nrow_A_new))
+    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_emp, ncol_A + nrow_A_valid))
     factor_emp = cholesky(B)
-    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_a, ncol_A + nrow_A_new))
+    B = A.transpose().dot(A) + diags(np.repeat(ridge_coef_a, ncol_A + nrow_A_valid))
     factor = cholesky(B)
     best_diff = np.Inf
     best_s = None
 
     x = factor_emp(
-        A.transpose().dot(b) + np.repeat(ridge_coef_emp * 0.5, ncol_A + nrow_A_new)
+        A.transpose().dot(b) + np.repeat(ridge_coef_emp * 0.5, ncol_A + nrow_A_valid)
     )
     c = (ridge_coef_a * x + ridge_coef_b * 0.5) / (ridge_coef_a + ridge_coef_b)
     min_cut = np.min(c)
@@ -192,16 +193,16 @@ def compute_homological_equivalence(
     one_ridx_A,
     one_cidx_A,
     nrow_A,
-    ncol_A,
-    ridge_coef_a,
-    ridge_coef_b,
     bd_column_birth_t,
     source_loop_death_t,
-    regression_mode,
-    do_approximation=False,  # this does not perform good
-    n_neighbors=1,
+    regression_mode: Literal["exact", "approx"] = "exact",
+    ncol_A=None,  # not used for now but keep it here
+    ridge_coef_a=0.1,
+    ridge_coef_b=1,
     do_downsample=True,  # this is better than nn approximation
     fraction_downsample=0.0,
+    do_approximation=False,  # this does not perform good
+    n_neighbors=1,
 ):
     n_sources = len(source_loops_edges)
     n_targets = len(target_loops_edges)
@@ -249,6 +250,9 @@ def compute_homological_equivalence(
             # reduce number of columns
             _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
             ncol_A_local = np.max(one_cidx_A_local) + 1
+        # if number of columns is greater than number of rows, remove triangles with large birth t
+        # large triangles are less likely be an important component between two equivalent loops
+        # print(f"A: {nrow_A} x {ncol_A_local}")
         if ncol_A_local > nrow_A:
             mask = np.argsort(bd_column_birth_t_sub)[:nrow_A]
             bd_column_birth_t_sub = bd_column_birth_t_sub[mask]
@@ -258,34 +262,48 @@ def compute_homological_equivalence(
             _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
             ncol_A_local = np.max(one_cidx_A_local) + 1
         if regression_mode == "exact":
-            # if number of columns is greater than number of rows, remove triangles with large birth t
-            # large triangles are less likely be an important component between two equivalent loops
-            # print(f"A: {nrow_A} x {ncol_A_local}")
             A = np.zeros([nrow_A, ncol_A_local])
             A[one_ridx_A_local, one_cidx_A_local] = 1
             # if whole row and b are zeros, then ignore that row
-            zero_rows = np.logical_and(np.all(A == 0, axis=1), b == 0)
-            nrow_A_new = nrow_A
-            nrow_A_new = nrow_A_new - np.sum(zero_rows)
+            zero_idx_b = np.where(b == 0)[0]
+            one_idx_b = np.where(b == 1)[0]
+            allzero_rows = np.setdiff1d(np.arange(nrow_A), np.unique(one_ridx_A_local))
+            trivial_rows = np.intersect1d(allzero_rows, zero_idx_b)
+            nrow_A_valid = nrow_A
+            nrow_A_valid = nrow_A_valid - len(trivial_rows)
             # fail immediately if b is one but A is all zeros
-            unsolvable_rows = np.logical_and(np.all(A == 0, axis=1), b == 1)
-            if np.any(unsolvable_rows):
+            unsolvable_rows = np.intersect1d(allzero_rows, one_idx_b)
+            if len(unsolvable_rows) > 0:
                 res = 0
+            elif nrow_A_valid == 0:
+                res = 1
             else:
-                if ncol_A_local > nrow_A_new:
-                    mask = np.argsort(bd_column_birth_t_sub)[:nrow_A_new]
+                columns_keep = np.argsort(bd_column_birth_t_sub)
+                if ncol_A_local > nrow_A_valid:
+                    columns_keep = columns_keep[:nrow_A_valid]
                     if do_downsample:
-                        mask = mask[
-                            : int(np.ceil(nrow_A_new * (1 - fraction_downsample)))
+                        columns_keep = columns_keep[
+                            : int(np.ceil(nrow_A_valid * (1 - fraction_downsample)))
                         ]
-                    if nrow_A_new == 0:
-                        res = 1
-                    else:
-                        res = mod2Solve_m4ri_py(
-                            A[~zero_rows, :][:, mask], b[~zero_rows]
-                        )
-                else:
-                    res = mod2Solve_m4ri_py(A[~zero_rows, :], b[~zero_rows])
+                mask = np.logical_and(
+                    ~np.isin(one_ridx_A_local, trivial_rows),
+                    np.isin(one_cidx_A_local, columns_keep),
+                )
+                one_ridx_A_local = one_ridx_A_local[mask]
+                one_cidx_A_local = one_cidx_A_local[mask]
+                _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+                _, one_ridx_A_local = np.unique(one_ridx_A_local, return_inverse=True)
+                one_idx_b = np.where(
+                    b[np.sort(np.setdiff1d(np.arange(nrow_A), trivial_rows))] == 1
+                )[0]
+                ncol_A_local = np.max(one_cidx_A_local) + 1
+                res = solve_mod2(
+                    one_ridx_A_local,
+                    one_cidx_A_local,
+                    nrow_A_valid,
+                    ncol_A_local,
+                    one_idx_b,
+                )
             dists.append(1 - int(res))
         elif regression_mode == "approx":
             res = sp_ridge_regression_mod2(

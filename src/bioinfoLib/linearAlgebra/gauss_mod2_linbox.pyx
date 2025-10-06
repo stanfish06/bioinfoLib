@@ -68,7 +68,7 @@ cdef extern from "linbox/solutions/solve.h" namespace "LinBox":
         const Wiedemann& m
     ) except +
 
-def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):
+def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
     cdef Modular_uint64 * F2 = new Modular_uint64(2)
     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)
 
@@ -79,7 +79,7 @@ def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):
 
     cdef DenseVector_Modular_uint64 * x = new DenseVector_Modular_uint64(F2[0], ncol_A)
 
-    for i in one_i_b:
+    for i in one_idx_b:
         F2.assign(b[0][i], F2[0].one);
 
     cdef ModularTag tag;

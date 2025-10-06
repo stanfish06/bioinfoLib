@@ -11,29 +11,28 @@ cdef extern from "m4ri/m4ri.h":
     cdef mzd_t *mzd_init(rci_t, rci_t)
     cdef void mzd_free(mzd_t *)
     cdef void mzd_write_bit(mzd_t *m, rci_t row, rci_t col, BIT value)
+    cdef BIT mzd_read_bit(mzd_t *M, rci_t row, rci_t col)
 
     cdef void mzd_print(mzd_t *)
     cdef int mzd_solve_left(mzd_t *A, mzd_t *B, int cutoff, int inconsistency_check)
 
 
-def mod2Solve_m4ri_py(A, b):
-    nr = len(A)
-    nc = len(A[0])
-
-    assert nr >= nc, "number of rows must be greater than or equal to the number of columns" 
-
-    cdef mzd_t *A2 = mzd_init(nr, nc);
-    cdef mzd_t *b2 = mzd_init(nr, 1);
-    
+def solve_mod2(one_ridx_A, one_cidx_A, nrow_A: int, ncol_A: int, one_idx_b):
+    assert nrow_A >= ncol_A, "number of rows must be greater than or equal to the number of columns" 
+    cdef mzd_t *A = mzd_init(nrow_A, ncol_A);
+    cdef mzd_t *b = mzd_init(nrow_A, 1);
+    for (i, j) in zip(one_ridx_A, one_cidx_A):
+        mzd_write_bit(A, i, j, 1)
+    for i in one_idx_b:
+        mzd_write_bit(b, i, 0, 1)
     try:
-        for i in range(nr):
-            for j in range(nc):
-                mzd_write_bit(A2, i, j, A[i][j])
-        for i in range(nr):
-            mzd_write_bit(b2, i, 0, b[i])
-        result = mzd_solve_left(A2, b2, 0, 1)
-        return result == 0
+        result = mzd_solve_left(A, b, 0, 1)
+        if result == 0:
+            sol = [mzd_read_bit(b, i, 0) for i in range(ncol_A)]
+        else:
+            sol = None
+        return (result == 0, sol)
     finally:
-        mzd_free(A2)
-        mzd_free(b2)
+        mzd_free(A)
+        mzd_free(b)
 

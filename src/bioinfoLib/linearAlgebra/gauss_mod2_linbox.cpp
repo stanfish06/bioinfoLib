@@ -2281,20 +2281,20 @@ static const char __pyx_k_module[] = "__module__";
 static const char __pyx_k_ncol_A[] = "ncol_A";
 static const char __pyx_k_nrow_A[] = "nrow_A";
 static const char __pyx_k_solved[] = "solved";
-static const char __pyx_k_one_i_b[] = "one_i_b";
 static const char __pyx_k_qualname[] = "__qualname__";
 static const char __pyx_k_set_name[] = "__set_name__";
+static const char __pyx_k_one_idx_b[] = "one_idx_b";
 static const char __pyx_k_one_cidx_A[] = "one_cidx_A";
 static const char __pyx_k_one_ridx_A[] = "one_ridx_A";
+static const char __pyx_k_solve_mod2[] = "solve_mod2";
 static const char __pyx_k_is_coroutine[] = "_is_coroutine";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_mod2Solve_linbox_py[] = "mod2Solve_linbox_py";
 static const char __pyx_k_1_I_ATQYYZ_5_1L_3c_1Ba_H_1DPQ_H[] = "\200\001\330\004\037\320\0371\260\021\260!\330\004*\320*I\310\021\310\"\310A\310T\320QY\320YZ\340\004\010\210\003\2105\220\003\2201\220L\240\001\330\010\t\210\031\220!\2203\220c\230\022\2301\230B\230a\340\004*\320*H\310\001\310\022\3101\310D\320PQ\340\004*\320*H\310\001\310\022\3101\310D\320PQ\340\004\010\210\005\210Q\330\010\n\210'\220\021\220!\2201\220B\220a\220t\2302\230Q\230b\240\001\360\n\000\005\016\210Q\330\004\005\330\010\r\210Q\210a\210q\220\004\220A\220Q\220d\230!\2301\230D\240\005\240Q\340\010\021\220\021\340\004\010\210\003\2103\210c\220\021\330\004\013\2101";
 static const char __pyx_k_bioinfoLib_linearAlgebra_gauss_m[] = "bioinfoLib.linearAlgebra.gauss_mod2_linbox";
 static const char __pyx_k_src_bioinfoLib_linearAlgebra_gau[] = "src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx";
 /* #### Code section: decls ### */
-static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2Solve_linbox_py(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_one_ridx_A, PyObject *__pyx_v_one_cidx_A, PyObject *__pyx_v_nrow_A, PyObject *__pyx_v_ncol_A, PyObject *__pyx_v_one_i_b); /* proto */
+static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_solve_mod2(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_one_ridx_A, PyObject *__pyx_v_one_cidx_A, PyObject *__pyx_v_nrow_A, PyObject *__pyx_v_ncol_A, PyObject *__pyx_v_one_idx_b); /* proto */
 /* #### Code section: late_includes ### */
 /* #### Code section: module_state ### */
 /* SmallCodeConfig */
@@ -2386,18 +2386,18 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #define __pyx_n_u_is_coroutine __pyx_string_tab[10]
 #define __pyx_n_u_main __pyx_string_tab[11]
 #define __pyx_n_u_method __pyx_string_tab[12]
-#define __pyx_n_u_mod2Solve_linbox_py __pyx_string_tab[13]
-#define __pyx_n_u_module __pyx_string_tab[14]
-#define __pyx_n_u_name __pyx_string_tab[15]
-#define __pyx_n_u_ncol_A __pyx_string_tab[16]
-#define __pyx_n_u_nrow_A __pyx_string_tab[17]
-#define __pyx_n_u_one_cidx_A __pyx_string_tab[18]
-#define __pyx_n_u_one_i_b __pyx_string_tab[19]
-#define __pyx_n_u_one_ridx_A __pyx_string_tab[20]
-#define __pyx_n_u_pop __pyx_string_tab[21]
-#define __pyx_n_u_qualname __pyx_string_tab[22]
-#define __pyx_n_u_r __pyx_string_tab[23]
-#define __pyx_n_u_set_name __pyx_string_tab[24]
+#define __pyx_n_u_module __pyx_string_tab[13]
+#define __pyx_n_u_name __pyx_string_tab[14]
+#define __pyx_n_u_ncol_A __pyx_string_tab[15]
+#define __pyx_n_u_nrow_A __pyx_string_tab[16]
+#define __pyx_n_u_one_cidx_A __pyx_string_tab[17]
+#define __pyx_n_u_one_idx_b __pyx_string_tab[18]
+#define __pyx_n_u_one_ridx_A __pyx_string_tab[19]
+#define __pyx_n_u_pop __pyx_string_tab[20]
+#define __pyx_n_u_qualname __pyx_string_tab[21]
+#define __pyx_n_u_r __pyx_string_tab[22]
+#define __pyx_n_u_set_name __pyx_string_tab[23]
+#define __pyx_n_u_solve_mod2 __pyx_string_tab[24]
 #define __pyx_n_u_solved __pyx_string_tab[25]
 #define __pyx_kp_u_src_bioinfoLib_linearAlgebra_gau __pyx_string_tab[26]
 #define __pyx_n_u_tag __pyx_string_tab[27]
@@ -2456,21 +2456,21 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
 /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":71
  *     ) except +
  * 
- * def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     cdef Modular_uint64 * F2 = new Modular_uint64(2)
  *     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)
 */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1mod2Solve_linbox_py(PyObject *__pyx_self, 
+static PyObject *__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1solve_mod2(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1mod2Solve_linbox_py = {"mod2Solve_linbox_py", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1mod2Solve_linbox_py, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1mod2Solve_linbox_py(PyObject *__pyx_self, 
+static PyMethodDef __pyx_mdef_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1solve_mod2 = {"solve_mod2", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1solve_mod2, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1solve_mod2(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -2481,7 +2481,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   PyObject *__pyx_v_one_cidx_A = 0;
   PyObject *__pyx_v_nrow_A = 0;
   PyObject *__pyx_v_ncol_A = 0;
-  PyObject *__pyx_v_one_i_b = 0;
+  PyObject *__pyx_v_one_idx_b = 0;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
@@ -2492,7 +2492,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("mod2Solve_linbox_py (wrapper)", 0);
+  __Pyx_RefNannySetupContext("solve_mod2 (wrapper)", 0);
   #if !CYTHON_METH_FASTCALL
   #if CYTHON_ASSUME_SAFE_SIZE
   __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
@@ -2502,7 +2502,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_one_ridx_A,&__pyx_mstate_global->__pyx_n_u_one_cidx_A,&__pyx_mstate_global->__pyx_n_u_nrow_A,&__pyx_mstate_global->__pyx_n_u_ncol_A,&__pyx_mstate_global->__pyx_n_u_one_i_b,0};
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_one_ridx_A,&__pyx_mstate_global->__pyx_n_u_one_cidx_A,&__pyx_mstate_global->__pyx_n_u_nrow_A,&__pyx_mstate_global->__pyx_n_u_ncol_A,&__pyx_mstate_global->__pyx_n_u_one_idx_b,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
     if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 71, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
@@ -2531,9 +2531,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "mod2Solve_linbox_py", 0) < 0) __PYX_ERR(0, 71, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "solve_mod2", 0) < 0) __PYX_ERR(0, 71, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 5; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("mod2Solve_linbox_py", 1, 5, 5, i); __PYX_ERR(0, 71, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("solve_mod2", 1, 5, 5, i); __PYX_ERR(0, 71, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 5)) {
       goto __pyx_L5_argtuple_error;
@@ -2553,22 +2553,22 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     __pyx_v_one_cidx_A = values[1];
     __pyx_v_nrow_A = values[2];
     __pyx_v_ncol_A = values[3];
-    __pyx_v_one_i_b = values[4];
+    __pyx_v_one_idx_b = values[4];
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("mod2Solve_linbox_py", 1, 5, 5, __pyx_nargs); __PYX_ERR(0, 71, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("solve_mod2", 1, 5, 5, __pyx_nargs); __PYX_ERR(0, 71, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.mod2Solve_linbox_py", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.solve_mod2", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2Solve_linbox_py(__pyx_self, __pyx_v_one_ridx_A, __pyx_v_one_cidx_A, __pyx_v_nrow_A, __pyx_v_ncol_A, __pyx_v_one_i_b);
+  __pyx_r = __pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_solve_mod2(__pyx_self, __pyx_v_one_ridx_A, __pyx_v_one_cidx_A, __pyx_v_nrow_A, __pyx_v_ncol_A, __pyx_v_one_idx_b);
 
   /* function exit code */
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
@@ -2578,7 +2578,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2Solve_linbox_py(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_one_ridx_A, PyObject *__pyx_v_one_cidx_A, PyObject *__pyx_v_nrow_A, PyObject *__pyx_v_ncol_A, PyObject *__pyx_v_one_i_b) {
+static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_solve_mod2(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_one_ridx_A, PyObject *__pyx_v_one_cidx_A, PyObject *__pyx_v_nrow_A, PyObject *__pyx_v_ncol_A, PyObject *__pyx_v_one_idx_b) {
   Givaro::Modular<uint64_t> *__pyx_v_F2;
   LinBox::SparseMatrix<Givaro::Modular<uint64_t>, LinBox::SparseMatrixFormat::SparseSeq> *__pyx_v_A;
   PyObject *__pyx_v_r = NULL;
@@ -2610,11 +2610,11 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("mod2Solve_linbox_py", 0);
+  __Pyx_RefNannySetupContext("solve_mod2", 0);
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":72
  * 
- * def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
  *     cdef Modular_uint64 * F2 = new Modular_uint64(2)             # <<<<<<<<<<<<<<
  *     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)
  * 
@@ -2628,7 +2628,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
   __pyx_v_F2 = __pyx_t_1;
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":73
- * def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):
  *     cdef Modular_uint64 * F2 = new Modular_uint64(2)
  *     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)             # <<<<<<<<<<<<<<
  * 
@@ -2810,7 +2810,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
  * 
  *     cdef DenseVector_Modular_uint64 * x = new DenseVector_Modular_uint64(F2[0], ncol_A)             # <<<<<<<<<<<<<<
  * 
- *     for i in one_i_b:
+ *     for i in one_idx_b:
 */
   __pyx_t_2 = __Pyx_PyLong_As_size_t(__pyx_v_ncol_A); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L1_error)
   try {
@@ -2824,16 +2824,16 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":82
  *     cdef DenseVector_Modular_uint64 * x = new DenseVector_Modular_uint64(F2[0], ncol_A)
  * 
- *     for i in one_i_b:             # <<<<<<<<<<<<<<
+ *     for i in one_idx_b:             # <<<<<<<<<<<<<<
  *         F2.assign(b[0][i], F2[0].one);
  * 
 */
-  if (likely(PyList_CheckExact(__pyx_v_one_i_b)) || PyTuple_CheckExact(__pyx_v_one_i_b)) {
-    __pyx_t_7 = __pyx_v_one_i_b; __Pyx_INCREF(__pyx_t_7);
+  if (likely(PyList_CheckExact(__pyx_v_one_idx_b)) || PyTuple_CheckExact(__pyx_v_one_idx_b)) {
+    __pyx_t_7 = __pyx_v_one_idx_b; __Pyx_INCREF(__pyx_t_7);
     __pyx_t_8 = 0;
     __pyx_t_9 = NULL;
   } else {
-    __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_v_one_i_b); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 82, __pyx_L1_error)
+    __pyx_t_8 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_v_one_idx_b); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_9 = (CYTHON_COMPILING_IN_LIMITED_API) ? PyIter_Next : __Pyx_PyObject_GetIterNextFunc(__pyx_t_7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 82, __pyx_L1_error)
   }
@@ -2882,7 +2882,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
 
     /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":83
  * 
- *     for i in one_i_b:
+ *     for i in one_idx_b:
  *         F2.assign(b[0][i], F2[0].one);             # <<<<<<<<<<<<<<
  * 
  *     cdef ModularTag tag;
@@ -2893,7 +2893,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
     /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":82
  *     cdef DenseVector_Modular_uint64 * x = new DenseVector_Modular_uint64(F2[0], ncol_A)
  * 
- *     for i in one_i_b:             # <<<<<<<<<<<<<<
+ *     for i in one_idx_b:             # <<<<<<<<<<<<<<
  *         F2.assign(b[0][i], F2[0].one);
  * 
 */
@@ -2966,7 +2966,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
  *     # cython will translate del to delete
 */
     /*except:*/ {
-      __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.mod2Solve_linbox_py", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.solve_mod2", __pyx_clineno, __pyx_lineno, __pyx_filename);
       if (__Pyx_GetException(&__pyx_t_7, &__pyx_t_5, &__pyx_t_10) < 0) __PYX_ERR(0, 91, __pyx_L13_except_error)
       __Pyx_XGOTREF(__pyx_t_7);
       __Pyx_XGOTREF(__pyx_t_5);
@@ -3033,7 +3033,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":71
  *     ) except +
  * 
- * def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     cdef Modular_uint64 * F2 = new Modular_uint64(2)
  *     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)
 */
@@ -3045,7 +3045,7 @@ static PyObject *__pyx_pf_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_mod2S
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_10);
   __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.mod2Solve_linbox_py", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bioinfoLib.linearAlgebra.gauss_mod2_linbox.solve_mod2", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_r);
@@ -3423,13 +3423,13 @@ __Pyx_RefNannySetupContext("PyInit_gauss_mod2_linbox", 0);
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":71
  *     ) except +
  * 
- * def mod2Solve_linbox_py(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_i_b):             # <<<<<<<<<<<<<<
+ * def solve_mod2(one_ridx_A, one_cidx_A, nrow_A, ncol_A, one_idx_b):             # <<<<<<<<<<<<<<
  *     cdef Modular_uint64 * F2 = new Modular_uint64(2)
  *     cdef SparseMatrix_Modular_uint64* A = new SparseMatrix_Modular_uint64(F2[0], nrow_A, ncol_A)
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1mod2Solve_linbox_py, 0, __pyx_mstate_global->__pyx_n_u_mod2Solve_linbox_py, NULL, __pyx_mstate_global->__pyx_n_u_bioinfoLib_linearAlgebra_gauss_m, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 71, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10bioinfoLib_13linearAlgebra_17gauss_mod2_linbox_1solve_mod2, 0, __pyx_mstate_global->__pyx_n_u_solve_mod2, NULL, __pyx_mstate_global->__pyx_n_u_bioinfoLib_linearAlgebra_gauss_m, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[0])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_mod2Solve_linbox_py, __pyx_t_2) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_solve_mod2, __pyx_t_2) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx":1
@@ -3513,18 +3513,18 @@ static const __Pyx_StringTabEntry __pyx_string_tab[] = {
   {__pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 1, 1}, /* PyObject cname: __pyx_n_u_is_coroutine */
   {__pyx_k_main, sizeof(__pyx_k_main), 0, 1, 1}, /* PyObject cname: __pyx_n_u_main */
   {__pyx_k_method, sizeof(__pyx_k_method), 0, 1, 1}, /* PyObject cname: __pyx_n_u_method */
-  {__pyx_k_mod2Solve_linbox_py, sizeof(__pyx_k_mod2Solve_linbox_py), 0, 1, 1}, /* PyObject cname: __pyx_n_u_mod2Solve_linbox_py */
   {__pyx_k_module, sizeof(__pyx_k_module), 0, 1, 1}, /* PyObject cname: __pyx_n_u_module */
   {__pyx_k_name, sizeof(__pyx_k_name), 0, 1, 1}, /* PyObject cname: __pyx_n_u_name */
   {__pyx_k_ncol_A, sizeof(__pyx_k_ncol_A), 0, 1, 1}, /* PyObject cname: __pyx_n_u_ncol_A */
   {__pyx_k_nrow_A, sizeof(__pyx_k_nrow_A), 0, 1, 1}, /* PyObject cname: __pyx_n_u_nrow_A */
   {__pyx_k_one_cidx_A, sizeof(__pyx_k_one_cidx_A), 0, 1, 1}, /* PyObject cname: __pyx_n_u_one_cidx_A */
-  {__pyx_k_one_i_b, sizeof(__pyx_k_one_i_b), 0, 1, 1}, /* PyObject cname: __pyx_n_u_one_i_b */
+  {__pyx_k_one_idx_b, sizeof(__pyx_k_one_idx_b), 0, 1, 1}, /* PyObject cname: __pyx_n_u_one_idx_b */
   {__pyx_k_one_ridx_A, sizeof(__pyx_k_one_ridx_A), 0, 1, 1}, /* PyObject cname: __pyx_n_u_one_ridx_A */
   {__pyx_k_pop, sizeof(__pyx_k_pop), 0, 1, 1}, /* PyObject cname: __pyx_n_u_pop */
   {__pyx_k_qualname, sizeof(__pyx_k_qualname), 0, 1, 1}, /* PyObject cname: __pyx_n_u_qualname */
   {__pyx_k_r, sizeof(__pyx_k_r), 0, 1, 1}, /* PyObject cname: __pyx_n_u_r */
   {__pyx_k_set_name, sizeof(__pyx_k_set_name), 0, 1, 1}, /* PyObject cname: __pyx_n_u_set_name */
+  {__pyx_k_solve_mod2, sizeof(__pyx_k_solve_mod2), 0, 1, 1}, /* PyObject cname: __pyx_n_u_solve_mod2 */
   {__pyx_k_solved, sizeof(__pyx_k_solved), 0, 1, 1}, /* PyObject cname: __pyx_n_u_solved */
   {__pyx_k_src_bioinfoLib_linearAlgebra_gau, sizeof(__pyx_k_src_bioinfoLib_linearAlgebra_gau), 0, 1, 0}, /* PyObject cname: __pyx_kp_u_src_bioinfoLib_linearAlgebra_gau */
   {__pyx_k_tag, sizeof(__pyx_k_tag), 0, 1, 1}, /* PyObject cname: __pyx_n_u_tag */
@@ -3592,8 +3592,8 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
   if (unlikely(!tuple_dedup_map)) return -1;
   {
     const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 15, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 71, 190};
-    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_one_ridx_A, __pyx_mstate->__pyx_n_u_one_cidx_A, __pyx_mstate->__pyx_n_u_nrow_A, __pyx_mstate->__pyx_n_u_ncol_A, __pyx_mstate->__pyx_n_u_one_i_b, __pyx_mstate->__pyx_n_u_F2, __pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_r, __pyx_mstate->__pyx_n_u_c, __pyx_mstate->__pyx_n_u_b, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_tag, __pyx_mstate->__pyx_n_u_method, __pyx_mstate->__pyx_n_u_solved};
-    __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_src_bioinfoLib_linearAlgebra_gau, __pyx_mstate->__pyx_n_u_mod2Solve_linbox_py, __pyx_k_1_I_ATQYYZ_5_1L_3c_1Ba_H_1DPQ_H, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_one_ridx_A, __pyx_mstate->__pyx_n_u_one_cidx_A, __pyx_mstate->__pyx_n_u_nrow_A, __pyx_mstate->__pyx_n_u_ncol_A, __pyx_mstate->__pyx_n_u_one_idx_b, __pyx_mstate->__pyx_n_u_F2, __pyx_mstate->__pyx_n_u_A, __pyx_mstate->__pyx_n_u_r, __pyx_mstate->__pyx_n_u_c, __pyx_mstate->__pyx_n_u_b, __pyx_mstate->__pyx_n_u_x, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_tag, __pyx_mstate->__pyx_n_u_method, __pyx_mstate->__pyx_n_u_solved};
+    __pyx_mstate_global->__pyx_codeobj_tab[0] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_src_bioinfoLib_linearAlgebra_gau, __pyx_mstate->__pyx_n_u_solve_mod2, __pyx_k_1_I_ATQYYZ_5_1L_3c_1Ba_H_1DPQ_H, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[0])) goto bad;
   }
   Py_DECREF(tuple_dedup_map);
   return 0;

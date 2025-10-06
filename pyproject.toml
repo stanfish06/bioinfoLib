@@ -154,9 +154,6 @@ ext-modules = [
   { name = "bioinfoLib.GP.simulator", sources = [
     "./src/bioinfoLib/GP/simulator.pyx",
   ], optional = true },
-  { name = "bioinfoLib.linearAlgebra.gauss_mod2", sources = [
-    "./src/bioinfoLib/linearAlgebra/gauss_mod2.pyx",
-  ], language = "c++", optional = true },
   { name = "bioinfoLib.linearAlgebra.gauss_mod2_linbox", sources = [
     "./src/bioinfoLib/linearAlgebra/gauss_mod2_linbox.pyx",
   ], language = "c++", optional = true, libraries = [

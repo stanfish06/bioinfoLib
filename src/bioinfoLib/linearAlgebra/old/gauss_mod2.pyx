@@ -2,7 +2,7 @@
 from libcpp.vector cimport vector
 from libcpp cimport bool
 
-cdef bool mod2Solve(vector[vector[bool]] Ab):
+cdef bool mod2solve(vector[vector[bool]] Ab):
     nr = Ab.size()
     nc = Ab[0].size()
 
@@ -49,7 +49,7 @@ cdef bool mod2Solve(vector[vector[bool]] Ab):
     return True;
 
 # A should be 2d list of bool values
-def mod2Solve_py(A, b):
+def solve_mod2(A, b):
     cdef vector[vector[bool]] Ab
     cdef vector[bool] row
 

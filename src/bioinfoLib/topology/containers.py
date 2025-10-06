@@ -187,6 +187,7 @@ class HomologyData:
         similarity_func = SimilarityMeasures_helper(ro)
 
         # frechet distance is too slow to compute
+        # TODO: implement frechet distance
         def compute_loop_distance(
             l1: np.ndarray, l2: np.ndarray, type: str = "hausdorff"
         ):
