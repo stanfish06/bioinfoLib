@@ -262,8 +262,6 @@ def compute_homological_equivalence(
             _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
             ncol_A_local = np.max(one_cidx_A_local) + 1
         if regression_mode == "exact":
-            A = np.zeros([nrow_A, ncol_A_local])
-            A[one_ridx_A_local, one_cidx_A_local] = 1
             # if whole row and b are zeros, then ignore that row
             zero_idx_b = np.where(b == 0)[0]
             one_idx_b = np.where(b == 1)[0]
@@ -274,9 +272,9 @@ def compute_homological_equivalence(
             # fail immediately if b is one but A is all zeros
             unsolvable_rows = np.intersect1d(allzero_rows, one_idx_b)
             if len(unsolvable_rows) > 0:
-                res = 0
+                res = (0, None)
             elif nrow_A_valid == 0:
-                res = 1
+                res = (1, None)
             else:
                 columns_keep = np.argsort(bd_column_birth_t_sub)
                 if ncol_A_local > nrow_A_valid:
@@ -304,11 +302,11 @@ def compute_homological_equivalence(
                     ncol_A_local,
                     one_idx_b,
                 )
-                dist = np.nan
-                try:
-                    dist = 1 - int(res[0])
-                finally:
-                    dists.append(dist)
+            dist = np.nan
+            try:
+                dist = 1 - int(res[0])
+            finally:
+                dists.append(dist)
         elif regression_mode == "approx":
             res = sp_ridge_regression_mod2(
                 one_ridx_A_local,

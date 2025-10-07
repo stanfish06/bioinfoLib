@@ -37,11 +37,12 @@ from .utils import (
 @dataclass
 class HomologyData:
     data: np.ndarray
-    n_vertices: int = 0
     data_visualization: np.ndarray = field(default_factory=lambda: np.array([]))
+    n_vertices: int = 0
     persistence_diagram: np.ndarray = field(default_factory=lambda: np.array([]))
     loops_eidx: list[list[np.ndarray]] = field(default_factory=list)
     loops_coords: list[list[np.ndarray]] = field(default_factory=list)
+    loops_coords_visualization: list[list[np.ndarray]] = field(default_factory=list)
     bd_mat: tuple = ()
     bd_column_birth_t: np.ndarray = field(
         default_factory=lambda: np.array([], dtype=float)
@@ -50,6 +51,9 @@ class HomologyData:
     persistence_diagram_boot: list[np.ndarray] = field(default_factory=list)
     loops_eidx_boot: list[list[np.ndarray]] = field(default_factory=list)
     loops_coords_boot: list[list[np.ndarray]] = field(default_factory=list)
+    loops_coords_visualization_boot: list[list[np.ndarray]] = field(
+        default_factory=list
+    )
     matching_df: list[pd.DataFrame] = field(default_factory=list)
     tracks: dict = field(default_factory=dict)  # e.g. (1,2): [(2,3),...]
     tracks_pvals: dict = field(default_factory=dict)
@@ -103,10 +107,10 @@ class HomologyData:
     def compute_loop_representatives(
         self,
         n_top,
-        n_each,
-        life_pct=0.1,
+        n_each=4,
+        life_pct=0.05,
         n_force_deviate=4,
-        n_reps_per_loop=8,
+        n_reps_per_loop=4,
         loop_lower_pct=5,
         loop_upper_pct=95,
         n_max_cocycles=1,
@@ -126,6 +130,7 @@ class HomologyData:
         n_total_loops = len(cocycles[1])
         n_compute = min(n_total_loops, n_top)
         self.loops_coords = []
+        self.loops_coords_visualization = []
         self.loops_eidx = []
         if n_compute > 0:
             for i in range(n_compute):
@@ -145,10 +150,12 @@ class HomologyData:
                 reps = [list(lp) for lp in reps[0]]
                 reps_eidx = []
                 reps_coords = []
+                reps_coords_visualization = []
                 for k in range(len(reps)):
                     rep_i_idx = [j - 1 for j in reps[k]]
                     rep_i_idx.append(rep_i_idx[0])
                     rep_i_coords = []
+                    rep_i_coords_visualization = []
                     rep_i_eidx = []
 
                     for j in range(1, len(rep_i_idx)):
@@ -160,6 +167,9 @@ class HomologyData:
                                 np.where(edge_idx == self.bd_row_id)[0][0]
                             )
                         rep_i_coords.append(self.data[v1, :])
+                        rep_i_coords_visualization.append(
+                            self.data_visualization[v1, :]
+                        )
                     # circles back to origin
                     edge_idx = edge_idx_encode(
                         i=v2, j=rep_i_idx[0], n_vertices=self.n_vertices
@@ -167,10 +177,17 @@ class HomologyData:
                     if edge_idx in self.bd_row_id:
                         rep_i_eidx.append(np.where(edge_idx == self.bd_row_id)[0][0])
                     rep_i_coords.append(self.data[rep_i_idx[0], :])
+                    rep_i_coords_visualization.append(
+                        self.data_visualization[rep_i_idx[0], :]
+                    )
 
                     reps_eidx.append(np.array(rep_i_eidx))
                     reps_coords.append(np.array(rep_i_coords))
+                    reps_coords_visualization.append(
+                        np.array(rep_i_coords_visualization)
+                    )
                 self.loops_coords.append(reps_coords)
+                self.loops_coords_visualization.append(reps_coords_visualization)
                 self.loops_eidx.append(reps_eidx)
 
             for i in range(len(self.loops_eidx)):
@@ -182,6 +199,7 @@ class HomologyData:
                     }
 
     # after booting both datasets, match two groups of loops and use permutation test to match groups
+    # TODO: use numba to speed up cross matching
     def cross_match(self, reference: HomologyData, n_permute: int) -> pd.DataFrame:
         assert self.tracks, "Query data contains no bootstrapped samples"
         assert reference.tracks, "Reference data contains no bootstrapped samples"
@@ -325,6 +343,7 @@ class HomologyData:
         self.tracks = {}
         self.n_booted = 0
         self.loops_coords_boot = []
+        self.loops_coords_visualization_boot = []
         self.loops_eidx_boot = []
         self.persistence_diagram_boot = []
         self.matching_df = []
@@ -340,12 +359,13 @@ class HomologyData:
 
     # Thoughts: for approx, use permutation test to have better match, but this will be computationally intense for sure
     # TODO: comme up with a reasonable way for loop matching when doing approximation
+    # TODO: transfer parameter values from compute_loop_representatives to here
     def boot(
         self,
         n,
-        thresh,
-        max_geometric_dist,
-        max_homological_dist=1.0,
+        thresh=None,
+        max_geometric_dist=np.inf,
+        max_homological_dist=np.inf,
         n_reps_per_loop=4,
         rep_life_pct=0.1,
         n_nearest_loops=20,
@@ -356,7 +376,7 @@ class HomologyData:
         n_neighbors=1,
         fresh_start=True,
         n_force_deviate=4,
-        _n_reps_per_loop=8,
+        _n_reps_per_loop=4,
         loop_lower_pct=5,
         loop_upper_pct=95,
         n_max_cocycles=1,
@@ -369,6 +389,12 @@ class HomologyData:
             raise ValueError("compute original loops first")
         if fresh_start:
             self.clean_boot()
+        if thresh is None:
+            if (
+                "filtration_threshold_homology" in self.parameters
+                and self.parameters["filtration_threshold_homology"]
+            ):
+                thresh = self.parameters["filtration_threshold_homology"]
         source_loop_eidx_pool = self.loops_eidx.copy()
         source_loop_coords_pool = self.loops_coords.copy()
         source_loop_key = []
@@ -448,6 +474,7 @@ class HomologyData:
                 death_t = np.array([i[2] for i in cocycles[1]])[::-1]
                 reps_eidx_boot = []
                 reps_coord_boot = []
+                reps_coord_visualization_boot = []
                 # Show and configure loop finding task
                 progress.update(task_find_loop, visible=True)
                 progress.reset(task_find_loop, total=len(cocycles[1]))
@@ -472,10 +499,12 @@ class HomologyData:
                         reps = [list(lp) for lp in reps[0]]
                         reps_eidx = []
                         reps_coords = []
+                        reps_coords_visualization = []
                         for i in range(len(reps)):
                             rep_i_idx = [j - 1 for j in reps[i]]
                             rep_i_idx.append(rep_i_idx[0])
                             rep_i_coords = []
+                            rep_i_coords_visualization = []
                             rep_i_eidx = []
 
                             for j in range(1, len(rep_i_idx)):
@@ -485,10 +514,17 @@ class HomologyData:
                                 if edge_idx in edge_lookup:
                                     rep_i_eidx.append(edge_lookup[edge_idx])
                                 rep_i_coords.append(self.data[v1, :])
+                                rep_i_coords_visualization.append(
+                                    self.data_visualization[v1, :]
+                                )
                             reps_eidx.append(np.array(rep_i_eidx))
                             reps_coords.append(np.array(rep_i_coords))
+                            reps_coords_visualization.append(
+                                np.array(rep_i_coords_visualization)
+                            )
                         reps_eidx_boot.append(reps_eidx)
                         reps_coord_boot.append(reps_coords)
+                        reps_coord_visualization_boot.append(reps_coords_visualization)
                     except ValueError:
                         continue
                     progress.update(task_find_loop, advance=1)
@@ -513,7 +549,6 @@ class HomologyData:
                         n_source_loops = len(source_loop_coords_pool[i])
                         n_target_loops = len(reps_coord_boot[j])
                         dists = []
-                        found_valid = False
                         for ii in range(n_source_loops):
                             for jj in range(n_target_loops):
                                 l1 = source_loop_coords_pool[i][ii]
@@ -602,6 +637,9 @@ class HomologyData:
                         continue
                     self.loops_eidx_boot.append(reps_eidx_boot)
                     self.loops_coords_boot.append(reps_coord_boot)
+                    self.loops_coords_visualization_boot.append(
+                        reps_coord_visualization_boot
+                    )
                     self.persistence_diagram_boot.append(
                         np.vstack([birth_t, death_t]).T
                     )
