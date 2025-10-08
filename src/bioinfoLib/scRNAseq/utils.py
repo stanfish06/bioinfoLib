@@ -11,6 +11,15 @@ from umap.spectral import spectral_layout
 from bioinfoLib.topology.utils import disk_2d_iso
 
 
+def rotate_embedding_2d(adata, embedding_key: str, angle):
+    rotation_matrix = np.array(
+        [[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]
+    )
+    adata.obsm[f"{embedding_key}_rotate"] = (
+        adata.obsm[embedding_key] @ rotation_matrix.T
+    )
+
+
 def force_layout(
     adata,
     use_rep: str,

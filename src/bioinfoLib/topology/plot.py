@@ -211,8 +211,8 @@ def plot_tracks(
     elif mode == "loops_on_data":
         # TODO: allow custom color key
         ax.scatter(
-            data.data[:, components[0]],
-            data.data[:, components[1]],
+            data.data_visualization[:, components[0]],
+            data.data_visualization[:, components[1]],
             color="lightgray",
             s=s,
             **kwargs,
@@ -222,9 +222,9 @@ def plot_tracks(
             loops_plot = []
             for tid in tracks:
                 if tid[0] == 0:
-                    loops_plot.extend(data.loops_coords[tid[1]])
+                    loops_plot.extend(data.loops_coords_visualization[tid[1]])
                 else:
-                    loops_plot.extend(data.loops_coords_boot[tid[0]-1][tid[1]])
+                    loops_plot.extend(data.loops_coords_visualization_boot[tid[0]-1][tid[1]])
             for j, loop in enumerate(loops_plot):
                 ax.plot(
                     loop[:, components[0]],

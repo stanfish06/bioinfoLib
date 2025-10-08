@@ -409,6 +409,7 @@ source = { editable = "." }
 dependencies = [
     { name = "adjusttext" },
     { name = "cython" },
+    { name = "fa2-modified" },
     { name = "fuzzywuzzy" },
     { name = "glasbey" },
     { name = "ipython" },
@@ -462,8 +463,7 @@ common = [
 ]
 deprecating = [
     { name = "magic-impute" },
-    { name = "phate" },
-    { name = "scprep" },
+    { name = "scprep", version = "1.2.3", source = { registry = "https://pypi.org/simple" } },
     { name = "scvelo" },
 ]
 dev = [
@@ -473,8 +473,8 @@ optional = [
     { name = "bbknn" },
     { name = "cellrank", marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "deeptools", marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
-    { name = "fa2-modified" },
     { name = "harmonypy" },
+    { name = "phate" },
     { name = "pygenometracks", marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "pytometry" },
     { name = "scarches" },
@@ -497,7 +497,7 @@ requires-dist = [
     { name = "cellrank", marker = "sys_platform == 'linux' and extra == 'optional'" },
     { name = "cython", specifier = ">=3.0.12" },
     { name = "deeptools", marker = "sys_platform == 'linux' and extra == 'optional'", specifier = ">=3.5.5" },
-    { name = "fa2-modified", marker = "extra == 'optional'", specifier = ">=0.3.10" },
+    { name = "fa2-modified", specifier = ">=0.3.10" },
     { name = "fuzzywuzzy", specifier = ">=0.18.0" },
     { name = "glasbey", specifier = ">=0.3.0" },
     { name = "harmonypy", marker = "extra == 'optional'", specifier = ">=0.0.10" },
@@ -516,7 +516,7 @@ requires-dist = [
     { name = "numpy", specifier = "<2.0.0" },
     { name = "palantir", specifier = ">=1.3.6" },
     { name = "pandas" },
-    { name = "phate", marker = "extra == 'deprecating'", specifier = ">=1.0.11" },
+    { name = "phate", marker = "extra == 'optional'", specifier = ">=1.0.11" },
     { name = "pip", specifier = ">=25.2" },
     { name = "pipdeptree", specifier = ">=2.28.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
@@ -1178,7 +1178,7 @@ name = "deprecated"
 version = "1.2.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "wrapt", marker = "sys_platform == 'linux' or extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "wrapt" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/98/97/06afe62762c9a8a86af0cfb7bfdab22a43ad17138b07af5b1a58442690a2/deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d", size = 2928744, upload-time = "2025-01-27T10:46:25.7Z" }
 wheels = [
@@ -2776,7 +2776,7 @@ dependencies = [
     { name = "pandas", version = "2.0.3", source = { registry = "https://pypi.org/simple" } },
     { name = "scikit-learn" },
     { name = "scipy" },
-    { name = "scprep" },
+    { name = "scprep", version = "1.2.3", source = { registry = "https://pypi.org/simple" } },
     { name = "tasklogger" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f8/ba/2b7c79ad9a2adedd09337ed10ad3bea8915d160e8039137f197a080949fb/magic-impute-3.0.0.tar.gz", hash = "sha256:0c3f6d17baf586c412c174709a19164f04e693fd1933a8c0399ae5c5bf1cfd7a", size = 17116, upload-time = "2021-03-11T17:49:41.202Z" }
@@ -4240,7 +4240,8 @@ dependencies = [
     { name = "s-gd2" },
     { name = "scikit-learn" },
     { name = "scipy" },
-    { name = "scprep" },
+    { name = "scprep", version = "1.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "scprep", version = "1.2.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-10-bioinfolib-deprecating'" },
     { name = "tasklogger" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/91/1a/423539b13ab54f5ca81d09e0c16a5a48ad801cfec5b5e7259a3fa03928a8/phate-1.0.11.tar.gz", hash = "sha256:10162e9edd09ce5d0e667b0767e96eed6bda5ee877667202ffff0a578ab5076d", size = 23512, upload-time = "2023-06-26T12:08:37.519Z" }
@@ -5842,15 +5843,52 @@ wheels = [
 
 [[package]]
 name = "scprep"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "decorator", marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "numpy", marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "packaging", marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "pandas", version = "2.3.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "scikit-learn", marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+    { name = "scipy", marker = "extra == 'extra-10-bioinfolib-common' or extra != 'extra-10-bioinfolib-deprecating'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/08/97/bced1293ae41248bb52370489a5142901cfbbc9f4fdc241e6c81b4425406/scprep-1.1.0.tar.gz", hash = "sha256:1276773585a77a673f6ac4948a14c3ad106c502c2ab946df050d1a0a1f3b9828", size = 103802, upload-time = "2021-03-19T20:48:02.422Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/91/dfb35608ffae7eb0f45b565e702d3083d784988200ab6a967fd3f60d833e/scprep-1.1.0-py3-none-any.whl", hash = "sha256:338af5565321d3b54a15a7635e5bc5160f84569bb889e1c369d4c3b3afecdc40", size = 104410, upload-time = "2021-03-19T20:48:01.329Z" },
+]
+
+[[package]]
+name = "scprep"
 version = "1.2.3"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform != 'linux' and sys_platform != 'win32'",
+]
 dependencies = [
-    { name = "decorator" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pandas", version = "2.0.3", source = { registry = "https://pypi.org/simple" } },
-    { name = "scikit-learn" },
-    { name = "scipy" },
+    { name = "decorator", marker = "extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "numpy", marker = "extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "packaging", marker = "extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "pandas", version = "2.0.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "scikit-learn", marker = "extra == 'extra-10-bioinfolib-deprecating'" },
+    { name = "scipy", marker = "extra == 'extra-10-bioinfolib-deprecating'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ba/71/9295d94b62bad558c8a7f48e8dc2a3621424cdacf28359ca4693af1032da/scprep-1.2.3.tar.gz", hash = "sha256:cc4ba4cedbba256935298f2ba6a973b4e74ea8cb9ad2632b693b6d4e6ab77c3f", size = 107981, upload-time = "2023-06-19T18:18:17.687Z" }
 wheels = [

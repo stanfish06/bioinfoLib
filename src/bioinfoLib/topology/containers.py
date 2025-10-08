@@ -20,7 +20,6 @@ from rich.progress import (
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist, directed_hausdorff, pdist, squareform
 from scipy.stats import binom, false_discovery_control, gamma
-from sklearn.metrics import pairwise_distances
 
 from bioinfoLib.R.utils import SimilarityMeasures_helper
 
@@ -68,9 +67,13 @@ class HomologyData:
             self.data_visualization = self.data
         self.n_vertices = self.data.shape[0]
         self.dist_mat = pdist(self.data)
+        self.dummy_value = np.min(self.dist_mat[self.dist_mat > 0]) * 1e-3
+        self.dist_mat = squareform(self.dist_mat)
+        self.dist_mat += self.dummy_value
+        np.fill_diagonal(self.dist_mat, 0.0)
 
     def compute_homology(self, thresh=None):
-        filt = julia.Rips(squareform(self.dist_mat), sparse=True, threshold=thresh)
+        filt = julia.Rips(self.dist_mat, sparse=True, threshold=thresh)
         # don't compute representatives if only persistence diagram is needed
         result_cycle = julia.ripserer(filt, reps=False)
         birth_t = np.array([i[1] for i in result_cycle[1]])
@@ -86,7 +89,7 @@ class HomologyData:
                 and self.parameters["filtration_threshold_homology"]
             ):
                 thresh = self.parameters["filtration_threshold_homology"]
-        filt = julia.Rips(squareform(self.dist_mat), sparse=True, threshold=thresh)
+        filt = julia.Rips(self.dist_mat, sparse=True, threshold=thresh)
         trigs, birth_t = julia.boundary_mat_d2(filt)
         trigs = np.array(np.array(trigs).tolist()) - 1
         edges = [list(combinations(trig, 2)) for trig in trigs]
@@ -119,11 +122,8 @@ class HomologyData:
         assert "filtration_threshold_homology" in self.parameters, (
             "run compute_homology first"
         )
-        dist_mat = pairwise_distances(self.data)
-        dist_mat = (dist_mat + dist_mat.T) / 2
-
         filt = julia.Rips(
-            dist_mat,
+            self.dist_mat,
             sparse=True,
             threshold=self.parameters["filtration_threshold_homology"],
         )
@@ -466,9 +466,12 @@ class HomologyData:
                     replace=True,
                 )
                 x_boot = self.data[boot_idx]
-                x_boot = x_boot + np.random.normal(scale=0.0001, size=self.data.shape)
-                dist_mat = pairwise_distances(x_boot)
-                dist_mat = (dist_mat + dist_mat.T) / 2
+                x_boot = x_boot + np.random.normal(
+                    scale=self.dummy_value, size=self.data.shape
+                )
+                dist_mat = squareform(pdist(x_boot))
+                dist_mat += self.dummy_value
+                np.fill_diagonal(dist_mat, 0.0)
                 filt = julia.Rips(dist_mat, sparse=True, threshold=thresh)
                 cocycles = julia.ripserer(filt, reps=1)
                 birth_t = np.array([i[1] for i in cocycles[1]])[::-1]
