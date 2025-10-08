@@ -4,7 +4,45 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
+from fa2_modified import ForceAtlas2
 from pydantic import validate_call
+from umap.spectral import spectral_layout
+
+from bioinfoLib.topology.utils import disk_2d_iso
+
+
+def force_layout(
+    adata,
+    use_rep: str,
+    initial_position=None,
+    spectral_dim=10,
+    spectral_components=(0, 1),
+    distance_key="connectivities",
+    num_iterations=10,
+    scalingRatio=2.0,
+    gravity=1.0,
+    seed=0,
+):
+    assert distance_key in adata.obsp, "distance key not found"
+    knn_dist_mat = adata.obsp[distance_key]
+    data = adata.X if use_rep == "X" else adata.obsm[use_rep]
+    # not sure why spectral embedding needs data. Check later
+    # spectral initialization does not perform good, I wonder why
+    if initial_position == "spectral":
+        initial_position = spectral_layout(
+            data=data, graph=knn_dist_mat, dim=spectral_dim, random_state=seed
+        )[:, spectral_components]
+    elif initial_position == "random_disk":
+        initial_position = np.column_stack(
+            disk_2d_iso(r=1, n_points=data.shape[0], noise=0, seed=seed)
+        )
+    else:
+        initial_position = None
+    # use spectral embedding as initial position
+    fa = ForceAtlas2(verbose=True, scalingRatio=scalingRatio, gravity=gravity)
+    adata.obsm["X_fl"] = np.array(
+        fa.forceatlas2(G=knn_dist_mat, pos=initial_position, iterations=num_iterations)
+    )
 
 
 def grouped_obs_mean(adata, group_key, use_raw=True, layer=None, genes=None):

@@ -32,6 +32,7 @@ from .utils import (
 
 
 # TODO: modify this data sturcture to enable cross species matching
+# TODO: extract developmetnal trajectories from loop representatives (thoughts: embed pseudotime gradient with hodge decomposition then split the loop in the case of lineage convergence)
 # EdgeCollapose Rips does not work as it will heavilly reduce local connectivity
 # random downsample for large input?
 @dataclass

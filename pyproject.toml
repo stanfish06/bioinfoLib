@@ -42,6 +42,7 @@ dependencies = [
   "rich>=14.0.0",
   "ipywidgets>=8.1.7",
   "pyqt5>=5.15.11",
+  "fa2-modified>=0.3.10",
 ]
 
 [project.optional-dependencies]
@@ -62,7 +63,7 @@ optional = [
   "deeptools>=3.5.5 ; sys_platform == 'linux'",
   "pygenometracks>=3.9 ; sys_platform == 'linux'",
   "pytometry",
-  "fa2-modified>=0.3.10",
+  "phate>=1.0.11",
 ]
 dev = [
   "modular ; sys_platform == 'linux'"
@@ -72,7 +73,6 @@ deprecating = [
   # "python-bioformats>=4.1.0 ; sys_platform == 'linux'",
   "scprep>=1.2.3",
   "magic-impute>=3.0.0",
-  "phate>=1.0.11",
   "scvelo>=0.3.3",
 ]
 

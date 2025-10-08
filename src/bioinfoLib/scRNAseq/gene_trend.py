@@ -21,6 +21,7 @@ def rolling_mean(t, y, w, s, min_n=50):
     return np.array(times), np.array(means), np.array(sds)
 
 
+# TODO: make it easier to use
 def compute_gene_trends(
     adata,
     genes,
