@@ -18,6 +18,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from scipy.optimize import linear_sum_assignment
+from scipy.sparse import coo_matrix
 from scipy.spatial.distance import cdist, directed_hausdorff, pdist, squareform
 from scipy.stats import binom, false_discovery_control, gamma
 
@@ -99,14 +100,56 @@ class HomologyData:
             [[edge_idx_encode(i, j, self.n_vertices) for i, j in es] for es in edges]
         )
         self.bd_row_id = np.unique(edge_idx)
+        # boundary matrix from triangles to edges
         one_ridx_A = np.searchsorted(self.bd_row_id, edge_idx).astype(int)
         nrow_A = len(self.bd_row_id)
         ncol_A = int(len(one_ridx_A) / 3)
         one_cidx_A = np.repeat(np.arange(ncol_A), 3).astype(int)
 
+        # boundary matrix from edges to vertices
+        B0 = np.array(np.concatenate(edges))
+        # Deduplicate edges based on encoded edge_idx
+        _, uniq_idx = np.unique(edge_idx, return_index=True)
+        B0_unique = B0[uniq_idx]  # One row per unique edge
+        vids = np.unique(B0_unique.flatten())
+
+        # Map edge indices for unique edges
+        edge_ridx = np.searchsorted(self.bd_row_id, edge_idx[uniq_idx])
+
+        # Create boundary matrix: 2 entries per unique edge (one for each vertex)
+        v1 = np.stack([B0_unique[:, 0], edge_ridx], 1)
+        v2 = np.stack([B0_unique[:, 1], edge_ridx], 1)
+        B0 = np.vstack([v1, v2])
+        B0[:, 0] = np.searchsorted(vids, B0[:, 0]).astype(int)
+
         self.bd_column_birth_t = birth_t
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
+        self.bd_mat_0 = (B0[:, 0], B0[:, 1], len(vids), nrow_A)
         self.parameters["filtration_threshold_bd_matrix"] = thresh
+
+    def compute_hodge_laplacian(self):
+        if not self.bd_mat:
+            raise ValueError("compute boundary matrix first")
+        # Extract boundary matrices
+        # ∂₂: triangles → edges (bd_mat)
+        one_ridx_A, one_cidx_A, nrow_A, ncol_A = self.bd_mat
+        # Create sparse matrix with proper orientation (±1)
+        data_A = np.ones(len(one_ridx_A))
+        bd2 = coo_matrix((data_A, (one_ridx_A, one_cidx_A)), shape=(nrow_A, ncol_A))
+        # ∂₁: edges → vertices (bd_mat_0)
+        row_idx_B, col_idx_B, nrow_B, ncol_B = self.bd_mat_0
+        # Create sparse matrix with proper orientation (±1)
+        # First half are +1 (source vertices), second half are -1 (target vertices)
+        n_edges = ncol_B
+        data_B = np.concatenate([np.ones(n_edges), -np.ones(n_edges)])
+        bd1 = coo_matrix((data_B, (row_idx_B, col_idx_B)), shape=(nrow_B, ncol_B))
+        # Compute L₁ = ∂₂∂₂ᵀ + ∂₁ᵀ∂₁
+        bd2_csr = bd2.tocsr()
+        bd1_csr = bd1.tocsr()
+        L1_down = bd2_csr @ bd2_csr.T  # ∂₂∂₂ᵀ (down Laplacian)
+        L1_up = bd1_csr.T @ bd1_csr  # ∂₁ᵀ∂₁ (up Laplacian)
+        L1 = L1_down + L1_up
+        return L1
 
     def compute_loop_representatives(
         self,
