@@ -18,9 +18,11 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from scipy.optimize import linear_sum_assignment
-from scipy.sparse import coo_matrix
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import eigsh
 from scipy.spatial.distance import cdist, directed_hausdorff, pdist, squareform
 from scipy.stats import binom, false_discovery_control, gamma
+from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 
 from bioinfoLib.R.utils import SimilarityMeasures_helper
 
@@ -40,6 +42,9 @@ class HomologyData:
     data: np.ndarray
     data_visualization: np.ndarray = field(default_factory=lambda: np.array([]))
     n_vertices: int = 0
+    pseudotime: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # pseudotime values for each point
     persistence_diagram: np.ndarray = field(default_factory=lambda: np.array([]))
     loops_eidx: list[list[np.ndarray]] = field(default_factory=list)
     loops_coords: list[list[np.ndarray]] = field(default_factory=list)
@@ -49,6 +54,15 @@ class HomologyData:
         default_factory=lambda: np.array([], dtype=float)
     )
     bd_row_id: np.ndarray = field(default_factory=lambda: np.array([], dtype=int))
+    bd_mat_0: tuple = ()  # boundary matrix from edges to vertices
+    edge_pseudotime_deltas: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # pseudotime differences for edges
+    hodge_eigenvalues: np.ndarray = field(default_factory=lambda: np.array([]))
+    hodge_eigenvectors: np.ndarray = field(default_factory=lambda: np.array([]))
+    loop_edge_clusters: list[list[dict]] = field(
+        default_factory=list
+    )  # clustering results for each loop
     persistence_diagram_boot: list[np.ndarray] = field(default_factory=list)
     loops_eidx_boot: list[list[np.ndarray]] = field(default_factory=list)
     loops_coords_boot: list[list[np.ndarray]] = field(default_factory=list)
@@ -72,6 +86,13 @@ class HomologyData:
         self.dist_mat = squareform(self.dist_mat)
         self.dist_mat += self.dummy_value
         np.fill_diagonal(self.dist_mat, 0.0)
+
+        # Validate pseudotime if provided
+        if len(self.pseudotime) > 0:
+            if len(self.pseudotime) != self.n_vertices:
+                raise ValueError(
+                    f"Pseudotime length ({len(self.pseudotime)}) must match number of vertices ({self.n_vertices})"
+                )
 
     def compute_homology(self, thresh=None):
         filt = julia.Rips(self.dist_mat, sparse=True, threshold=thresh)
@@ -107,49 +128,423 @@ class HomologyData:
         one_cidx_A = np.repeat(np.arange(ncol_A), 3).astype(int)
 
         # boundary matrix from edges to vertices
-        B0 = np.array(np.concatenate(edges))
+        A0 = np.array(np.concatenate(edges))
         # Deduplicate edges based on encoded edge_idx
         _, uniq_idx = np.unique(edge_idx, return_index=True)
-        B0_unique = B0[uniq_idx]  # One row per unique edge
-        vids = np.unique(B0_unique.flatten())
+        A0_unique = A0[uniq_idx]  # One row per unique edge
+        vids = np.unique(A0_unique.flatten())
 
         # Map edge indices for unique edges
         edge_ridx = np.searchsorted(self.bd_row_id, edge_idx[uniq_idx])
 
         # Create boundary matrix: 2 entries per unique edge (one for each vertex)
-        v1 = np.stack([B0_unique[:, 0], edge_ridx], 1)
-        v2 = np.stack([B0_unique[:, 1], edge_ridx], 1)
-        B0 = np.vstack([v1, v2])
-        B0[:, 0] = np.searchsorted(vids, B0[:, 0]).astype(int)
+        v1 = np.stack([A0_unique[:, 0], edge_ridx], 1)
+        v2 = np.stack([A0_unique[:, 1], edge_ridx], 1)
+        # do so such that two vertices of each edge are adjacent
+        A0 = np.empty((A0_unique.shape[0] * 2, 2), dtype=int)
+        A0[0::2] = v1
+        A0[1::2] = v2
+        A0[:, 0] = np.searchsorted(vids, A0[:, 0]).astype(int)
 
         self.bd_column_birth_t = birth_t
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
-        self.bd_mat_0 = (B0[:, 0], B0[:, 1], len(vids), nrow_A)
+        self.bd_mat_0 = (A0[:, 0], A0[:, 1], len(vids), nrow_A)
         self.parameters["filtration_threshold_bd_matrix"] = thresh
 
-    def compute_hodge_laplacian(self):
+    def compute_hodge_laplacian(self, normalized=True):
         if not self.bd_mat:
             raise ValueError("compute boundary matrix first")
+
         # Extract boundary matrices
         # ∂₂: triangles → edges (bd_mat)
         one_ridx_A, one_cidx_A, nrow_A, ncol_A = self.bd_mat
         # Create sparse matrix with proper orientation (±1)
         data_A = np.ones(len(one_ridx_A))
-        bd2 = coo_matrix((data_A, (one_ridx_A, one_cidx_A)), shape=(nrow_A, ncol_A))
+        # make boundary matrix oriented (the edge encoding already sorted the edges by vertex index)
+        # the second edge (relative) of each triangle will be -1
+        data_A[np.mod(np.arange(len(one_ridx_A)), 3) == 1] = -1
+        bd2 = csr_matrix((data_A, (one_ridx_A, one_cidx_A)), shape=(nrow_A, ncol_A))
+
         # ∂₁: edges → vertices (bd_mat_0)
-        row_idx_B, col_idx_B, nrow_B, ncol_B = self.bd_mat_0
-        # Create sparse matrix with proper orientation (±1)
-        # First half are +1 (source vertices), second half are -1 (target vertices)
-        n_edges = ncol_B
-        data_B = np.concatenate([np.ones(n_edges), -np.ones(n_edges)])
-        bd1 = coo_matrix((data_B, (row_idx_B, col_idx_B)), shape=(nrow_B, ncol_B))
-        # Compute L₁ = ∂₂∂₂ᵀ + ∂₁ᵀ∂₁
-        bd2_csr = bd2.tocsr()
-        bd1_csr = bd1.tocsr()
-        L1_down = bd2_csr @ bd2_csr.T  # ∂₂∂₂ᵀ (down Laplacian)
-        L1_up = bd1_csr.T @ bd1_csr  # ∂₁ᵀ∂₁ (up Laplacian)
-        L1 = L1_down + L1_up
+        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
+        # Create sparse matrix with proper orientation
+        # for each edge, the second (relative) vertex gets -1
+        data_A0 = np.ones(len(one_ridx_A0))
+        data_A0[np.mod(np.arange(len(one_ridx_A0)), 2) == 1] = -1
+        bd1 = csr_matrix(
+            (data_A0, (one_ridx_A0, one_cidx_A0)), shape=(nrow_A0, ncol_A0)
+        )
+
+        if normalized:
+            D2 = np.maximum(abs(bd2).sum(1), 1)
+            D1 = 2 * (abs(bd1) @ D2)
+            D3 = 1 / 3
+            # L1 = D2 B1t D1^(-1) B1 + B2 D3 B2t D2^(-1)
+            L1 = (bd1.T.multiply(D2).multiply(1 / D1.T)) @ bd1 + (bd2 @ bd2.T).multiply(
+                1 / D2.T
+            ) * D3
+        else:
+            L1 = bd1.T @ bd1 + bd2 @ bd2.T
+
+        # Compute pseudotime deltas for edges if pseudotime is provided
+        if len(self.pseudotime) > 0:
+            self._compute_edge_pseudotime_deltas()
+
         return L1
+
+    def _compute_edge_pseudotime_deltas(self):
+        """Compute pseudotime differences for all edges in bd_row_id."""
+        if len(self.pseudotime) == 0:
+            raise ValueError("Pseudotime values not provided")
+
+        if not self.bd_mat_0:
+            raise ValueError("Boundary matrix bd_mat_0 not computed")
+
+        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
+
+        # Initialize edge pseudotime deltas
+        self.edge_pseudotime_deltas = np.zeros(len(self.bd_row_id))
+
+        # bd_mat_0 has 2 entries per edge (one for each vertex)
+        for edge_idx in range(len(self.bd_row_id)):
+            # Find the two vertices for this edge
+            vertex_mask = one_cidx_A0 == edge_idx
+            vertices = one_ridx_A0[vertex_mask]
+
+            if len(vertices) == 2:
+                v1, v2 = vertices[0], vertices[1]
+                self.edge_pseudotime_deltas[edge_idx] = (
+                    self.pseudotime[v1] - self.pseudotime[v2]
+                )
+
+    def compute_hodge_eigendecomposition(self, n_components=10, normalized=True):
+        """
+        Compute eigendecomposition of the normalized Hodge Laplacian.
+
+        Parameters
+        ----------
+        n_components : int
+            Number of eigenvectors to compute
+        normalized : bool
+            Whether to use normalized Hodge Laplacian
+
+        Returns
+        -------
+        eigenvalues : np.ndarray
+            Eigenvalues sorted in ascending order
+        eigenvectors : np.ndarray
+            Corresponding eigenvectors (columns)
+        """
+        L1 = self.compute_hodge_laplacian(normalized=normalized)
+
+        # Compute smallest eigenvalues and corresponding eigenvectors
+        n_comp = min(n_components, L1.shape[0] - 2)
+        eigenvalues, eigenvectors = eigsh(L1, k=n_comp, which="SM")
+
+        # Sort by eigenvalue
+        sort_idx = np.argsort(eigenvalues)
+        self.hodge_eigenvalues = eigenvalues[sort_idx]
+        self.hodge_eigenvectors = eigenvectors[:, sort_idx]
+
+        return self.hodge_eigenvalues, self.hodge_eigenvectors
+
+    def cluster_loop_edges(
+        self,
+        n_components=10,
+        n_clusters=2,
+        normalized=True,
+        clustering_method="kmeans",
+        use_pseudotime=True,
+    ):
+        """
+        Cluster edges in each loop representative based on Hodge eigenspace embedding.
+
+        This method embeds edges of loop representatives into the normalized Hodge
+        eigenspace and clusters them to determine if trajectories are cyclic or converging.
+
+        Parameters
+        ----------
+        n_components : int
+            Number of Hodge eigenvectors to use for embedding
+        n_clusters : int or 'auto'
+            Number of clusters. If 'auto', will try to determine automatically.
+        normalized : bool
+            Whether to use normalized Hodge Laplacian
+        clustering_method : str
+            Clustering method: 'kmeans', 'hierarchical', or 'spectral'
+        use_pseudotime : bool
+            Whether to include pseudotime deltas in the feature space
+
+        Returns
+        -------
+        loop_edge_clusters : list of list of dict
+            For each loop and each representative, contains:
+            - 'edge_indices': edge indices in the loop
+            - 'vertex_indices': vertex indices in the loop
+            - 'edge_labels': cluster labels for edges
+            - 'vertex_labels': cluster labels for vertices
+            - 'edge_embeddings': Hodge eigenspace embeddings for edges
+            - 'trajectory_type': 'cyclic' or 'converging' or 'mixed'
+            - 'pseudotime_gradient': pseudotime deltas if available
+        """
+        if not self.loops_eidx:
+            raise ValueError(
+                "Loop representatives not computed. Run compute_loop_representatives first."
+            )
+
+        # Compute Hodge eigendecomposition if not already done
+        if len(self.hodge_eigenvectors) == 0:
+            self.compute_hodge_eigendecomposition(
+                n_components=n_components, normalized=normalized
+            )
+
+        # Check pseudotime availability
+        has_pseudotime = (
+            len(self.pseudotime) > 0 and len(self.edge_pseudotime_deltas) > 0
+        )
+        if use_pseudotime and not has_pseudotime:
+            print(
+                "Warning: Pseudotime requested but not available. Proceeding without pseudotime."
+            )
+            use_pseudotime = False
+
+        self.loop_edge_clusters = []
+
+        # Process each loop
+        for loop_idx, loop_reps in enumerate(self.loops_eidx):
+            loop_clusters = []
+
+            # Process each representative of the loop
+            for rep_idx, edge_indices in enumerate(loop_reps):
+                if len(edge_indices) == 0:
+                    loop_clusters.append(
+                        {
+                            "edge_indices": edge_indices,
+                            "vertex_indices": np.array([]),
+                            "edge_labels": np.array([]),
+                            "vertex_labels": np.array([]),
+                            "edge_embeddings": np.array([]),
+                            "trajectory_type": "empty",
+                            "pseudotime_gradient": np.array([]),
+                        }
+                    )
+                    continue
+
+                # Get embeddings for edges in this loop
+                edge_embeddings = self.hodge_eigenvectors[edge_indices, :n_components]
+
+                # Add pseudotime deltas as features if requested
+                if use_pseudotime:
+                    pseudotime_features = self.edge_pseudotime_deltas[
+                        edge_indices
+                    ].reshape(-1, 1)
+                    # Normalize pseudotime to same scale as embeddings
+                    pseudotime_features = pseudotime_features / (
+                        np.std(pseudotime_features) + 1e-10
+                    )
+                    edge_embeddings = np.hstack([edge_embeddings, pseudotime_features])
+                    pseudotime_gradient = self.edge_pseudotime_deltas[edge_indices]
+                else:
+                    pseudotime_gradient = np.array([])
+
+                # Determine number of clusters
+                if n_clusters == "auto":
+                    # Use simple heuristic: try 2-4 clusters and pick best silhouette score
+                    from sklearn.metrics import silhouette_score
+
+                    best_score = -1
+                    best_k = 2
+                    for k in range(2, min(5, len(edge_indices))):
+                        labels = KMeans(
+                            n_clusters=k, random_state=42, n_init=10
+                        ).fit_predict(edge_embeddings)
+                        if len(np.unique(labels)) > 1:
+                            score = silhouette_score(edge_embeddings, labels)
+                            if score > best_score:
+                                best_score = score
+                                best_k = k
+                    n_clust = best_k
+                else:
+                    n_clust = min(n_clusters, len(edge_indices))
+
+                # Perform clustering
+                if clustering_method == "kmeans":
+                    clusterer = KMeans(n_clusters=n_clust, random_state=42, n_init=10)
+                elif clustering_method == "hierarchical":
+                    clusterer = AgglomerativeClustering(n_clusters=n_clust)
+                elif clustering_method == "spectral":
+                    clusterer = SpectralClustering(n_clusters=n_clust, random_state=42)
+                else:
+                    raise ValueError(f"Unknown clustering method: {clustering_method}")
+
+                edge_labels = clusterer.fit_predict(edge_embeddings)
+
+                # Get vertex indices from loop coordinates
+                vertex_indices = np.array([])
+                vertex_labels = np.array([])
+                if loop_idx < len(self.loops_coords) and rep_idx < len(
+                    self.loops_coords[loop_idx]
+                ):
+                    loop_coords = self.loops_coords[loop_idx][rep_idx]
+                    # Find vertex indices by matching coordinates
+                    vertex_indices = []
+                    for coord in loop_coords:
+                        # Find matching vertex in original data
+                        dist = np.linalg.norm(self.data - coord, axis=1)
+                        vertex_indices.append(np.argmin(dist))
+                    vertex_indices = np.array(vertex_indices)
+
+                    # Assign vertex labels based on adjacent edge labels
+                    vertex_labels = np.zeros(len(vertex_indices), dtype=int)
+                    for i in range(len(vertex_indices)):
+                        # Vertex gets label of adjacent edge (or majority of adjacent edges)
+                        if i < len(edge_labels):
+                            vertex_labels[i] = edge_labels[i]
+                        else:
+                            vertex_labels[i] = edge_labels[-1]
+
+                # Determine trajectory type
+                trajectory_type = self._classify_trajectory_type(
+                    edge_labels, pseudotime_gradient if use_pseudotime else None
+                )
+
+                loop_clusters.append(
+                    {
+                        "edge_indices": edge_indices,
+                        "vertex_indices": vertex_indices,
+                        "edge_labels": edge_labels,
+                        "vertex_labels": vertex_labels,
+                        "edge_embeddings": edge_embeddings,
+                        "trajectory_type": trajectory_type,
+                        "pseudotime_gradient": pseudotime_gradient,
+                        "n_clusters": n_clust,
+                    }
+                )
+
+            self.loop_edge_clusters.append(loop_clusters)
+
+        return self.loop_edge_clusters
+
+    def _classify_trajectory_type(self, edge_labels, pseudotime_gradient=None):
+        """
+        Classify trajectory as cyclic, converging, or mixed based on cluster labels.
+
+        Parameters
+        ----------
+        edge_labels : np.ndarray
+            Cluster labels for edges in the loop
+        pseudotime_gradient : np.ndarray or None
+            Pseudotime deltas for edges
+
+        Returns
+        -------
+        str : 'cyclic', 'converging', 'diverging', or 'mixed'
+        """
+        n_unique_labels = len(np.unique(edge_labels))
+
+        # If only one cluster, it's cyclic
+        if n_unique_labels == 1:
+            return "cyclic"
+
+        # Check for spatial clustering pattern
+        # If clusters are contiguous, it's likely converging/diverging
+        # If clusters alternate, it's likely cyclic with structure
+
+        # Count transitions between clusters
+        transitions = 0
+        for i in range(len(edge_labels) - 1):
+            if edge_labels[i] != edge_labels[i + 1]:
+                transitions += 1
+
+        # Check transition to first edge (loop closure)
+        if edge_labels[-1] != edge_labels[0]:
+            transitions += 1
+
+        # If pseudotime is available, check for monotonicity
+        if pseudotime_gradient is not None and len(pseudotime_gradient) > 0:
+            # Check if pseudotime shows a trend within clusters
+            cluster_means = []
+            for label in np.unique(edge_labels):
+                mask = edge_labels == label
+                cluster_means.append(np.mean(pseudotime_gradient[mask]))
+
+            # If cluster means are very different, likely converging/diverging
+            if np.std(cluster_means) > np.mean(pseudotime_gradient) * 0.5:
+                # Check if pseudotime is increasing
+                if (
+                    np.corrcoef(
+                        np.arange(len(pseudotime_gradient)), pseudotime_gradient
+                    )[0, 1]
+                    > 0.3
+                ):
+                    return "diverging"
+                elif (
+                    np.corrcoef(
+                        np.arange(len(pseudotime_gradient)), pseudotime_gradient
+                    )[0, 1]
+                    < -0.3
+                ):
+                    return "converging"
+
+        # Heuristic: many transitions suggest cyclic, few suggest converging
+        transition_ratio = transitions / len(edge_labels)
+
+        if transition_ratio > 0.3:
+            return "mixed"  # Multiple transitions suggest complex structure
+        elif n_unique_labels == 2 and transitions <= 2:
+            return "converging"  # Two contiguous clusters suggest convergence
+        else:
+            return "cyclic"
+
+    def get_loop_clustering_summary(self):
+        """
+        Get a summary of loop clustering results.
+
+        Returns
+        -------
+        pd.DataFrame
+            Summary dataframe with columns:
+            - loop_idx: loop index
+            - rep_idx: representative index
+            - n_edges: number of edges in loop
+            - n_clusters: number of clusters found
+            - trajectory_type: cyclic/converging/diverging/mixed
+            - pseudotime_available: whether pseudotime was used
+            - mean_pseudotime_delta: mean pseudotime delta (if available)
+        """
+        if not self.loop_edge_clusters:
+            raise ValueError(
+                "Loop clustering not computed. Run cluster_loop_edges first."
+            )
+
+        summary_data = []
+        for loop_idx, loop_clusters in enumerate(self.loop_edge_clusters):
+            for rep_idx, cluster_info in enumerate(loop_clusters):
+                row = {
+                    "loop_idx": loop_idx,
+                    "rep_idx": rep_idx,
+                    "n_edges": len(cluster_info["edge_indices"]),
+                    "n_vertices": len(cluster_info["vertex_indices"]),
+                    "n_clusters": cluster_info.get("n_clusters", 0),
+                    "trajectory_type": cluster_info["trajectory_type"],
+                    "pseudotime_available": len(cluster_info["pseudotime_gradient"])
+                    > 0,
+                }
+
+                if len(cluster_info["pseudotime_gradient"]) > 0:
+                    row["mean_pseudotime_delta"] = np.mean(
+                        cluster_info["pseudotime_gradient"]
+                    )
+                    row["std_pseudotime_delta"] = np.std(
+                        cluster_info["pseudotime_gradient"]
+                    )
+                else:
+                    row["mean_pseudotime_delta"] = np.nan
+                    row["std_pseudotime_delta"] = np.nan
+
+                summary_data.append(row)
+
+        return pd.DataFrame(summary_data)
 
     def compute_loop_representatives(
         self,
