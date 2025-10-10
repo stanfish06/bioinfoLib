@@ -61,9 +61,9 @@ class HomologyData:
         default_factory=list
     )  # clustering results for each loop
     persistence_diagram_boot: list[np.ndarray] = field(default_factory=list)
-    loops_eidx_boot: list[list[np.ndarray]] = field(default_factory=list)
-    loops_coords_boot: list[list[np.ndarray]] = field(default_factory=list)
-    loops_coords_visualization_boot: list[list[np.ndarray]] = field(
+    loops_eidx_boot: list[list[list[np.ndarray]]] = field(default_factory=list)
+    loops_coords_boot: list[list[list[np.ndarray]]] = field(default_factory=list)
+    loops_coords_visualization_boot: list[list[list[np.ndarray]]] = field(
         default_factory=list
     )
     matching_df: list[pd.DataFrame] = field(default_factory=list)
@@ -147,94 +147,6 @@ class HomologyData:
         self.bd_mat = (one_ridx_A, one_cidx_A, nrow_A, ncol_A)
         self.bd_mat_0 = (A0[:, 0], A0[:, 1], len(vids), nrow_A)
         self.parameters["filtration_threshold_bd_matrix"] = thresh
-
-    def _compute_edge_pseudotime_deltas(self):
-        if len(self.pseudotime) == 0:
-            raise ValueError("Pseudotime values not provided")
-        if not self.bd_mat_0:
-            raise ValueError("Boundary matrix bd_mat_0 not computed")
-        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
-        # Initialize edge pseudotime deltas
-        self.edge_pseudotime_deltas = np.zeros(len(self.bd_row_id))
-        # bd_mat_0 has 2 entries per edge (one for each vertex)
-        for edge_idx in range(len(self.bd_row_id)):
-            # Find the two vertices for this edge
-            vertex_mask = one_cidx_A0 == edge_idx
-            vertices = one_ridx_A0[vertex_mask]
-
-            if len(vertices) == 2:
-                v1, v2 = vertices[0], vertices[1]
-                self.edge_pseudotime_deltas[edge_idx] = (
-                    self.pseudotime[v1] - self.pseudotime[v2]
-                )
-
-    # thresh_t should be picked such that the target loop actually exists
-    def compute_hodge_laplacian(self, thresh_t, normalized=True):
-        if not self.bd_mat:
-            raise ValueError("compute boundary matrix first")
-        # Extract boundary matrices
-        # ∂₂: triangles → edges (bd_mat)
-        one_ridx_A, one_cidx_A, nrow_A, ncol_A = self.bd_mat
-        # remove columns with birth t larger than the death t of the loop
-        columns_use = np.where(self.bd_column_birth_t <= thresh_t)[0]
-        if columns_use.size == 0:
-            return None
-        mask = np.isin(one_cidx_A, columns_use)
-        one_ridx_A_local = one_ridx_A[mask]
-        one_cidx_A_local = one_cidx_A[mask]
-        _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
-        ncol_A_local = np.max(one_cidx_A_local) + 1
-        # Create sparse matrix with proper orientation (±1)
-        data_A = np.ones(len(one_ridx_A_local))
-        # make boundary matrix oriented (the edge encoding already sorted the edges by vertex index)
-        # the second edge (relative) of each triangle will be -1
-        data_A[np.mod(np.arange(len(one_ridx_A_local)), 3) == 1] = -1
-        bd2 = csr_matrix(
-            (data_A, (one_ridx_A_local, one_cidx_A_local)), shape=(nrow_A, ncol_A_local)
-        )
-        # ∂₁: edges → vertices (bd_mat_0)
-        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
-        # Create sparse matrix with proper orientation
-        # for each edge, the second (relative) vertex gets -1
-        data_A0 = np.ones(len(one_ridx_A0))
-        data_A0[np.mod(np.arange(len(one_ridx_A0)), 2) == 1] = -1
-        bd1 = csr_matrix(
-            (data_A0, (one_ridx_A0, one_cidx_A0)), shape=(nrow_A0, ncol_A0)
-        )
-        if normalized:
-            D2 = np.maximum(abs(bd2).sum(1), 1)
-            D1 = 2 * (abs(bd1) @ D2)
-            D3 = 1 / 3
-            # L1 = D2 B1t D1^(-1) B1 + B2 D3 B2t D2^(-1)
-            L1 = (bd1.T.multiply(D2).multiply(1 / D1.T)) @ bd1 + (bd2 @ bd2.T).multiply(
-                1 / D2.T
-            ) * D3
-        else:
-            L1 = bd1.T @ bd1 + bd2 @ bd2.T
-        # Compute pseudotime deltas for edges if pseudotime is provided
-        if len(self.pseudotime) > 0:
-            self._compute_edge_pseudotime_deltas()
-        return L1
-
-    # thresh_t should be picked such that the target loop actually exists
-    def compute_hodge_eigendecomposition(
-        self, thresh_t, n_components=10, normalized=True
-    ):
-        L1 = self.compute_hodge_laplacian(normalized=normalized, thresh_t=thresh_t)
-        # Compute smallest eigenvalues and corresponding eigenvectors
-        n_comp = min(n_components, L1.shape[0] - 2)
-        eigenvalues, eigenvectors = eigsh(L1, k=n_comp, which="SM")
-        # Sort by eigenvalue
-        sort_idx = np.argsort(eigenvalues)
-        hodge_eigenvalues = eigenvalues[sort_idx]
-        hodge_eigenvectors = eigenvectors[:, sort_idx]
-
-    # TODO: embed edges based on pseudotime gradient and hodge decomposition
-    # In general, trajectory classification is likely a manually task
-    # so just store edge embeddings for all loops as well as eigenvalues
-    # you can probably process n consecutive edges a time to make embedding more robust, since pseudotime gradient can be noisy
-    def computing_loop_edge_embedding(self, edge_window=3):
-        pass
 
     def compute_loop_representatives(
         self,
@@ -320,12 +232,161 @@ class HomologyData:
                 self.loops_eidx.append(reps_eidx)
 
             for i in range(len(self.loops_eidx)):
-                sloop_birth_t = self.persistence_diagram[i, 0]
                 if f"(0,{i})" not in self.tracks:
                     self.tracks[f"(0,{i})"] = {
-                        "birth_t": sloop_birth_t,
+                        "birth_t": self.persistence_diagram[i, 0],
+                        "death_t": self.persistence_diagram[i, 1],
                         "loops": [(0, i)],
                     }
+
+    def _compute_edge_pseudotime_deltas(self):
+        if len(self.pseudotime) == 0:
+            raise ValueError("Pseudotime values not provided")
+        if not self.bd_mat_0:
+            raise ValueError("Boundary matrix bd_mat_0 not computed")
+        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
+        # Initialize edge pseudotime deltas
+        self.edge_pseudotime_deltas = np.zeros(len(self.bd_row_id))
+        # bd_mat_0 has 2 entries per edge (one for each vertex)
+        for edge_idx in range(len(self.bd_row_id)):
+            # Find the two vertices for this edge
+            vertex_mask = one_cidx_A0 == edge_idx
+            vertices = one_ridx_A0[vertex_mask]
+
+            if len(vertices) == 2:
+                v1, v2 = vertices[0], vertices[1]
+                self.edge_pseudotime_deltas[edge_idx] = (
+                    self.pseudotime[v1] - self.pseudotime[v2]
+                )
+
+    # thresh_t should be picked such that the target loop actually exists
+    def compute_hodge_laplacian(self, thresh_t, normalized=True):
+        if not self.bd_mat:
+            raise ValueError("compute boundary matrix first")
+        # Extract boundary matrices
+        # ∂₂: triangles → edges (bd_mat)
+        one_ridx_A, one_cidx_A, nrow_A, ncol_A = self.bd_mat
+        # remove columns with birth t larger than the death t of the loop
+        columns_use = np.where(self.bd_column_birth_t <= thresh_t)[0]
+        if columns_use.size == 0:
+            return None
+        mask = np.isin(one_cidx_A, columns_use)
+        one_ridx_A_local = one_ridx_A[mask]
+        one_cidx_A_local = one_cidx_A[mask]
+        _, one_cidx_A_local = np.unique(one_cidx_A_local, return_inverse=True)
+        ncol_A_local = np.max(one_cidx_A_local) + 1
+        # Create sparse matrix with proper orientation (±1)
+        data_A = np.ones(len(one_ridx_A_local))
+        # make boundary matrix oriented (the edge encoding already sorted the edges by vertex index)
+        # the second edge (relative) of each triangle will be -1
+        data_A[np.mod(np.arange(len(one_ridx_A_local)), 3) == 1] = -1
+        bd2 = csr_matrix(
+            (data_A, (one_ridx_A_local, one_cidx_A_local)), shape=(nrow_A, ncol_A_local)
+        )
+        # ∂₁: edges → vertices (bd_mat_0)
+        one_ridx_A0, one_cidx_A0, nrow_A0, ncol_A0 = self.bd_mat_0
+        # Create sparse matrix with proper orientation
+        # for each edge, the second (relative) vertex gets -1
+        data_A0 = np.ones(len(one_ridx_A0))
+        data_A0[np.mod(np.arange(len(one_ridx_A0)), 2) == 1] = -1
+        bd1 = csr_matrix(
+            (data_A0, (one_ridx_A0, one_cidx_A0)), shape=(nrow_A0, ncol_A0)
+        )
+        if normalized:
+            D2 = np.maximum(abs(bd2).sum(1), 1)
+            D1 = 2 * (abs(bd1) @ D2)
+            D3 = 1 / 3
+            # L1 = D2 B1t D1^(-1) B1 + B2 D3 B2t D2^(-1)
+            L1 = (bd1.T.multiply(D2).multiply(1 / D1.T)) @ bd1 + (bd2 @ bd2.T).multiply(
+                1 / D2.T
+            ) * D3
+        else:
+            L1 = bd1.T @ bd1 + bd2 @ bd2.T
+        # Compute pseudotime deltas for edges if pseudotime is provided
+        if len(self.pseudotime) > 0:
+            self._compute_edge_pseudotime_deltas()
+        return L1
+
+    # thresh_t should be picked such that the target loop actually exists
+    def compute_hodge_eigendecomposition(
+        self, thresh_t, n_components=10, normalized=True
+    ):
+        L1 = self.compute_hodge_laplacian(normalized=normalized, thresh_t=thresh_t)
+        if L1 is None:
+            raise ValueError("Hodge Laplacian undefined")
+        # Compute smallest eigenvalues and corresponding eigenvectors
+        n_comp = min(n_components, L1.shape[0] - 2)
+        eigenvalues, eigenvectors = eigsh(L1, k=n_comp, which="SM")
+        # Sort by eigenvalue
+        sort_idx = np.argsort(eigenvalues)
+        hodge_eigenvalues = eigenvalues[sort_idx]
+        hodge_eigenvectors = eigenvectors[:, sort_idx]
+        return hodge_eigenvalues, hodge_eigenvectors
+
+    # TODO: embed edges based on pseudotime gradient and hodge decomposition
+    # In general, trajectory classification is likely a manually task
+    # so just store edge embeddings for all loops as well as eigenvalues
+    # you can probably process n consecutive edges a time to make embedding more robust, since pseudotime gradient can be noisy
+    def computing_loop_edge_embedding(
+        self, loop_idx, life_pct=0.05, n_hodge_components=10, edge_half_window=1
+    ):
+        if f"(0,{loop_idx})" not in self.tracks:
+            raise ValueError("No representatives found for this loop ")
+        loop_idx = f"(0,{loop_idx})"
+        birth_t = self.tracks[loop_idx]["birth_t"]
+        death_t = self.tracks[loop_idx]["death_t"]
+        thresh_t = birth_t + (death_t - birth_t) * life_pct
+        eigenvalues, eigenvectors = self.compute_hodge_eigendecomposition(
+            thresh_t=thresh_t, n_components=n_hodge_components
+        )
+        self.tracks[loop_idx]["hodge_eigenvalues"] = eigenvalues
+        self.tracks[loop_idx]["hodge_eigenvectors"] = eigenvectors
+        self.tracks[loop_idx]["loops_edges_embedding"] = []
+
+        # Count total loops for progress tracking
+        total_loops = sum(
+            len(self.loops_eidx[rid])
+            if sid == 0
+            else len(self.loops_eidx_boot[sid - 1][rid])
+            for sid, rid in self.tracks[loop_idx]["loops"]
+            if (
+                self.loops_eidx[rid] if sid == 0 else self.loops_eidx_boot[sid - 1][rid]
+            )
+        )
+
+        with Progress(
+            TextColumn("[bold blue]Computing edge embeddings"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TextColumn("[bold green]loops"),
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task("Processing loops", total=total_loops)
+
+            for sid, rid in self.tracks[loop_idx]["loops"]:
+                if sid == 0:
+                    loops_eidx = self.loops_eidx[rid]
+                else:
+                    loops_eidx = self.loops_eidx_boot[sid - 1][rid]
+                loops_edges_embed = []
+                if len(loops_eidx) > 0:
+                    for lp in loops_eidx:
+                        edge_mat = np.zeros([len(self.bd_row_id), len(lp)])
+                        for i in range(len(lp)):
+                            edge_window = np.take(
+                                lp,
+                                np.arange(
+                                    i - edge_half_window, i + edge_half_window + 1
+                                ),
+                                mode="wrap",
+                            )
+                            edge_mat[edge_window, i] = self.edge_pseudotime_deltas[
+                                edge_window
+                            ]
+                        edges_embed = edge_mat.T @ eigenvectors
+                        loops_edges_embed.append(edges_embed)
+                        progress.advance(task)
+                self.tracks[loop_idx]["loops_edges_embedding"].append(loops_edges_embed)
 
     # after booting both datasets, match two groups of loops and use permutation test to match groups
     # TODO: use numba to speed up cross matching

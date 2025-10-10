@@ -43,6 +43,7 @@ dependencies = [
   "ipywidgets>=8.1.7",
   "pyqt5>=5.15.11",
   "fa2-modified>=0.3.10",
+  "pyrefly>=0.36.2",
 ]
 
 [project.optional-dependencies]
