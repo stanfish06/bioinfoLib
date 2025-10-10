@@ -594,7 +594,11 @@ class HomologyData:
             sloop_birth_t = self.persistence_diagram[i, 0]
             sloop_death_t = self.persistence_diagram[i, 1]
             if f"(0,{i})" not in self.tracks:
-                self.tracks[f"(0,{i})"] = {"birth_t": sloop_birth_t, "loops": [(0, i)]}
+                self.tracks[f"(0,{i})"] = {
+                    "birth_t": sloop_birth_t,
+                    "death_t": sloop_death_t,
+                    "loops": [(0, i)],
+                }
             source_loop_key.append(f"(0,{i})")
             source_loop_birth_t.append(sloop_birth_t)
             source_loop_death_t.append(sloop_death_t)
