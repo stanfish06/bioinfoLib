@@ -4,7 +4,7 @@ from torch import Generator, from_numpy
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 
-class MLPregressorDataModule(pl.LightningDataModule):
+class nnRegressorDataModule(pl.LightningDataModule):
     def __init__(
         self,
         x: np.ndarray,

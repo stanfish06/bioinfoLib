@@ -446,6 +446,7 @@ dependencies = [
     { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchdyn" },
     { name = "torchvision", version = "0.21.0", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine != 'aarch64' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform != 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "torchvision", version = "0.21.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform != 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
     { name = "torchvision", version = "0.22.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
@@ -548,6 +549,7 @@ requires-dist = [
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", marker = "sys_platform == 'linux'", index = "https://download.pytorch.org/whl/cu126" },
     { name = "torch", marker = "sys_platform == 'win32'", index = "https://download.pytorch.org/whl/cu126" },
+    { name = "torchdyn", specifier = ">=1.0.6" },
     { name = "torchvision", marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torchvision", marker = "sys_platform == 'linux'", index = "https://download.pytorch.org/whl/cu126" },
     { name = "torchvision", marker = "sys_platform == 'win32'", index = "https://download.pytorch.org/whl/cu126" },
@@ -4197,6 +4199,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pastel"
+version = "0.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/f1/4594f5e0fcddb6953e5b8fe00da8c317b8b41b547e2b3ae2da7512943c62/pastel-0.2.1.tar.gz", hash = "sha256:e6581ac04e973cac858828c6202c1e1e81fee1dc7de7683f3e1ffe0bfd8a573d", size = 7555, upload-time = "2020-09-16T19:21:12.43Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/18/a8444036c6dd65ba3624c63b734d3ba95ba63ace513078e1580590075d21/pastel-0.2.1-py2.py3-none-any.whl", hash = "sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364", size = 5955, upload-time = "2020-09-16T19:21:11.409Z" },
+]
+
+[[package]]
 name = "patsy"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4343,6 +4354,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "poethepoet"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pastel" },
+    { name = "tomlkit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/29/cb/bff3dcda033fc3222ba4a2cfedb7ddb025397e0c3c042a5a65156f96c949/poethepoet-0.10.0.tar.gz", hash = "sha256:70b97cb194b978dc464c70793e85e6f746cddf82b84a38bfb135946ad71ae19c", size = 26938, upload-time = "2021-02-07T18:07:03.541Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/9e/13240bdacb9a2fdef104753febdd4c9ff1faf513641a5ee94bd8e2714e3c/poethepoet-0.10.0-py3-none-any.whl", hash = "sha256:6fb3021603d4421c6fcc40072bbcf150a6c52ef70ff4d3be089b8b04e015ef5a", size = 31054, upload-time = "2021-02-07T18:07:02.11Z" },
 ]
 
 [[package]]
@@ -6758,6 +6782,15 @@ wheels = [
 ]
 
 [[package]]
+name = "tomlkit"
+version = "0.13.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/18/0bbf3884e9eaa38819ebe46a7bd25dcd56b67434402b66a58c4b8e552575/tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1", size = 185207, upload-time = "2025-06-05T07:13:44.947Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/75/8539d011f6be8e29f339c42e633aae3cb73bffa95dd0f9adec09b9c58e85/tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0", size = 38901, upload-time = "2025-06-05T07:13:43.546Z" },
+]
+
+[[package]]
 name = "toolz"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -6855,6 +6888,64 @@ wheels = [
 ]
 
 [[package]]
+name = "torchcde"
+version = "0.2.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchdiffeq" },
+    { name = "torchsde" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5a/e3/17760c5265c0f178d5f910b0f219b4d8b88716314ae317fc6e890511e67f/torchcde-0.2.5.tar.gz", hash = "sha256:6e6081192e00476314eb0d97ce54e6c6a67134d868b97b06db7b8017e60f0de6", size = 31214, upload-time = "2021-10-17T15:13:01.372Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/86/f9aa5117cc932ddea16679b8cd8b4ff1ab48d5e9133a7e4c8f5111b90d63/torchcde-0.2.5-py3-none-any.whl", hash = "sha256:90ad5943d74d601400476a3cdaf6ea7aabd3967033ba6d513bc8f6a93f982ffd", size = 28886, upload-time = "2021-10-17T15:12:58.516Z" },
+]
+
+[[package]]
+name = "torchdiffeq"
+version = "0.2.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "scipy" },
+    { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/ec/a40aa124660f0ee65e6760cb53df6a82ad91a1a3ef1da5e747f1336644dd/torchdiffeq-0.2.5.tar.gz", hash = "sha256:b50d3760d13fd138dcceac651f4b80396f44fefcebd037a033fecfeaa9cc12e7", size = 31197, upload-time = "2024-11-21T20:20:11.552Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/35/537f64f2d0b3cfebaae0f903b4e3a3b239abcc99d0f73cb15b9cee9b8212/torchdiffeq-0.2.5-py3-none-any.whl", hash = "sha256:aa1db4bed13bd04952f28a53cdf4336d1ab60417c1d9698d7a239fec1cf2bcf8", size = 32902, upload-time = "2024-11-21T20:20:09.938Z" },
+]
+
+[[package]]
+name = "torchdyn"
+version = "1.0.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ipykernel" },
+    { name = "ipywidgets" },
+    { name = "matplotlib" },
+    { name = "poethepoet" },
+    { name = "pytorch-lightning" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchcde" },
+    { name = "torchsde" },
+    { name = "torchvision", version = "0.21.0", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux') or (platform_machine != 'aarch64' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform != 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchvision", version = "0.21.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform != 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchvision", version = "0.22.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torchvision", version = "0.22.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/98/ad/e54a3ea2fe8081b050502794e6abcb925b20492fce9615bc084476bd9b52/torchdyn-1.0.6.tar.gz", hash = "sha256:3b74d785e3d9c8a42a65dc061af11d39fb2036500ca73d32f077c9314148cdbf", size = 40853, upload-time = "2023-09-01T15:00:11.536Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/81/14535d528bf27cacb0fde2bb6893c9b852e17ae232f743cab99807f28ee4/torchdyn-1.0.6-py3-none-any.whl", hash = "sha256:1699db47296b14756172cd26b814bd49ce702420f8c4b049c8ae60b4ae6ac88d", size = 58069, upload-time = "2023-09-01T15:00:09.967Z" },
+]
+
+[[package]]
 name = "torchmetrics"
 version = "1.7.3"
 source = { registry = "https://pypi.org/simple" }
@@ -6869,6 +6960,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/48/22/8b16c4ec34d93ee15024924cbbe84fbd235bb3e1df2cc8f48c865c1528e7/torchmetrics-1.7.3.tar.gz", hash = "sha256:08450a19cdb67ba1608aac0b213e5dc73033e11b60ad4719696ebcede591621e", size = 566545, upload-time = "2025-06-13T15:39:37.498Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6f/f2/bed7da46003c26ed44fc7fa3ecc98a84216f0d4758e5e6a3693754d490d9/torchmetrics-1.7.3-py3-none-any.whl", hash = "sha256:7b6fd43e92f0a1071c8bcb029637f252b0630699140a93ed8817ce7afe9db34e", size = 962639, upload-time = "2025-06-13T15:39:35.69Z" },
+]
+
+[[package]]
+name = "torchsde"
+version = "0.2.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+    { name = "torch", version = "2.6.0+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'linux' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'linux' and sys_platform != 'win32') or (sys_platform == 'linux' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating') or (sys_platform == 'win32' and extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "torch", version = "2.7.1+cu126", source = { registry = "https://download.pytorch.org/whl/cu126" }, marker = "sys_platform == 'win32' or (extra == 'extra-10-bioinfolib-common' and extra == 'extra-10-bioinfolib-deprecating')" },
+    { name = "trampoline" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/71/a5/ae18ee6de023b3a5462122a43a4c9812c11d275cc585a3d08bf24945c02a/torchsde-0.2.6.tar.gz", hash = "sha256:81d074d3504f9d190f1694fb526395afbe4608ee43a88adb1262a639e5b4778b", size = 48840, upload-time = "2023-09-26T21:52:20.614Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/1f/b67ebd7e19ffe259f05d3cf4547326725c3113d640c277030be3e9998d6f/torchsde-0.2.6-py3-none-any.whl", hash = "sha256:19bf7ff02eec7e8e46ba1cdb4aa0f9db1c51d492524a16975234b467f7fc463b", size = 61232, upload-time = "2023-09-26T21:52:19.274Z" },
 ]
 
 [[package]]
@@ -6997,6 +7105,14 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/eb/79/72064e6a701c2183016abbbfedaba506d81e30e232a68c9f0d6f6fcd1574/traitlets-5.14.3.tar.gz", hash = "sha256:9ed0579d3502c94b4b3732ac120375cda96f923114522847de4b3bb98b96b6b7", size = 161621, upload-time = "2024-04-19T11:11:49.746Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/00/c0/8f5d070730d7836adc9c9b6408dec68c6ced86b304a9b26a14df072a6e8c/traitlets-5.14.3-py3-none-any.whl", hash = "sha256:b74e89e397b1ed28cc831db7aea759ba6640cb3de13090ca145426688ff1ac4f", size = 85359, upload-time = "2024-04-19T11:11:46.763Z" },
+]
+
+[[package]]
+name = "trampoline"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/54/d2805324fb746d8da86d3844bee4f55c0cfd6c136de61b713772d44c5bea/trampoline-0.1.2-py3-none-any.whl", hash = "sha256:36cc9a4ff9811843d177fc0e0740efbd7da39eadfe6e50c9e2937cbc06d899d9", size = 5173, upload-time = "2018-08-18T01:00:41.215Z" },
 ]
 
 [[package]]

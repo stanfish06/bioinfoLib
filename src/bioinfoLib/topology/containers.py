@@ -40,6 +40,7 @@ from .utils import (
 class HomologyData:
     data: np.ndarray
     data_visualization: np.ndarray = field(default_factory=lambda: np.array([]))
+    data_cross_match: np.ndarray = field(default_factory=lambda: np.array([]))
     n_vertices: int = 0
     pseudotime: np.ndarray = field(
         default_factory=lambda: np.array([])
@@ -323,10 +324,6 @@ class HomologyData:
         hodge_eigenvectors = eigenvectors[:, sort_idx]
         return hodge_eigenvalues, hodge_eigenvectors
 
-    # TODO: embed edges based on pseudotime gradient and hodge decomposition
-    # In general, trajectory classification is likely a manually task
-    # so just store edge embeddings for all loops as well as eigenvalues
-    # you can probably process n consecutive edges a time to make embedding more robust, since pseudotime gradient can be noisy
     def computing_loop_edge_embedding(
         self, loop_idx, life_pct=0.05, n_hodge_components=10, edge_half_window=1
     ):

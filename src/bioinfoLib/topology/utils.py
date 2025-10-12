@@ -338,6 +338,12 @@ def compute_homological_equivalence(
     return dist
 
 
+# TODO: using normalizing flow to learn the mapping so that topology is preserved
+# should return a trained model
+def compute_cross_match_mapping():
+    pass
+
+
 def donut_2d_iso(r1, r2, n_points, noise, seed):
     np.random.seed(seed)
     rho = (r1 - r2) * np.sqrt(np.random.rand(n_points)) + r2

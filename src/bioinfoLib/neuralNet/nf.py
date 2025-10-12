@@ -1,33 +1,47 @@
 from collections import OrderedDict
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchdyn.core import NeuralODE
 
 from .data_modules import nnRegressorDataModule
 
 
-class MLPregressor(pl.LightningModule):
+class NeuralODEregressor(pl.LightningModule):
     def __init__(
         self,
         data: nnRegressorDataModule,
-        n_hidden=128,
-        n_layers=2,
-        dropout=0.1,
+        t_span: torch.Tensor,
+        n_hidden=64,
+        n_layers=1,
+        solver="rk4",
+        solver_adjoint="dopri5",
+        atol_adjoint=1e-4,
+        rtol_adjoint=1e-4,
         lr=1e-3,
         weight_decay=1e-4,
     ):
         super().__init__()
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+        self.t_span = t_span.to(device)
         self.input_dim = data.input_dim
         self.output_dim = data.output_dim
         self.do_validation = data.do_validation
         self.n_hidden = n_hidden
         self.n_layers = n_layers
+        self.activation_fn = nn.Tanh()
+        self.solver = solver
+        self.solver_adjoint = solver_adjoint
+        self.atol_adjoint = (atol_adjoint,)
+        self.rtol_adjoint = (rtol_adjoint,)
         self.lr = lr
         self.weight_decay = weight_decay
-        self.activation_fn = nn.LeakyReLU()
-        self.dropout = nn.Dropout(dropout)
 
         self.save_hyperparameters("n_hidden", "n_layers")
 
@@ -47,17 +61,19 @@ class MLPregressor(pl.LightningModule):
                         self.activation_fn
                         if i < len(layers_dims) - 2
                         else nn.Identity(),  # No activation on final layer
-                        self.dropout
-                        if i < len(layers_dims) - 2
-                        else nn.Identity(),  # No dropout on final layer
                     ),
                 )
             )
 
-        self.model = nn.Sequential(OrderedDict(layers))
+        self.model = NeuralODE(
+            nn.Sequential(OrderedDict(layers)),
+            sensitivity="adjoint",
+            solver=self.solver,
+            solver_adjoint=self.solver_adjoint,
+        )
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x, t_span):
+        return self.model(x, t_span)
 
     def compute_loss(self, y_hat, y):
         mse_loss = F.mse_loss(y_hat, y)
@@ -65,15 +81,17 @@ class MLPregressor(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.forward(x)
+        _, y_hat = self.forward(x, self.t_span)
+        # select last point of solution trajectory
+        y_hat = y_hat[-1]
         loss = self.compute_loss(y_hat, y)
-
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        return loss
+        return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.forward(x)
+        _, y_hat = self.forward(x, self.t_span)
+        y_hat = y_hat[-1]  # select last point of solution trajectory
         loss = self.compute_loss(y_hat, y)
 
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -81,7 +99,8 @@ class MLPregressor(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.forward(x)
+        _, y_hat = self.forward(x, self.t_span)
+        y_hat = y_hat[-1]  # select last point of solution trajectory
         loss = self.compute_loss(y_hat, y)
 
         self.log("test_loss", loss, on_step=False, on_epoch=True)
@@ -107,3 +126,25 @@ class MLPregressor(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         x = batch if not isinstance(batch, (tuple, list)) else batch[0]
         return self.forward(x)
+
+
+def main():
+    np.random.seed(42)
+    x = np.random.randn(1000, 2).astype(np.float32)
+    y = np.column_stack([np.sin(x[:, 0]), np.cos(x[:, 1])]).astype(np.float32)
+
+    data_module = nnRegressorDataModule(x=x, y=y, batch_size=32)
+    data_module.setup("fit")
+
+    t_span = torch.linspace(0, 1, 5)
+    model = NeuralODEregressor(data=data_module, t_span=t_span, n_hidden=32, n_layers=1)
+    test_x = torch.randn(4, 2)
+    t_eval, y_pred = model.forward(test_x, t_span)
+
+    # Train the model
+    trainer = pl.Trainer(max_epochs=5, enable_checkpointing=False, logger=False)
+    trainer.fit(model, data_module)
+
+
+if __name__ == "__main__":
+    main()

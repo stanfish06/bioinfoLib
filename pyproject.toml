@@ -44,6 +44,7 @@ dependencies = [
   "pyqt5>=5.15.11",
   "fa2-modified>=0.3.10",
   "pyrefly>=0.36.2",
+  "torchdyn>=1.0.6",
 ]
 
 [project.optional-dependencies]
