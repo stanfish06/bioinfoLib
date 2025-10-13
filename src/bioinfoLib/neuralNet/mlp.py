@@ -21,6 +21,7 @@ class MLPregressor(pl.LightningModule):
         weight_decay=1e-4,
     ):
         super().__init__()
+        self.data = data
         self.input_dim = data.input_dim
         self.output_dim = data.output_dim
         self.do_validation = data.do_validation
@@ -32,6 +33,7 @@ class MLPregressor(pl.LightningModule):
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(self.n_hidden) if layer_norm else nn.Identity()
         self.batch_norm = nn.BatchNorm1d(self.n_hidden) if batch_norm else nn.Identity()
+        self.trainer = None
 
         self.save_hyperparameters("n_hidden", "n_layers")
 
@@ -117,3 +119,24 @@ class MLPregressor(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         x = batch if not isinstance(batch, (tuple, list)) else batch[0]
         return self.forward(x)
+
+    # TODO: configure logging
+    def fit(self, max_epochs: int = 100):
+        self.trainer = pl.Trainer(
+            max_epochs=max_epochs,
+            accelerator="auto",
+            logger=False,
+            enable_checkpointing=True,
+        )
+        self.trainer.fit(self, self.data)
+
+    def predict(self):
+        if self.trainer is None:
+            raise RuntimeError(
+                "Model must be trained first. Call fit() before predict()."
+            )
+
+        batch_predictions = self.trainer.predict(self, self.data)
+        all_predictions = torch.cat(batch_predictions, dim=0)
+
+        return all_predictions.detach().cpu().numpy()

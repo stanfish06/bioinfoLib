@@ -29,6 +29,7 @@ class NeuralODEregressor(pl.LightningModule):
             device = torch.device("cuda")
         else:
             device = torch.device("cpu")
+        self.data = data
         self.t_span = t_span.to(device)
         self.input_dim = data.input_dim
         self.output_dim = data.output_dim
@@ -42,6 +43,7 @@ class NeuralODEregressor(pl.LightningModule):
         self.rtol_adjoint = (rtol_adjoint,)
         self.lr = lr
         self.weight_decay = weight_decay
+        self.trainer = None
 
         self.save_hyperparameters("n_hidden", "n_layers")
 
@@ -125,7 +127,35 @@ class NeuralODEregressor(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         x = batch if not isinstance(batch, (tuple, list)) else batch[0]
-        return self.forward(x)
+        return self.forward(x, self.t_span)
+
+    # TODO: configure logging
+    def fit(self, max_epochs: int = 100):
+        self.trainer = pl.Trainer(
+            max_epochs=max_epochs,
+            accelerator="auto",
+            logger=False,
+            enable_checkpointing=True,
+        )
+        self.trainer.fit(self, self.data)
+
+    def predict(self):
+        if self.trainer is None:
+            raise RuntimeError(
+                "Model must be trained first. Call fit() before predict()."
+            )
+
+        batch_predictions = self.trainer.predict(self, self.data)
+
+        t_eval = batch_predictions[0][0]
+        all_trajectories = torch.cat([pred[1] for pred in batch_predictions], dim=1)
+        final_snapshots = all_trajectories[-1, :, :]
+
+        t_eval_np = t_eval.detach().cpu().numpy()
+        trajectories_np = all_trajectories.detach().cpu().numpy()
+        final_np = final_snapshots.detach().cpu().numpy()
+
+        return (t_eval_np, trajectories_np, final_np)
 
 
 def main():
@@ -142,8 +172,7 @@ def main():
     t_eval, y_pred = model.forward(test_x, t_span)
 
     # Train the model
-    trainer = pl.Trainer(max_epochs=5, enable_checkpointing=False, logger=False)
-    trainer.fit(model, data_module)
+    model.fit()
 
 
 if __name__ == "__main__":
