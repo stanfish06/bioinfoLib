@@ -4,9 +4,13 @@ bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 
 import logging
 
+# Set up environment variables
+from dotenv import load_dotenv
+
 from . import utils
 
 __version__ = "0.1.3"
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +59,7 @@ try:
     from . import neuralNet as nn
 except ImportError as e:
     logger.warning(f"Could not import neuralNet modules: {e}")
+    nn = None
 
 # Export commonly used components (only those that were successfully imported)
 __all__ = [

@@ -1,9 +1,6 @@
 import os
 import subprocess
 
-from dotenv import load_dotenv
-
-load_dotenv()
 r_ld_path = (
     subprocess.check_output(["python", "-m", "rpy2.situation", "LD_LIBRARY_PATH"])
     .decode("utf-8")
