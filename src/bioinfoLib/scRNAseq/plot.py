@@ -1,5 +1,6 @@
-from typing import Literal, Optional
+from typing import Literal
 
+import matplotlib.patheffects as path_effects  # Add this import
 import matplotlib.pyplot as plt
 import numpy as np
 from adjustText import adjust_text
@@ -28,7 +29,7 @@ def volcano_plot_differential_expression(
     y_max: float = np.inf,
     legend_loc: str = "upper right",
     gene_domain: list[str] = None,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     **kwargs,
 ) -> Axes:
     if ax is None:
@@ -204,10 +205,10 @@ def volcano_plot_differential_expression(
 @validate_call(config={"arbitrary_types_allowed": True})
 def embedding_label_repl(
     adata: AnnData,
-    basis: tuple,
+    basis: str,
     groupby: str,
     exclude: list[str],
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     components: tuple = (0, 1),
     adjust_kwargs: dict = Field(default_factory=dict),
     text_kwargs: dict = Field(default_factory=dict),
@@ -227,11 +228,11 @@ def embedding_label_repl(
             continue
         medians[g] = np.median(adata[g_idx].obsm[basis][:, components], axis=0)
 
-    # Fill the text colors dictionary
-    text_colors = {group: None for group in adata.obs[groupby].cat.categories}
+    # Fill the text colors dictionary with default black color
+    text_colors = dict.fromkeys(adata.obs[groupby].cat.categories, "black")
 
     if color_by_group:
-        if palette is not None:
+        if palette:
             for i, group in enumerate(adata.obs[groupby].cat.categories):
                 if group in exclude:
                     continue
@@ -253,8 +254,11 @@ def embedding_label_repl(
             for k, (x, y) in medians.items()
         ]
 
-    if text_path_effect is not None:
+    if text_path_effect:  # Apply path effects if provided
+        path_effect_obj = path_effects.withStroke(**text_path_effect)
         for text in texts:
-            text.set_path_effects(text_path_effect)
+            text.set_path_effects([path_effect_obj])
 
-    adjust_text(texts, **adjust_kwargs)
+    ax = ax if ax is not None else plt.gca()
+    adjust_text(texts, ax=ax, **adjust_kwargs)
+    return texts  # Return texts so you can debug positioning
