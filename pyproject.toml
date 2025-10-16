@@ -45,7 +45,9 @@ dependencies = [
   "fa2-modified>=0.3.10",
   "pyrefly>=0.36.2",
   "torchdyn>=1.0.6",
+  "tensorflow>=2.18.1",
 ]
+# tensorflow does not support py3.13 yet
 
 [project.optional-dependencies]
 common = [
@@ -55,8 +57,6 @@ common = [
   "pyvista>=0.44.2",
 ]
 optional = [
-  "tensorflow-intel ; sys_platform == 'win32'",
-  "tensorflow[and-cuda] ; sys_platform == 'linux'",
   "scarches>=0.5.0",
   "scvi-tools>=1.2.0",
   "harmonypy>=0.0.10",
@@ -85,12 +85,12 @@ conflicts = [[{ extra = "common" }, { extra = "deprecating" }]]
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cu126", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
 
 torchvision = [
   { index = "pytorch-cu126", marker = "sys_platform == 'win32'" },
-  { index = "pytorch-cu126", marker = "sys_platform == 'linux'" },
+  { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
 
 modular = [
@@ -98,8 +98,13 @@ modular = [
 ]
 
 [[tool.uv.index]]
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
+explicit = true
+
+[[tool.uv.index]]
 name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu126"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [[tool.uv.index]]

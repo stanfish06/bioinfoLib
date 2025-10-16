@@ -20,7 +20,11 @@ conda install nvidia::libcusparse conda-force::nccl nvidia::cuda-toolkit
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 ```
 For sksparse, it depends on openblas, so need to make sure both libblas.so.3 and liblapack.so.3 point to the right version of openblas (if system openblas failed, try build from source and configure alternative)
+Also, for sksparse, suite-sparse is needed.
 
 For juila, use 1.12.0-beta1+0.x64.linux.gnu if 1.11 failed due to curl issue.
 
 For rpy2, it needs libtirpc-dev
+
+If libcublas cant be found, check /usr/local/cuda-13/lib64/
+If torch still complain about libcublas, try update torch cuda index

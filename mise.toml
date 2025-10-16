@@ -25,5 +25,8 @@ run = "uv run Rscript ./scripts/install_bioc_packages.R"
 [tasks.test]
 run = "uv run pytest -s tests/*"
 
-[tasks.sync_optional]
-run = "uv pip install python-bioformats"
+[tasks.sync_dev]
+run = [
+  "uv sync",
+  "uv pip install python-bioformats"
+]
