@@ -60,10 +60,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not import neuralNet modules: {e}")
     nn = None
+try:
+    from . import resource as res
+except ImportError as e:
+    logger.warning(f"Could not import resource: {e}")
 
 # Export commonly used components (only those that were successfully imported)
 __all__ = [
     name
-    for name in ["rn", "scr", "GP", "jl", "la", "tp", "im", "r", "nn"]
+    for name in ["rn", "scr", "GP", "jl", "la", "tp", "im", "r", "nn", "res"]
     if globals().get(name) is not None
 ]
