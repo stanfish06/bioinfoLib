@@ -4,14 +4,41 @@ from itertools import product
 from typing import Literal
 
 import numpy as np
+from pynndescent import NNDescent
 from scipy.sparse import csr_matrix, diags
-from scipy.spatial.distance import cdist, hamming
+from scipy.spatial.distance import cdist, hamming, pdist
 from sksparse.cholmod import cholesky
 
 from bioinfoLib.linearAlgebra.gauss_mod2_m4ri import solve_mod2
 from bioinfoLib.R.utils import trajectory_distance
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+
+def subsample(
+    x: np.ndarray,
+    n: int,
+    distance_metric: str = "euclidean",
+    group_aware: bool = False,
+    groupby: str | None = None,
+    density_aware: bool = False,
+    n_neighbors: int = 50,
+    seed: int = 1,
+):
+    if density_aware:
+        knn_search_index = NNDescent(
+            x, n_neighbors=n_neighbors, metric=distance_metric, random_state=seed
+        )
+        knn_indices, knn_dists = knn_search_index.neighbor_graph
+        if density_aware:
+            # first column is the self edge
+            knn_densities = np.sum(
+                knn_dists / np.expand_dims(np.std(knn_dists[:, 1:], axis=1), 1), axis=1
+            )
+    y = []
+    if group_aware:
+        pass
+    pw_dist = pdist(x)
 
 
 # TODO: grid search, adjust radius based on gaussian prior

@@ -37,6 +37,8 @@ from .utils import (
 # EdgeCollapose Rips does not work as it will heavilly reduce local connectivity
 # random downsample for large input? use topological aware subsampling
 # wrap ripser.cpp instead? I technically only need cocylces
+# random downsample for large input?
+# persistance landscape, useful here or no?
 @dataclass
 class HomologyData:
     data: np.ndarray

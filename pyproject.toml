@@ -68,7 +68,8 @@ optional = [
   "phate>=1.0.11",
 ]
 dev = [
-  "modular ; sys_platform == 'linux'"
+  "modular ; sys_platform == 'linux'",
+  "marimo[recommended]"
 ]
 deprecating = [
   # bioformats resolution needs java environment, hand this to mise
