@@ -25,8 +25,11 @@ run = "uv run Rscript ./scripts/install_bioc_packages.R"
 [tasks.test]
 run = "uv run pytest -s tests/*"
 
+[tasks.marimo]
+run = "uv run marimo edit --no-token"
+
 [tasks.sync_dev]
 run = [
-  "uv sync",
+  "uv sync --extra dev",
   "uv pip install python-bioformats"
 ]
