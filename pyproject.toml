@@ -185,6 +185,15 @@ name = "deeptoolsintervals"
 version = "0.1.9"
 requires-python = ">=3.7"
 
+[tool.pyrefly]
+project-includes = ["**/*.py*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/*venv/**/*",
+    "**/.[!/.]*/**/*",
+]
+
 [project.urls]
 Homepage = "https://github.com/stanfish06/bioinfoLib"
 Issues = "https://github.com/stanfish06/bioinfoLib/issues"
