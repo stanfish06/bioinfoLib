@@ -1,3 +1,5 @@
+# Copyright 2025 Zhiyuan Yu (Heemskerk's lab, University of Michigan)
+
 import io
 import re
 from contextlib import redirect_stdout

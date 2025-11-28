@@ -30,6 +30,6 @@ run = "uv run marimo edit --no-token"
 
 [tasks.sync_dev]
 run = [
-  "uv sync --extra dev",
+  "uv sync --extra dev --extra optional",
   "uv pip install python-bioformats"
 ]

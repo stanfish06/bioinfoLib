@@ -1,3 +1,5 @@
+# Copyright 2025 Zhiyuan Yu (Heemskerk's lab, University of Michigan)
+
 import mysql.connector
 from fuzzywuzzy import fuzz
 

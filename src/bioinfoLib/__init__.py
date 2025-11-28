@@ -1,3 +1,5 @@
+# Copyright 2025 Zhiyuan Yu (Heemskerk's lab, University of Michigan)
+
 """
 bioinfoLib - A comprehensive Python library for bioinformatics analysis.
 """

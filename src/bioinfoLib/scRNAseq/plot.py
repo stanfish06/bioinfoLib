@@ -1,3 +1,5 @@
+# Copyright 2025 Zhiyuan Yu (Heemskerk's lab, University of Michigan)
+
 from typing import Literal
 
 import matplotlib.patheffects as path_effects  # Add this import

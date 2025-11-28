@@ -1,3 +1,5 @@
+# Copyright 2025 Zhiyuan Yu (Heemskerk's lab, University of Michigan)
+
 import bioformats
 import numpy as np
 import tifffile
